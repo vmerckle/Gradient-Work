@@ -1,3 +1,6 @@
+__pycache__
+*.pkl
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
