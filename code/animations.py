@@ -229,7 +229,7 @@ class NiceAnim:
         for i in range(self.m):
             w1, w2 = ly1.T[i]
             alpha, = ly2[i]
-            xl[i], yl[i] = lact[i], lnorm[i]
+            xl[i], yl[i] = lact[i], lnorm[i]*100
             if alpha > 0:
                 colors.append("green")
             else:
