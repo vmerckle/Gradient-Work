@@ -22,7 +22,7 @@ from utils import *
 from torch_descent import torch_descent
 from jko_descent import jko_descent
 
-class LessNiceAnim:
+class LessNiceAnimNotUsed:
     def __init__(self, fig, data, runanim=False):
         # load and check data
         self.Xb, self.Y, self.X = data["Xb"], data["Y"][:, 0], data["X"]
@@ -96,6 +96,100 @@ class LessNiceAnim:
 
     def getAnim(self, interval, blit=True):
         return animation.FuncAnimation(self.fig, self.update, frames=list(range(self.Nframe)), blit=blit, interval=interval)
+
+class LessNiceAnim:
+    def __init__(self, fig, data, runanim=False, frames=None):
+        # load and check data
+        self.Xb, self.Y, self.X = data["Xb"], data["Y"][:, 0], data["X"]
+        self.Xout = data["Xout"]
+        self.n, self.d = self.X.shape
+        self.m = data["ly1"].shape[1]
+        assert self.Y.ndim == 1 and len(self.Y) == self.n
+        if runanim:
+            self.D = None
+        else:
+            self.D = data["iterdata"]
+            self.Nframe = len(self.D)
+            # sanity checks on data, looks useless but this is python
+            assert np.all([di["ly1"].shape == (self.d, self.m) for di in self.D])
+            assert np.all([di["ly2"].shape == (self.m, 1) for di in self.D])
+            if frames is None:
+                self.frames = list(range(self.Nframe))
+            else:
+                self.frames = frames
+        # plotting setup
+        self.fig = fig
+        self.ax = self.fig.add_subplot(frameon=False)
+        self.ax.xaxis.set_major_locator(plt.MaxNLocator(5))
+        self.ax.yaxis.set_major_locator(plt.MaxNLocator(5))
+        self.ax.axhline(y=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
+        self.ax.axvline(x=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
+        self.ax.grid(True, alpha=0.2)
+
+        cvx_n1, cvx_n2, cvx_c = [], [], []
+        if data["ly1s"] is not None:
+            for (w1, w2), alp in zip(data["ly1s"].T, data["ly2s"]):
+                cvx_n1.append(w1*alp)
+                cvx_n2.append(w2*alp)
+                cvx_c.append("violet")
+
+            self.ax.scatter(cvx_n1, cvx_n2, marker="*", color=cvx_c, s=60, alpha=0.9)
+
+        self.ax.scatter(self.Xb, np.ones_like(self.Xb), marker="x", color="red", s=60, alpha=0.5)
+        for x in self.Xb:
+            self.ax.axline((0,0), xy2=(-1, float(x)), color="C1", alpha=0.3)
+        self.signedE = self.ax.scatter([], [], marker="*", color="blue", s=60, alpha=1)
+        ## beautiful lines don't touch
+        s = u'$\u2193$'
+        self.fun_marker = MarkerStyle(s).get_path().transformed(MarkerStyle(s).get_transform())
+        self.pos_marker = MarkerStyle('>').get_path().transformed(MarkerStyle('>').get_transform())
+        self.neg_marker = MarkerStyle('<').get_path().transformed(MarkerStyle('<').get_transform())
+        # artist engaged in animation
+        self.text = self.ax.text(0.05, 0.9, f"start frame", transform=self.ax.transAxes)
+        self.outline, = self.ax.plot([], [])
+        self.allscat = self.ax.scatter([], [], marker='o')
+        # administrative stuff
+        self.starttime = time.time()
+        self.verbose = False
+
+    def update_aux(self, di, frame):
+        ly1, ly2 = di["ly1"], di["ly2"]
+        lact, lnorm = di["lact"], di["lnorm"]
+        loss, Yout = di["loss"], di["Yout"]
+        lsize = di["lsize"]
+        #ly1g, ly2g = di["ly1g"], di["ly2g"]
+
+        xl, yl, mks = np.zeros(self.m), np.zeros(self.m), []
+        sizes, colors = lsize*4, []
+        for i in range(self.m):
+            w1, w2 = ly1.T[i]
+            alpha, = ly2[i]
+            xl[i], yl[i] = w1*alpha, w2*alpha
+            if alpha > 0:
+                colors.append("green")
+            else:
+                colors.append("green")
+                #colors.append("red")
+            d = self.fun_marker.transformed(mpl.transforms.Affine2D().rotate_deg(np.arctan(w2/w1)*360/2/np.pi+90))
+            mks.append(d)
+
+        self.allscat.set_offsets(np.column_stack((xl, yl)))
+        self.allscat.set_paths(mks)
+        self.allscat.set_sizes(sizes)
+        self.allscat.set_color(colors)
+        #self.signedE.set_offsets(np.column_stack((self.Xb, di["signedE"])))
+        #self.pdirecs.set_offsets(np.column_stack((di["pdirecs"], -0.1*np.ones(di["pdirecs"].shape))))
+        #set_alpha : same way 0-1
+        self.text.set_text(f"Step: {frame}, loss={loss:.4f}")
+        #self.outline.set_data(self.Xout, Yout)
+        return self.text, self.allscat
+
+    def update(self, frame):
+        di = self.D[frame]
+        return self.update_aux(di, frame)
+
+    def getAnim(self, interval, blit=True):
+        return animation.FuncAnimation(self.fig, self.update, frames=self.frames, blit=blit, interval=interval)
 
 class NiceAnim:
     def __init__(self, fig, data, runanim=False):
@@ -287,7 +381,7 @@ def simpleArun(X, myanim):
         return animobj.update_aux(di, i)
 
     try:
-        ani = animation.FuncAnimation(fig, update_ok, frames=list(range(1000)), blit=True, interval=1)
+        ani = animation.FuncAnimation(fig, update_ok, frames=list(range(100000)), blit=True, interval=1)
         animobj.ax.set_xlim(-1.2, 1.2)
         animobj.ax.set_ylim(-1.2, 1.2)
         plt.show()
@@ -311,7 +405,7 @@ def simplecalcs(X):
 
 
 def getInput2(args):
-    seed = 4
+    seed = args.seed
     torch.use_deterministic_algorithms(True)
     gpudevice = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
     if gpudevice != "cpu":
@@ -446,6 +540,7 @@ if __name__ == '__main__':
     parser.add_argument("-m", "--movie", help="save movie", action="store_true")
     parser.add_argument("--fps", type=int, default=10, help="movie fps")
     parser.add_argument("--movieout", help="output movie name", default="out_new")
+
     parser.add_argument("-o", "--output", help="output name", default="out_new")
     parser.add_argument( "--verbose", action="store_true")
     parser.add_argument("--scaleinit", default=1e-3, type=float, help="scalar factor to weight matrix")
@@ -456,6 +551,7 @@ if __name__ == '__main__':
     parser.add_argument("--jkotau", default=1, type=float, help="algo=jko, float")
     parser.add_argument("--proxf", default="scipy", choices=["scipy", "torch"], help="algo=jko, how to compute the prox")
     parser.add_argument("--adamlr", default=1e-3, type=float, help="algo=jko, proxf=torch, learning rate for gradient descent")
+    parser.add_argument("--seed", type=int, default=4, help="seed")
     args = parser.parse_args()
     code = args.output
     if code != "out_new" and args.movieout == "out_new":
@@ -517,6 +613,7 @@ if __name__ == '__main__':
     animobj.ax.set_xlim(-1.2, 1.2)
     animobj.ax.set_ylim(-1.2, 1.2)
 
+    # todo implement some frame skipping
     if args.movie:
         print("Saving animation")
         writer = animation.FFMpegWriter(fps=args.fps)#, bitrate=1800)
