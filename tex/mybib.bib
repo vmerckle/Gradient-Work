@@ -1,0 +1,348 @@
+@article{allen-zhuUNDERSTANDINGENSEMBLEKNOWL,
+  title = {TOWARDS UNDERSTANDING ENSEMBLE, KNOWL- EDGE DISTILLATION AND SELF-DISTILLATION IN DEEP LEARNING},
+  author = {Allen-Zhu, Zeyuan and Li, Yuanzhi},
+  abstract = {We formally study how ensemble of deep learning models can improve test accuracy, and how the superior performance of ensemble can be distilled into a single model using knowledge distillation. We consider the challenging case where the ensemble is simply an average of the outputs of a few independently trained neural networks with the same architecture, trained using the same algorithm on the same data set, and they only differ by the random seeds used in the initialization.},
+  langid = {english},
+  file = {/home/savar/Zotero/storage/P4SCS7GY/Allen-Zhu and Li - TOWARDS UNDERSTANDING ENSEMBLE, KNOWL- EDGE DISTIL.pdf}
+}
+
+@online{bachGradientDescentInfinitely2021,
+  title = {Gradient Descent on Infinitely Wide Neural Networks: Global Convergence and Generalization},
+  shorttitle = {Gradient Descent on Infinitely Wide Neural Networks},
+  author = {Bach, Francis and Chizat, Lenaïc},
+  date = {2021-10-15},
+  eprint = {2110.08084},
+  eprinttype = {arxiv},
+  eprintclass = {cs, math, stat},
+  doi = {10.48550/arXiv.2110.08084},
+  url = {http://arxiv.org/abs/2110.08084},
+  urldate = {2023-05-25},
+  abstract = {Many supervised machine learning methods are naturally cast as optimization problems. For prediction models which are linear in their parameters, this often leads to convex problems for which many mathematical guarantees exist. Models which are non-linear in their parameters such as neural networks lead to non-convex optimization problems for which guarantees are harder to obtain. In this review paper, we consider two-layer neural networks with homogeneous activation functions where the number of hidden neurons tends to infinity, and show how qualitative convergence guarantees may be derived.},
+  pubstate = {preprint},
+  keywords = {Computer Science - Machine Learning,Mathematics - Optimization and Control,Mathematics - Statistics Theory},
+  file = {/home/savar/Zotero/storage/H6A3HGUH/Bach and Chizat - 2021 - Gradient Descent on Infinitely Wide Neural Network.pdf;/home/savar/Zotero/storage/H7RSPF25/2110.html}
+}
+
+@article{barzilaiKERNELPERSPECTIVESKIP2023,
+  title = {A KERNEL PERSPECTIVE OF SKIP CONNECTIONS IN CONVOLUTIONAL NETWORKS},
+  author = {Barzilai, Daniel and Geifman, Amnon and Galun, Meirav and Basri, Ronen},
+  date = {2023},
+  abstract = {Over-parameterized residual networks are amongst the most successful convolutional neural architectures for image processing. Here we study their properties through their Gaussian Process and Neural Tangent kernels. We derive explicit formulas for these kernels, analyze their spectra and provide bounds on their implied condition numbers. Our results indicate that (1) with ReLU activation, the eigenvalues of these residual kernels decay polynomially at a similar rate as the same kernels when skip connections are not used, thus maintaining a similar frequency bias; (2) however, residual kernels are more locally biased. Our analysis further shows that the matrices obtained by these residual kernels yield favorable condition numbers at finite depths than those obtained without the skip connections, enabling therefore faster convergence of training with gradient descent.},
+  langid = {english},
+  file = {/home/savar/Zotero/storage/LIB6MAMJ/Barzilai et al. - 2023 - A KERNEL PERSPECTIVE OF SKIP CONNECTIONS IN CONVOL.pdf}
+}
+
+@article{berthierIncrementalLearningDiagonal,
+  title = {Incremental Learning in Diagonal Linear Networks},
+  author = {Berthier, Raphael},
+  url = {https://jmlr.org/papers/volume24/22-1395/22-1395.pdf},
+  abstract = {Diagonal linear networks (DLNs) are a toy simplification of artificial neural networks; they consist in a quadratic reparametrization of linear regression inducing a sparse implicit regularization. In this paper, we describe the trajectory of the gradient flow of DLNs in the limit of small initialization. We show that incremental learning is effectively performed in the limit: coordinates are successively activated, while the iterate is the minimizer of the loss constrained to have support on the active coordinates only. This shows that the sparse implicit regularization of DLNs decreases with time. This work is restricted to the underparametrized regime with anti-correlated features for technical reasons.},
+  langid = {english},
+  file = {/home/savar/Zotero/storage/J9SSZK2Y/Berthier - Incremental Learning in Diagonal Linear Networks.pdf}
+}
+
+@online{boursierGradientFlowDynamics2022,
+  title = {Gradient Flow Dynamics of Shallow ReLU Networks for Square Loss and Orthogonal Inputs},
+  author = {Boursier, Etienne and Pillaud-Vivien, Loucas and Flammarion, Nicolas},
+  date = {2022-10-31},
+  eprint = {2206.00939},
+  eprinttype = {arxiv},
+  eprintclass = {cs, stat},
+  doi = {10.48550/arXiv.2206.00939},
+  url = {http://arxiv.org/abs/2206.00939},
+  urldate = {2023-03-06},
+  abstract = {The training of neural networks by gradient descent methods is a cornerstone of the deep learning revolution. Yet, despite some recent progress, a complete theory explaining its success is still missing. This article presents, for orthogonal input vectors, a precise description of the gradient flow dynamics of training one-hidden layer ReLU neural networks for the mean squared error at small initialisation. In this setting, despite non-convexity, we show that the gradient flow converges to zero loss and characterise its implicit bias towards minimum variation norm. Furthermore, some interesting phenomena are highlighted: a quantitative description of the initial alignment phenomenon and a proof that the process follows a specific saddle to saddle dynamics.},
+  pubstate = {preprint},
+  keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/home/savar/Zotero/storage/GNXMTPEA/Boursier et al. - 2022 - Gradient flow dynamics of shallow ReLU networks fo.pdf;/home/savar/Zotero/storage/W4S5EXZ9/2206.html}
+}
+
+@online{carlierConvergenceEntropicSchemes2017,
+  title = {Convergence of Entropic Schemes for Optimal Transport and Gradient Flows},
+  author = {Carlier, Guillaume and Duval, Vincent and Peyré, Gabriel and Schmitzer, Bernhard},
+  date = {2017-01-08},
+  eprint = {1512.02783},
+  eprinttype = {arxiv},
+  eprintclass = {math},
+  url = {http://arxiv.org/abs/1512.02783},
+  urldate = {2023-05-25},
+  abstract = {Replacing positivity constraints by an entropy barrier is popular to approximate solutions of linear programs. In the special case of the optimal transport problem, this technique dates back to the early work of Schro¨dinger. This approach has recently been used successfully to solve optimal transport related problems in several applied fields such as imaging sciences, machine learning and social sciences. The main reason for this success is that, in contrast to linear programming solvers, the resulting algorithms are highly parallelizable and take advantage of the geometry of the computational grid (e.g. an image or a triangulated mesh). The first contribution of this article is the proof of the Γ-convergence of the entropic regularized optimal transport problem towards the Monge-Kantorovich problem for the squared Euclidean norm cost function. This implies in particular the convergence of the optimal entropic regularized transport plan towards an optimal transport plan as the entropy vanishes. Optimal transport distances are also useful to define gradient flows as a limit of implicit Euler steps according to the transportation distance. Our second contribution is a proof that implicit steps according to the entropic regularized distance converge towards the original gradient flow when both the step size and the entropic penalty vanish (in some controlled way).},
+  langid = {english},
+  pubstate = {preprint},
+  keywords = {Mathematics - Analysis of PDEs,Mathematics - Numerical Analysis},
+  file = {/home/savar/Zotero/storage/X9V3EZG7/Carlier et al. - 2017 - Convergence of Entropic Schemes for Optimal Transp.pdf}
+}
+
+@online{carlierConvergenceEntropicSchemes2017a,
+  title = {Convergence of Entropic Schemes for Optimal Transport and Gradient Flows},
+  author = {Carlier, Guillaume and Duval, Vincent and Peyré, Gabriel and Schmitzer, Bernhard},
+  date = {2017-01-08},
+  eprint = {1512.02783},
+  eprinttype = {arxiv},
+  eprintclass = {math},
+  url = {http://arxiv.org/abs/1512.02783},
+  urldate = {2023-06-05},
+  abstract = {Replacing positivity constraints by an entropy barrier is popular to approximate solutions of linear programs. In the special case of the optimal transport problem, this technique dates back to the early work of Schro¨dinger. This approach has recently been used successfully to solve optimal transport related problems in several applied fields such as imaging sciences, machine learning and social sciences. The main reason for this success is that, in contrast to linear programming solvers, the resulting algorithms are highly parallelizable and take advantage of the geometry of the computational grid (e.g. an image or a triangulated mesh). The first contribution of this article is the proof of the Γ-convergence of the entropic regularized optimal transport problem towards the Monge-Kantorovich problem for the squared Euclidean norm cost function. This implies in particular the convergence of the optimal entropic regularized transport plan towards an optimal transport plan as the entropy vanishes. Optimal transport distances are also useful to define gradient flows as a limit of implicit Euler steps according to the transportation distance. Our second contribution is a proof that implicit steps according to the entropic regularized distance converge towards the original gradient flow when both the step size and the entropic penalty vanish (in some controlled way).},
+  langid = {english},
+  pubstate = {preprint},
+  keywords = {Mathematics - Analysis of PDEs,Mathematics - Numerical Analysis},
+  file = {/home/savar/Zotero/storage/WJK8DEDX/Carlier et al. - 2017 - Convergence of Entropic Schemes for Optimal Transp.pdf}
+}
+
+@inproceedings{chizatGlobalConvergenceGradient2018,
+  title = {On the Global Convergence of Gradient Descent for Over-Parameterized Models Using Optimal Transport},
+  booktitle = {Adv. Neural Inf. Process. Syst. 31 Annu. Conf. Neural Inf. Process. Syst. 2018 NeurIPS 2018 Dec. 3-8 2018 Montr. Can.},
+  author = {Chizat, Lénaïc and Bach, Francis R.},
+  editor = {Bengio, Samy and Wallach, Hanna M. and Larochelle, Hugo and Grauman, Kristen and Cesa-Bianchi, Nicolò and Garnett, Roman},
+  date = {2018},
+  pages = {3040--3050},
+  url = {https://proceedings.neurips.cc/paper/2018/hash/a1afc58c6ca9540d057299ec3016d726-Abstract.html},
+  urldate = {2023-03-27},
+  file = {/home/savar/Zotero/storage/KEDG8YKZ/Chizat and Bach - 2018 - On the Global Convergence of Gradient Descent for .pdf}
+}
+
+@online{chizatLazyTrainingDifferentiable2020,
+  title = {On Lazy Training in Differentiable Programming},
+  author = {Chizat, Lenaic and Oyallon, Edouard and Bach, Francis},
+  date = {2020-01-07},
+  eprint = {1812.07956},
+  eprinttype = {arxiv},
+  eprintclass = {cs, math},
+  url = {http://arxiv.org/abs/1812.07956},
+  urldate = {2023-05-22},
+  abstract = {In a series of recent theoretical works, it was shown that strongly overparameterized neural networks trained with gradient-based methods could converge exponentially fast to zero training loss, with their parameters hardly varying. In this work, we show that this “lazy training” phenomenon is not specific to overparameterized neural networks, and is due to a choice of scaling, often implicit, that makes the model behave as its linearization around the initialization, thus yielding a model equivalent to learning with positive-definite kernels. Through a theoretical analysis, we exhibit various situations where this phenomenon arises in non-convex optimization and we provide bounds on the distance between the lazy and linearized optimization paths. Our numerical experiments bring a critical note, as we observe that the performance of commonly used non-linear deep convolutional neural networks in computer vision degrades when trained in the lazy regime. This makes it unlikely that “lazy training” is behind the many successes of neural networks in difficult high dimensional tasks.},
+  langid = {english},
+  pubstate = {preprint},
+  keywords = {Computer Science - Machine Learning,Mathematics - Optimization and Control},
+  file = {/home/savar/Zotero/storage/YFG26URY/Chizat et al. - 2020 - On Lazy Training in Differentiable Programming.pdf}
+}
+
+@online{jacotNeuralTangentKernel2020,
+  title = {Neural Tangent Kernel: Convergence and Generalization in Neural Networks},
+  shorttitle = {Neural Tangent Kernel},
+  author = {Jacot, Arthur and Gabriel, Franck and Hongler, Clément},
+  date = {2020-02-10},
+  eprint = {1806.07572},
+  eprinttype = {arxiv},
+  eprintclass = {cs, math, stat},
+  doi = {10.48550/arXiv.1806.07572},
+  url = {http://arxiv.org/abs/1806.07572},
+  urldate = {2023-06-01},
+  abstract = {At initialization, artificial neural networks (ANNs) are equivalent to Gaussian processes in the infinite-width limit, thus connecting them to kernel methods. We prove that the evolution of an ANN during training can also be described by a kernel: during gradient descent on the parameters of an ANN, the network function \$f\_\textbackslash theta\$ (which maps input vectors to output vectors) follows the kernel gradient of the functional cost (which is convex, in contrast to the parameter cost) w.r.t. a new kernel: the Neural Tangent Kernel (NTK). This kernel is central to describe the generalization features of ANNs. While the NTK is random at initialization and varies during training, in the infinite-width limit it converges to an explicit limiting kernel and it stays constant during training. This makes it possible to study the training of ANNs in function space instead of parameter space. Convergence of the training can then be related to the positive-definiteness of the limiting NTK. We prove the positive-definiteness of the limiting NTK when the data is supported on the sphere and the non-linearity is non-polynomial. We then focus on the setting of least-squares regression and show that in the infinite-width limit, the network function \$f\_\textbackslash theta\$ follows a linear differential equation during training. The convergence is fastest along the largest kernel principal components of the input data with respect to the NTK, hence suggesting a theoretical motivation for early stopping. Finally we study the NTK numerically, observe its behavior for wide networks, and compare it to the infinite-width limit.},
+  pubstate = {preprint},
+  keywords = {Computer Science - Machine Learning,Computer Science - Neural and Evolutionary Computing,Mathematics - Probability,Statistics - Machine Learning},
+  file = {/home/savar/Zotero/storage/RCFZE4YT/Jacot et al. - 2020 - Neural Tangent Kernel Convergence and Generalizat.pdf;/home/savar/Zotero/storage/GI247TJX/1806.html}
+}
+
+@online{laurentDeepLinearNeural2018,
+  title = {Deep Linear Neural Networks with Arbitrary Loss: All Local Minima Are Global},
+  shorttitle = {Deep Linear Neural Networks with Arbitrary Loss},
+  author = {Laurent, Thomas},
+  date = {2018-07-24},
+  eprint = {1712.01473},
+  eprinttype = {arxiv},
+  eprintclass = {cs, stat},
+  url = {http://arxiv.org/abs/1712.01473},
+  urldate = {2023-07-21},
+  abstract = {We consider deep linear networks with arbitrary convex differentiable loss. We provide a short and elementary proof of the fact that all local minima are global minima if the hidden layers are either 1) at least as wide as the input layer, or 2) at least as wide as the output layer. This result is the strongest possible in the following sense: If the loss is convex and Lipschitz but not differentiable then deep linear networks can have sub-optimal local minima.},
+  langid = {english},
+  pubstate = {preprint},
+  keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/home/savar/Zotero/storage/AT564BGV/Laurent and von Brecht - 2018 - Deep linear neural networks with arbitrary loss A.pdf}
+}
+
+@online{leeDeepNeuralNetworks2018,
+  title = {Deep Neural Networks as Gaussian Processes},
+  author = {Lee, Jaehoon and Bahri, Yasaman and Novak, Roman and Schoenholz, Samuel S. and Pennington, Jeffrey and Sohl-Dickstein, Jascha},
+  date = {2018-03-02},
+  eprint = {1711.00165},
+  eprinttype = {arxiv},
+  eprintclass = {cs, stat},
+  url = {http://arxiv.org/abs/1711.00165},
+  urldate = {2023-06-01},
+  abstract = {It has long been known that a single-layer fully-connected neural network with an i.i.d. prior over its parameters is equivalent to a Gaussian process (GP), in the limit of infinite network width. This correspondence enables exact Bayesian inference for infinite width neural networks on regression tasks by means of evaluating the corresponding GP. Recently, kernel functions which mimic multi-layer random neural networks have been developed, but only outside of a Bayesian framework. As such, previous work has not identified that these kernels can be used as covariance functions for GPs and allow fully Bayesian prediction with a deep neural network.},
+  langid = {english},
+  pubstate = {preprint},
+  keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/home/savar/Zotero/storage/EYRNAAY2/Lee et al. - 2018 - Deep Neural Networks as Gaussian Processes.pdf}
+}
+
+@article{marionLeveragingTwotimescaleRegime,
+  title = {Leveraging the Two-Timescale Regime to Demonstrate Convergence of Neural Networks},
+  author = {Marion, Pierre and Berthier, Raphaël},
+  abstract = {We study the training dynamics of shallow neural networks, in a two-timescale regime in which the stepsizes for the inner layer are much smaller than those for the outer layer. In this regime, we prove convergence of the gradient flow to a global optimum of the non-convex optimization problem in a simple univariate setting. The number of neurons need not be asymptotically large for our result to hold, distinguishing our result from popular recent approaches such as the neural tangent kernel or mean-field regimes. Experimental illustration is provided, showing that the stochastic gradient descent behaves according to our description of the gradient flow and thus converges to a global optimum in the two-timescale regime, but can fail outside of this regime.},
+  langid = {english},
+  file = {/home/savar/Zotero/storage/99QWCRD5/Marion and Berthier - Leveraging the two-timescale regime to demonstrate.pdf}
+}
+
+@online{mishkinFastConvexOptimization2022a,
+  title = {Fast Convex Optimization for Two-Layer ReLU Networks: Equivalent Model Classes and Cone Decompositions},
+  shorttitle = {Fast Convex Optimization for Two-Layer ReLU Networks},
+  author = {Mishkin, Aaron and Sahiner, Arda and Pilanci, Mert},
+  date = {2022-08-31},
+  eprint = {2202.01331},
+  eprinttype = {arxiv},
+  eprintclass = {cs},
+  url = {http://arxiv.org/abs/2202.01331},
+  urldate = {2023-11-23},
+  abstract = {We develop fast algorithms and robust software for convex optimization of two-layer neural networks with ReLU activation functions. Our work leverages a convex reformulation of the standard weight-decay penalized training problem as a set of group- 1-regularized data-local models, where locality is enforced by polyhedral cone constraints. In the special case of zero-regularization, we show that this problem is exactly equivalent to unconstrained optimization of a convex “gated ReLU” network. For problems with nonzero regularization, we show that convex gated ReLU models obtain data-dependent approximation bounds for the ReLU training problem. To optimize the convex reformulations, we develop an accelerated proximal gradient method and a practical augmented Lagrangian solver. We show that these approaches are faster than standard training heuristics for the non-convex problem, such as SGD, and outperform commercial interior-point solvers. Experimentally, we verify our theoretical results, explore the group- 1 regularization path, and scale convex optimization for neural networks to image classification on MNIST and CIFAR-10.},
+  langid = {english},
+  pubstate = {preprint},
+  keywords = {Computer Science - Machine Learning},
+  file = {/home/savar/Zotero/storage/XZP2XBNM/Mishkin et al. - 2022 - Fast Convex Optimization for Two-Layer ReLU Networ.pdf}
+}
+
+@online{neumayerEffectInitializationScaling2023,
+  title = {On the Effect of Initialization: The Scaling Path of 2-Layer Neural Networks},
+  shorttitle = {On the Effect of Initialization},
+  author = {Neumayer, Sebastian and Chizat, Lénaïc and Unser, Michael},
+  date = {2023-03-31},
+  eprint = {2303.17805},
+  eprinttype = {arxiv},
+  eprintclass = {cs, math},
+  url = {http://arxiv.org/abs/2303.17805},
+  urldate = {2023-05-22},
+  abstract = {In supervised learning, the regularization path is sometimes used as a convenient theoretical proxy for the optimization path of gradient descent initialized with zero. In this paper, we study a modification of the regularization path for infinite-width 2-layer ReLU neural networks with non-zero initial distribution of the weights at different scales. By exploiting a link with unbalanced optimal transport theory, we show that, despite the non-convexity of the 2-layer network training, this problem admits an infinite dimensional convex counterpart. We formulate the corresponding functional optimization problem and investigate its main properties. In particular, we show that as the scale of the initialization ranges between \$0\$ and \$+\textbackslash infty\$, the associated path interpolates continuously between the so-called kernel and rich regimes. The numerical experiments confirm that, in our setting, the scaling path and the final states of the optimization path behave similarly even beyond these extreme points.},
+  langid = {english},
+  pubstate = {preprint},
+  keywords = {Computer Science - Machine Learning,Mathematics - Optimization and Control},
+  file = {/home/savar/Zotero/storage/SECLEDB8/Neumayer et al. - 2023 - On the Effect of Initialization The Scaling Path .pdf}
+}
+
+@online{penningtonResurrectingSigmoidDeep2017,
+  title = {Resurrecting the Sigmoid in Deep Learning through Dynamical Isometry: Theory and Practice},
+  shorttitle = {Resurrecting the Sigmoid in Deep Learning through Dynamical Isometry},
+  author = {Pennington, Jeffrey and Schoenholz, Samuel S. and Ganguli, Surya},
+  date = {2017-11-13},
+  eprint = {1711.04735},
+  eprinttype = {arxiv},
+  eprintclass = {cs, stat},
+  doi = {10.48550/arXiv.1711.04735},
+  url = {http://arxiv.org/abs/1711.04735},
+  urldate = {2023-03-28},
+  abstract = {It is well known that the initialization of weights in deep neural networks can have a dramatic impact on learning speed. For example, ensuring the mean squared singular value of a network's input-output Jacobian is \$O(1)\$ is essential for avoiding the exponential vanishing or explosion of gradients. The stronger condition that all singular values of the Jacobian concentrate near \$1\$ is a property known as dynamical isometry. For deep linear networks, dynamical isometry can be achieved through orthogonal weight initialization and has been shown to dramatically speed up learning; however, it has remained unclear how to extend these results to the nonlinear setting. We address this question by employing powerful tools from free probability theory to compute analytically the entire singular value distribution of a deep network's input-output Jacobian. We explore the dependence of the singular value distribution on the depth of the network, the weight initialization, and the choice of nonlinearity. Intriguingly, we find that ReLU networks are incapable of dynamical isometry. On the other hand, sigmoidal networks can achieve isometry, but only with orthogonal weight initialization. Moreover, we demonstrate empirically that deep nonlinear networks achieving dynamical isometry learn orders of magnitude faster than networks that do not. Indeed, we show that properly-initialized deep sigmoidal networks consistently outperform deep ReLU networks. Overall, our analysis reveals that controlling the entire distribution of Jacobian singular values is an important design consideration in deep learning.},
+  pubstate = {preprint},
+  keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/home/savar/Zotero/storage/9Q27QRPJ/Pennington et al. - 2017 - Resurrecting the sigmoid in deep learning through .pdf;/home/savar/Zotero/storage/T2HWY3M4/1711.html}
+}
+
+@article{pesmeImplicitBiasSGD,
+  title = {Implicit Bias of SGD for Diagonal Linear Networks: A Provable Benefit of Stochasticity},
+  author = {Pesme, Scott and Pillaud-Vivien, Loucas},
+  url = {https://openreview.net/pdf?id=vvi7KqHQiA},
+  abstract = {Understanding the implicit bias of training algorithms is of crucial importance in order to explain the success of overparametrised neural networks. In this paper, we study the dynamics of stochastic gradient descent over diagonal linear networks through its continuous time version, namely stochastic gradient flow. We explicitly characterise the solution chosen by the stochastic flow and prove that it always enjoys better generalisation properties than that of gradient flow. Quite surprisingly, we show that the convergence speed of the training loss controls the magnitude of the biasing effect: the slower the convergence, the better the bias. To fully complete our analysis, we provide convergence guarantees for the dynamics. We also give experimental results which support our theoretical claims. Our findings highlight the fact that structured noise can induce better generalisation and they help explain the greater performances of stochastic gradient descent over gradient descent observed in practice.},
+  langid = {english},
+  file = {/home/savar/Zotero/storage/NMT6NVYS/Pesme and Pillaud-Vivien - Implicit Bias of SGD for Diagonal Linear Networks.pdf}
+}
+
+@inproceedings{pilanciNeuralNetworksAre2020,
+  title = {Neural Networks Are Convex Regularizers: Exact Polynomial-Time Convex Optimization Formulations for Two-Layer Networks},
+  shorttitle = {Neural Networks Are Convex Regularizers},
+  booktitle = {Proc. 37th Int. Conf. Mach. Learn.},
+  author = {Pilanci, Mert and Ergen, Tolga},
+  date = {2020-11-21},
+  pages = {7695--7705},
+  publisher = {PMLR},
+  issn = {2640-3498},
+  url = {https://proceedings.mlr.press/v119/pilanci20a.html},
+  urldate = {2022-06-10},
+  abstract = {We develop exact representations of training two-layer neural networks with rectified linear units (ReLUs) in terms of a single convex program with number of variables polynomial in the number of training samples and the number of hidden neurons. Our theory utilizes semi-infinite duality and minimum norm regularization. We show that ReLU networks trained with standard weight decay are equivalent to block \$\textbackslash ell\_1\$ penalized convex models. Moreover, we show that certain standard convolutional linear networks are equivalent semi-definite programs which can be simplified to \$\textbackslash ell\_1\$ regularized linear models in a polynomial sized discrete Fourier feature space},
+  eventtitle = {International Conference on Machine Learning},
+  langid = {english},
+  file = {/home/savar/Zotero/storage/6RH8PNHW/Pilanci et Ergen - 2020 - Neural Networks are Convex Regularizers Exact Pol.pdf;/home/savar/Zotero/storage/E6U3JCEY/Pilanci et Ergen - 2020 - Neural Networks are Convex Regularizers Exact Pol.pdf}
+}
+
+@article{roughgardenBoundingInefficiencyEquilibria2004,
+  title = {Bounding the Inefficiency of Equilibria in Nonatomic Congestion Games},
+  author = {Roughgarden, Tim and Tardos, Eva},
+  date = {2004},
+  journaltitle = {Games Econ. Behav.},
+  volume = {47},
+  number = {2},
+  pages = {389--403},
+  publisher = {Elsevier},
+  url = {https://timroughgarden.org/papers/ncg.pdf},
+  urldate = {2023-07-20},
+  abstract = {No abstract is available for this item.},
+  langid = {english},
+  file = {/home/savar/Zotero/storage/GC9IDV5V/ncg.pdf;/home/savar/Zotero/storage/Y7TKDFAA/v47y2004i2p389-403.html}
+}
+
+@inproceedings{vesseronDeepNeuralNetworks2021,
+  title = {Deep Neural Networks Are Congestion Games: From Loss Landscape to Wardrop Equilibrium and Beyond},
+  shorttitle = {Deep Neural Networks Are Congestion Games},
+  booktitle = {Proc. 24th Int. Conf. Artif. Intell. Stat.},
+  author = {Vesseron, Nina and Redko, Ievgen and Laclau, Charlotte},
+  date = {2021-03-18},
+  pages = {1765--1773},
+  publisher = {PMLR},
+  issn = {2640-3498},
+  url = {https://proceedings.mlr.press/v130/vesseron21a.html},
+  urldate = {2023-05-22},
+  abstract = {The theoretical analysis of deep neural networks (DNN) is arguably among the most challenging research directions in machine learning (ML) right now, as it requires from scientists to lay novel statistical learning foundations to explain their behaviour in practice. While some success has been achieved recently in this endeavour, the question on whether DNNs can be analyzed using the tools from other scientific fields outside the ML community has not received the attention it may well have deserved. In this paper, we explore the interplay between DNNs and game theory (GT), and show how one can benefit from the classic readily available results from the latter when analyzing the former. In particular, we consider the widely studied class of congestion games, and illustrate their intrinsic relatedness to both linear and non-linear DNNs and to the properties of their loss surface. Beyond retrieving the state-of-the-art results from the literature, we argue that our work provides a very promising novel tool for analyzing the DNNs and support this claim by proposing concrete open problems that can advance significantly our understanding of DNNs when solved.},
+  eventtitle = {International Conference on Artificial Intelligence and Statistics},
+  langid = {english},
+  file = {/home/savar/Zotero/storage/97BFL9VS/Vesseron et al. - 2021 - Deep Neural Networks Are Congestion Games From Lo.pdf;/home/savar/Zotero/storage/FEHXV5KD/Vesseron et al. - 2021 - Deep Neural Networks Are Congestion Games From Lo.pdf}
+}
+
+@inproceedings{wangHiddenConvexOptimization2022,
+  title = {The Hidden Convex Optimization Landscape of Regularized Two-Layer ReLU Networks: An Exact Characterization of Optimal Solutions},
+  shorttitle = {The Hidden Convex Optimization Landscape of Regularized Two-Layer ReLU Networks},
+  booktitle = {Tenth Int. Conf. Learn. Represent. ICLR 2022 Virtual Event April 25-29 2022},
+  author = {Wang, Yifei and Lacotte, Jonathan and Pilanci, Mert},
+  date = {2022},
+  publisher = {OpenReview.net},
+  url = {https://openreview.net/forum?id=Z7Lk2cQEG8a},
+  urldate = {2023-03-11},
+  file = {/home/savar/Zotero/storage/FJ85TBX9/Wang et al. - 2022 - The Hidden Convex Optimization Landscape of Two-La.pdf}
+}
+
+@online{wangOverparameterizedReLUNeural2022,
+  title = {Overparameterized ReLU Neural Networks Learn the Simplest Models: Neural Isometry and Exact Recovery},
+  shorttitle = {Overparameterized ReLU Neural Networks Learn the Simplest Models},
+  author = {Wang, Yifei and Hua, Yixuan and Candés, Emmanuel and Pilanci, Mert},
+  date = {2022-10-04},
+  eprint = {2209.15265},
+  eprinttype = {arxiv},
+  eprintclass = {cs, math, stat},
+  url = {http://arxiv.org/abs/2209.15265},
+  urldate = {2023-01-04},
+  abstract = {The practice of deep learning has shown that neural networks generalize remarkably well even with an extreme number of learned parameters. This appears to contradict traditional statistical wisdom, in which a trade-off between model complexity and fit to the data is essential. We set out to resolve this discrepancy from a convex optimization and sparse recovery perspective. We consider the training and generalization properties of two-layer ReLU networks with standard weight decay regularization. Under certain regularity assumptions on the data, we show that ReLU networks with an arbitrary number of parameters learn only simple models that explain the data. This is analogous to the recovery of the sparsest linear model in compressed sensing. For ReLU networks and their variants with skip connections or normalization layers, we present isometry conditions that ensure the exact recovery of planted neurons. For randomly generated data, we show the existence of a phase transition in recovering planted neural network models. The situation is simple: whenever the ratio between the number of samples and the dimension exceeds a numerical threshold, the recovery succeeds with high probability; otherwise, it fails with high probability. Surprisingly, ReLU networks learn simple and sparse models even when the labels are noisy. The phase transition phenomenon is confirmed through numerical experiments.},
+  langid = {english},
+  pubstate = {preprint},
+  keywords = {Computer Science - Information Theory,Computer Science - Machine Learning,Mathematics - Optimization and Control,Statistics - Machine Learning},
+  file = {/home/savar/Zotero/storage/PTAFS73N/Wang et al. - 2022 - Overparameterized ReLU Neural Networks Learn the S.pdf}
+}
+
+@online{woodworthKernelRichRegimes2020,
+  title = {Kernel and Rich Regimes in Overparametrized Models},
+  author = {Woodworth, Blake and Gunasekar, Suriya and Lee, Jason D. and Moroshko, Edward and Savarese, Pedro and Golan, Itay and Soudry, Daniel and Srebro, Nathan},
+  date = {2020-07-27},
+  eprint = {2002.09277},
+  eprinttype = {arxiv},
+  eprintclass = {cs, stat},
+  url = {http://arxiv.org/abs/2002.09277},
+  urldate = {2023-06-01},
+  abstract = {A recent line of work studies overparametrized neural networks in the “kernel regime,” i.e., when during training the network behaves as a kernelized linear predictor, and thus, training with gradient descent has the effect of finding the corresponding minimum RKHS norm solution. This stands in contrast to other studies which demonstrate how gradient descent on overparametrized networks can induce rich implicit biases that are not RKHS norms. Building on an observation by Chizat et al. [6], we show how the scale of the initialization controls the transition between the “kernel” (aka lazy) and “rich” (aka active) regimes and affects generalization properties in multilayer homogeneous models. We provide a complete and detailed analysis for a family of simple depth-D linear networks that exhibit an interesting and meaningful transition between the kernel and rich regimes, and highlight an interesting role for the width of the models. We further demonstrate this transition empirically for matrix factorization and multilayer non-linear networks.},
+  langid = {english},
+  pubstate = {preprint},
+  keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/home/savar/Zotero/storage/YQ35EMIR/Woodworth et al. - 2020 - Kernel and Rich Regimes in Overparametrized Models.pdf}
+}
+
+@online{xiaoDynamicalIsometryMean2018,
+  title = {Dynamical Isometry and a Mean Field Theory of CNNs: How to Train 10,000-Layer Vanilla Convolutional Neural Networks},
+  shorttitle = {Dynamical Isometry and a Mean Field Theory of CNNs},
+  author = {Xiao, Lechao and Bahri, Yasaman and Sohl-Dickstein, Jascha and Schoenholz, Samuel S. and Pennington, Jeffrey},
+  date = {2018-07-10},
+  eprint = {1806.05393},
+  eprinttype = {arxiv},
+  eprintclass = {cs, stat},
+  url = {http://arxiv.org/abs/1806.05393},
+  urldate = {2023-03-28},
+  abstract = {In recent years, state-of-the-art methods in computer vision have utilized increasingly deep convolutional neural network architectures (CNNs), with some of the most successful models employing hundreds or even thousands of layers. A variety of pathologies such as vanishing/exploding gradients make training such deep networks challenging. While residual connections and batch normalization do enable training at these depths, it has remained unclear whether such specialized architecture designs are truly necessary to train deep CNNs. In this work, we demonstrate that it is possible to train vanilla CNNs with ten thousand layers or more simply by using an appropriate initialization scheme. We derive this initialization scheme theoretically by developing a mean field theory for signal propagation and by characterizing the conditions for dynamical isometry, the equilibration of singular values of the input-output Jacobian matrix. These conditions require that the convolution operator be an orthogonal transformation in the sense that it is norm-preserving. We present an algorithm for generating such random initial orthogonal convolution kernels and demonstrate empirically that they enable efficient training of extremely deep architectures.},
+  langid = {english},
+  pubstate = {preprint},
+  keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/home/savar/Zotero/storage/GIDU5AAX/Xiao et al. - 2018 - Dynamical Isometry and a Mean Field Theory of CNNs.pdf}
+}

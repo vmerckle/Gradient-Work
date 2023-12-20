@@ -1,0 +1,90 @@
+Discretize mean-field limit using JKO, see if it is similar to GD.
+
+\textbf{Mean-field limit}\citep{chizatGlobalConvergenceGradient2018}: For a sufficiently large width, the training dynamics of a NN can be coupled with the evolution of a probability distribution described by a PDE. \textbf{Pros:} Using a smaller initialization scale than in the NTK regime, feature learning is allowed to happen. \textbf{Cons:} Discretization is not trivial, and PDE are a bit harder than linear models. The theory is lacking a lot of useful results.
+
+\begin{itemize}
+	\item \colorbox{Thistle!40}{Block:} obligé de modifier l'algo du papier pour que ça converge, on sait plus trop se qu'il se passe (potentiellement on fait une GD..)
+	\item \colorbox{Emerald!30}{Next step:} donner une initialisation spécifique (uniquement une activation) et voir si ça se diffuse en suivant les coûts. Utiliser JKOnet pour tester aussi.
+\end{itemize}
+
+\section{Classic setup}
+
+Data $x_j \in \R^d$ and labels $y_j \in \R$, $j=1,..,n$
+
+First layer $w_i \in \R^d$, second layer $\alpha_i \in \R$, $i=1,..,m$
+
+$\step>0$ step-size, $\reg$ regularization
+
+\begin{equation}
+	 \mathcal{L}(W, \alpha) = \sum_{j=1}^n \bigg( \underbrace{\sum_{i=1}^m \max(0, w_i^\top x_j) \alpha_i}_{\text{Network's Output}} - y_j \bigg)^2 + \underbrace{\lambda \sum_{i=1}^m \| w_i \|^2_2 + \alpha_i^2}_{\text{Weight Decay}}
+\end{equation}
+
+
+\textbf{Discret time.}
+
+Full-batch gradient descent
+
+\begin{equation}
+	(W, \alpha)_{t+1} = (W, \alpha)_t - \step \nabla \mathcal{L}((W, \alpha)_t)
+\end{equation}
+
+Implicit
+
+\begin{equation}
+	\param_{t+1} = \argmin_{\param} \mathcal{L}(\param) +\frac{1}{2\step} \norm{\param - \param_t}
+\end{equation}
+
+\textbf{Continuous time.}
+
+Taking $\step \to 0$, we get the gradient flow: $\frac{\dd \param_t}{\dd t} = - \nabla \mathcal{L}(\param_t)$. We make ReLU differentiable with $\sigma'(0)=0$ as justified in \citep{boursierGradientFlowDynamics2022}.
+
+\section{Using a measure}
+
+\begin{equation}
+	\int_\paramS m(\param; x) \dd \mu(\param) = \frac{1}{m} \sum_{i=1}^{m} \inp{\vw_i}{\vx_j}_+ \alpha_i
+\end{equation}
+
+Different ways to use a measure:
+
+\begin{itemize}
+	\item $\paramS = \R^d \times \R$, measure $\mu = \frac{1}{m} \sum_{i=1}^{m} \dirac_{\param_i = (\vw_i, \alpha_i)}$, output of one neuron $m(\param=(\vw,\alpha); \vx) = \inp{\vx}{\vw}_+ \alpha$: (works, output matches discrete)
+	\item $\paramS = \R^d$, measure $\mu = \frac{1}{m} \sum_{i=1}^{m} \alpha_i \dirac_{\param_i = \vw_i}$ output of one neuron $m(\param=\vw; \vx) = \inp{\vx}{\vw}_+$ (works)
+	\item $\paramS = \R^d \times \R^d$, output of one neuron $m(\tilde{\vw}_+, \tilde{\vw}_-, \vx) = \inp{\tilde{\vw}_+}{\vx} - \inp{\tilde{\vw}_-}{\vx}$ (works, separate neg and positive)
+	\item $\paramS = (S^{d-1} \times \R)$, output of one neuron $m((\vd, \tilde{\alpha}); \vx) = \tilde{\alpha} \inp{\vd}{\vx} = \tilde{\alpha}\  \mathds{1}_{\inp{\vd}{\vx}>0} $ (works), mapping: $\vd = \frac{\vw}{\norm{\vw}}$ and $\tilde{\alpha}=\norm{\vw} \alpha$. Gradient are not equal to discrete.
+\end{itemize}
+
+\subsection{Algorithm, discretize the measure's space}
+
+Take a grid of $N$ points in $\paramS$, we can match the notation above by taking a neuron for each point of the grid $m=N$.
+
+\begin{equation}
+	\mu(t+1) = \argmin_{\mu \in \mathcal{M}(\paramS)} F(\mu) + \frac{1}{2 \step} W_2(\mu; \mu(t))
+\end{equation}
+
+A essayer: KL à la place de distance wasserstein.
+
+Remark: le 1/m c'est principalement pour être ok à l'infini. Dans le papier JKO \citep{carlierConvergenceEntropicSchemes2017} ils utilisent un vecteur de proba
+
+\subsection{Infinity and beyond}
+
+Take $\step \to 0$, get gradient flow. Take $m \to \infty$, get wasserstein gradient flow \citep{bachGradientDescentInfinitely2021}, and if it converges, it goes to the global optimal.
+
+\subsection{JKO}
+
+Use something out of the box to compute JKO flow
+
+\begin{itemize}
+	\item \href{https://arxiv.org/pdf/2206.05262.pdf}{Meta Optimal Transport (paper)} and \href{https://github.com/facebookresearch/meta-ot}{(code git)}: InputConvexNN to predict solution of OT problem
+	\item \href{https://arxiv.org/pdf/2106.06345.pdf}{JKOnet (paper)} and \href{https://github.com/bunnech/jkonet}{(code git)}:
+		\begin{itemize}
+			\item \href{https://github.com/bunnech/jkonet/tree/main/jkonet/models}{/models} \verb|->| sinkhorn loss defined in loss.py, differentiable loop in fixed point.py
+			\item next step: trying to create the right \href{https://ott-jax.readthedocs.io/en/latest/_autosummary/ott.geometry.geometry.Geometry.html#ott.geometry.geometry.Geometry}{Geometry} object from OTT library, which is what's used for sinkhorn
+			\item Or try to use the whole thing?
+		\end{itemize}
+\end{itemize}
+
+\subsubsection{Grid problems}
+
+The grid currently dictate the neuron's scale, giving multiple choices. One solution: duplicate each neuron, make one with a small scale and one with a very big scale.
+
+

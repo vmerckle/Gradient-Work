@@ -1,0 +1,2 @@
+- *code* -> simulations
+- *tex* -> produce pdf

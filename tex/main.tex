@@ -1,0 +1,125 @@
+% this will be read by vimtex as well
+%% %! TeX program = lualatex
+
+% More space version
+%\documentclass[a4paper, 12pt]{article}
+%\usepackage[top=1.5cm, bottom=1.5cm, left=2.0cm, right=2.0cm]{geometry}}
+
+% ICLR version
+\documentclass{article} % For LaTeX2e
+\usepackage[dvipsnames]{xcolor} % conflict with.. ICLR? %.. actually no, just need to call it first otherwise other packages import it..
+\usepackage{iclr2023_conference,times}
+
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{kpfonts} %http://distrib-coffee.ipsl.jussieu.fr/pub/mirrors/ctan/fonts/kpfonts/doc/kpfonts.pdf
+
+
+\usepackage{comment}
+%\excludecomment{comment} % this is already the default
+\includecomment{slow}
+%\excludecomment{slow} % comment this to slow the  compile time
+
+\usepackage{graphicx} % includegraphics...
+\graphicspath{ {./imgs/} } %relative to main tex file
+\usepackage{amsmath, amsfonts, amsthm, amssymb}
+\usepackage{dsfont}
+%\usepackage{bm} % make any math symbol bold
+%\usepackage[bb=dsserif]{mathalpha}
+\usepackage{booktabs} % bettertables
+
+\usepackage{enumitem} % allows easy modification to enumerate
+\setitemize{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt} % for example, make it more compact
+\usepackage[hypertexnames=false]{hyperref}
+\usepackage{url}
+
+%\definecolor{lightred}{cmyk}{0, 0.7808, 0.4429, 0.1412}
+\definecolor{citecolor}{HTML}{626262}
+\hypersetup{
+  urlcolor  = blue, %Aquamarine!85!black,
+	colorlinks = true,
+	citecolor=citecolor,
+}
+
+
+% for pandoc, see https://github.com/jgm/pandoc-templates/blob/master/default.latex
+%\providecommand{\tightlist}{%
+%  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+
+% trying to add color to emphasis text..
+%\DeclareTextFontCommand{\emph}{\em\color{RubineRed}}
+
+% Theorem environments, need amsthm
+% https://www.overleaf.com/learn/latex/Theorems_and_proofs#Numbered_theorems.2C_definitions.2C_corollar
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+\newtheorem{example}{Example}
+\newtheorem{assumption}{Assumption}
+\newtheorem{property}{Property}
+
+
+%those two lines remove a warning about etex, https://tex.stackexchange.com/questions/285950/package-autonum-needs-the-obsolete-etex-package
+%don't ever mention those lines to me
+\expandafter\def\csname ver@etex.sty\endcsname{3000/12/31}
+\let\globcount\newcount
+\usepackage{autonum} %amsmath -> hyperref->cleverref -> autonum
+
+% https://tex.stackexchange.com/questions/471651/cref-not-working-with-autonum-but-cref-without-the-capital-letter-works
+\makeatletter
+\autonum@generatePatchedReferenceCSL{Cref}
+\makeatother
+\input{math_commands.tex} % Optional math commands from https://github.com/goodfeli/dlbook_notation.
+%\usepackage{bbold}
+%\usepackage{unicode-math}
+
+\newcommand*{\iset}[2]{\{#1, \number\numexpr#1+1\relax \dots, #2 \}}
+
+\usepackage{mathtools} % needed for \shortvdot and \vdotwithin
+\DeclarePairedDelimiter\norm{\lVert}{\rVert} % good. norm* will fit the size
+\DeclarePairedDelimiterX{\inp}[2]{\langle}{\rangle}{#1, #2}
+\DeclareMathDelimiter{\given}{\mathbin}{symbols}{"6A}{largesymbols}{"0C}
+\DeclarePairedDelimiter\set{\{}{\}} % good. norm* will fit the size
+%\providecommand\given{}
+%\newcommand{\norm}[1]{\left\|#1\right\|} % bad
+%\newcommand{\norm*}[1]{\|#1\|}
+\newcommand{\diag}[1]{\text{diag}(#1)}
+\newcommand{\todo}[1]{\textcolor{red}{\tiny{(TODO)}}\textcolor{gray}{#1}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\step}{\gamma}
+\newcommand{\reg}{\beta}
+\newcommand{\paramS}{\Theta}
+\newcommand{\param}{\theta}
+\newcommand{\dirac}{\delta}
+
+\DeclareMathOperator*{\diver}{div}
+
+\usepackage[capitalize]{cleveref} % should be put near the bottom for reasons
+\def\valpha{{\bm{\alpha}}} %not in math commands, don't really want to edit math coms
+%\DeclareMathOperator*{\min}{min}
+
+\title{Jko}
+\author{Victor Mercklé\\
+\today} % iclr..
+\date{\today}
+\iclrfinalcopy %
+
+\begin{document}
+
+%\maketitle
+%\tableofcontents
+%\vspace{4cm}
+\input{content.tex}
+
+%\clearpage
+\vspace{3cm}
+\bibliography{mybib}
+\bibliographystyle{iclr2023_conference}
+\end{document}
