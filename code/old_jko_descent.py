@@ -20,11 +20,10 @@ class jko_descent:
         self.dtype = dtype  # float16 does a runtime error in pred
         self.device = device
         self.adamlr = adamlr
-        self.mynorm = lambda x: np.linalg.norm(x.flatten())
         if proxf == "scipy":
             self.proxf = self.prox_f_scipy
         elif proxf == "torch":
-            self.proxf = self.prox_f_pytorch_new
+            self.proxf = self.prox_f_pytorch
         else:
             raise Exception("You're drunk")
 
@@ -37,11 +36,12 @@ class jko_descent:
             norm = ly2.sum()
             #print("ly1", ly1.shape, "its norm", norm.shape)
             self.normori = norm
-            #self.grid = ly1.T*norm
-            self.grid = ly1.T*ly2
-            #self.p = np.ones_like(ly2)/len(ly2)
-            self.p = np.zeros_like(ly2)/len(ly2)
-            self.p[2] = 1
+            self.grid = ly1.T*norm
+            #print("grid", self.grid.shape)
+            #print(self.grid)
+            self.p = ly2/norm
+            #print("hopefully..", self.p.sum())
+            #print("p", self.p.shape,  self.p)
         else:
             self.normori = 1
             self.grid = grid
@@ -50,53 +50,124 @@ class jko_descent:
         self.K = getKernel(self.grid, self.gamma)
 
     def step(self):
-        print("here", [f"{x:.4f}" for x in self.p.flatten()])
         q = self.p
+        #print(f"qsum={q.sum():.2f}, q={q.flatten()}")
+        #print([w1**2+w2**2 for w1, w2 in self.grid])
+        # print("start step?", q.sum())
+        proxf = self.proxf
+        mynorm = lambda x: np.linalg.norm(x.flatten())
 
-        a, b = ( np.ones_like(self.p) for _ in range(2) )
+        a, b, u, u1, v, v1, pr = ( np.ones_like(self.p) for _ in range(7) )
 
-        eps = 0
         for i in range(self.interiter):
             if self.verb == 1:
                 print(f".", end="", flush=True)
 
-            self.p = self.proxf(self.K(b))
-            #print(i, "psum=", self.p.sum())
-            a = self.p / (self.K(b)+eps)
-            ConstrEven = self.mynorm(b * self.K(a) - q) / self.mynorm(q)
-            b = q / (self.K(a)+eps)
-            ConstrOdd = self.mynorm(a * self.K(b) - self.p) / self.mynorm(q)
-            #print("<<<", ConstrEven, ConstrOdd, ">>>")
+            # memory
+            a1 = a.copy()
+            b1 = b.copy()
+
+            u2 = u1.copy()
+            u1 = u.copy()
+
+            v2 = v1.copy()
+            v1 = v.copy()
+
+            # odd update 
+            a = a1 * u2
+            b = q / self.K(a)
+            #print(self.K(b).shape)
+
+            u = u2*a1/a
+            v = v2*b1/b
+
+            # Violation 
+            ConstrOdd = mynorm(a * self.K(b) - pr) / mynorm(q)
+            
+
+            # memory
+            a1 = a.copy()
+            b1 = b.copy()
+
+            u2 = u1.copy()
+            u1 = u.copy()
+
+            v2 = v1.copy()
+            v1 = v.copy()
+
+
+            # even update
+            b = b1 * v2
+            pr = proxf(a1 * u2 * self.K(b))
+            a = pr / self.K(b)
+
+            u = u2*a1/a
+            v = v2*b1/b
+
+
+            # violation
+            ConstrEven = mynorm(b * self.K(a) - q) / mynorm(q)
            
+
             if ConstrOdd < self.tol and ConstrEven < self.tol:
                 if self.verb == 1:
+                    print(f"     early exit after {(i+1)*2} iterations")
+                self.p = pr
+                return 
+        if self.verb == 1:
+            print(f"went over {self.interiter} iterations, exit")
+        self.p = pr
+        return 
+
+    def step(self):
+        print("running slimmed down")
+        q = self.p
+        #print("in", self.p.flatten())
+        mynorm = lambda x: np.linalg.norm(x.flatten())
+
+        a, b = ( np.ones_like(self.p) for _ in range(2) )
+
+        for i in range(self.interiter):
+            if self.verb == 1:
+                print(f".", end="", flush=True)
+            #print("before", f"a: {a.sum()}, b:{b.sum()}, p:{self.p.sum()}")
+            #print("kb?", self.K(b))
+            eps = 0
+            b = q / (self.K(a)+eps)
+            #print("before", f"a: {a.sum()}, b:{b.sum()}, p:{self.p.sum()}")
+            ConstrOdd = mynorm(a * self.K(b) - self.p) / mynorm(q) < self.tol
+            kb = self.K(b)
+            #print("kb?", kb)
+            #print(b.flatten())
+            #print(f"in -> {self.K(b).sum():.3f}")
+            self.p = self.proxf(a * self.K(b)) # as algo
+            #print("before", f"a: {a.sum()}, b:{b.sum()}, p:{self.p.sum()}")
+            #print(f"out[{i}]: {self.p.sum()}", "we got this out..")
+            # self.p = self.proxf(kb/kb.sum()) # optional forced normalization..
+            a = self.p / (self.K(b)+eps)
+            ConstrEven = mynorm(b * self.K(a) - q) / mynorm(q) < self.tol
+            #print("after", f"a: {a.sum()}, b:{b.sum()}, p:{self.p.sum()}")
+           
+            if ConstrOdd and ConstrEven:
+                if self.verb == 1:
                     print(f"early exit after {i} iterations")
-                    #print("INSIDE JKO iter")
                 return
+
 
         if self.verb == 1:
             print(f"went over {self.interiter} iterations, exit")
-            print("psum before norma:" ,self.p.sum())
-        print("so needed?", self.p.sum())
-        #self.p = self.p/self.p.sum()
+        print("psum before norma:" ,self.p.sum())
+        self.p = self.p/self.p.sum()
 
-    def params(self, regopti=False, oneway=False):
-        #ly1 = self.grid * np.sqrt(self.p)
-        #ly2 = np.sqrt(self.p)
-        if regopti:
+    def params(self, gridout=False):
+        if gridout:
+            return self.grid, self.p, self.psigns
+        else:
+            #ly1 = self.grid * np.sqrt(self.p)
+            #ly2 = np.sqrt(self.p)
             ly1 = self.grid.T/self.normori # some attempt at not modifying the scale
             ly2 = self.p*self.normori * self.psigns
             return ly1, ly2
-        elif oneway:
-            ly1 = self.grid.T*self.p.flatten()
-            ly2 = np.ones_like(self.p)
-            return ly1, ly2
-        else:
-            ly1 = self.grid.T
-            return ly1, self.p
-
-    def gridout(self):
-        return self.grid, self.p, self.psigns
 
     def loss(self):
         return self.f(self.p)
@@ -254,42 +325,6 @@ class jko_descent:
             #print(f"did all {maxit} iterations, grad=", torch.norm(p.grad).item())
         return allps.sum(axis=0)/nallps
         #return p.cpu().detach().numpy()
-
-    def prox_f_pytorch_new(self, q_in):
-        X = torch.tensor(self.X, dtype=self.dtype, device=self.device)
-        Y = torch.tensor(self.Y, dtype=self.dtype, device=self.device)
-        p = torch.tensor(q_in, dtype=self.dtype, device=self.device, requires_grad=True)
-        q = torch.tensor(q_in, dtype=self.dtype, device=self.device)
-        grid = torch.tensor(self.grid.T, dtype=self.dtype, device=self.device)
-        psigns= torch.tensor(self.psigns, dtype=self.dtype, device=self.device)
-        activ = (X @ grid) > 0
-        def obj(p, verb=False, onlyMSE=False):
-            effneurons = p * grid.T * psigns # (d,N) 
-            out = activ * (X @ effneurons.T) # (n, d) * (d, N) = (n, N)
-            yhat = torch.sum(out, axis=1)
-            mseloss = torch.nn.MSELoss()(yhat.flatten(), Y.flatten())
-            kldiv = p * torch.log(p/q) - p + q
-            kldivs = torch.sum(kldiv)/len(p)
-            if verb:
-                print("p,q", p, q)
-                print("kldiv", kldiv)
-                sys.exit(0)
-            if onlyMSE:
-                return mseloss.item(), kldivs.item()
-            return self.tau/self.gamma * mseloss +  kldivs
-
-        optimizer = torch.optim.AdamW([p], lr=self.adamlr, weight_decay=0)
-        #optimizer = torch.optim.SGD([p], lr=self.adamlr, weight_decay=0)
-        maxit = 100
-        for i in range(maxit):
-            p.grad = None
-            loss = obj(p)
-            loss.backward()
-            #print(loss.item())
-            optimizer.step()
-            p.data = torch.clamp(p.data, min=1e-16) # necessary
-        return p.cpu().detach().numpy()
-
         
     def prox_f_pytorch_ok(self, q_in):
         q_in = np.log(q_in+1e-7)

@@ -71,7 +71,15 @@ Take $\step \to 0$, get gradient flow. Take $m \to \infty$, get wasserstein grad
 
 \subsection{JKO}
 
-Use something out of the box to compute JKO flow
+What we compute by using the entropic JKO flow iterations.
+
+\begin{align}
+	\forall t > 0, p_{t+1} := & \prox^{W_{\gamma}}_{\tau f}(p_t) \\
+							= & \argmin_{p \in \text{simplex}} W_{\gamma}(p, q) + \tau f(p) \\
+							= &\argmin_{p \in \text{simplex}}  \left( \min_{\pi \in \Pi(p, q)} \inp{c}{\pi} + \gamma E(\pi) \right) + \tau f(p)
+\end{align}
+
+$f$ "should" be convex and with a closed form proximal
 
 \begin{itemize}
 	\item \href{https://arxiv.org/pdf/2206.05262.pdf}{Meta Optimal Transport (paper)} and \href{https://github.com/facebookresearch/meta-ot}{(code git)}: InputConvexNN to predict solution of OT problem
@@ -79,7 +87,6 @@ Use something out of the box to compute JKO flow
 		\begin{itemize}
 			\item \href{https://github.com/bunnech/jkonet/tree/main/jkonet/models}{/models} \verb|->| sinkhorn loss defined in loss.py, differentiable loop in fixed point.py
 			\item next step: trying to create the right \href{https://ott-jax.readthedocs.io/en/latest/_autosummary/ott.geometry.geometry.Geometry.html#ott.geometry.geometry.Geometry}{Geometry} object from OTT library, which is what's used for sinkhorn
-			\item Or try to use the whole thing?
 		\end{itemize}
 \end{itemize}
 

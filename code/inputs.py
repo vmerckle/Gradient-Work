@@ -71,6 +71,19 @@ def getInput2(args):
         m, d, n = 5, 2, 5
         Xb = np.linspace(-1, 1, n)[:, None]
         #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
+        X, Y = add_bias(Xb), Xb*0.5+0.6
+
+        ly1 = rng.uniform(-1, 1, size=(d, m))
+        ly1 = np.array([[0.5, 0.6], [1, 0.6], [-1, 0.3]]).T
+        ly1 = ly1 / np.linalg.norm(ly1, axis=0)
+        ly2 = np.ones((len(ly1.T), 1))
+        # double the number of neurons to allow for negative neurons..
+        # ly1 = np.concatenate((ly1, ly1*1.0), axis=1)
+        # ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0)
+    elif c == 44: # working but simpler
+        m, d, n = 5, 2, 5
+        Xb = np.linspace(-1, 1, n)[:, None]
+        #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
         X, Y = add_bias(Xb), Xb*0.5+0.3
 
         ly1 = rng.uniform(-1, 1, size=(d, m))

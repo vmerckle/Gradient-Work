@@ -120,6 +120,7 @@ def simpleArun(X, myanim):
             return animobj.update_aux(di, i) # so we simply don't do the step
         opti.step()
         nly1, nly2 = opti.params()
+        #print(nly1, nly2)
         di = NNtoIter(X, Y, Xout, nly1, nly2, run=True)
         lly1.append(nly1)
         lly2.append(nly2)
