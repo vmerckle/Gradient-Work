@@ -115,7 +115,7 @@ class LessNiceAnim:
         self.ax.grid(True, alpha=0.2)
 
         cvx_n1, cvx_n2, cvx_c = [], [], []
-        if data["ly1s"] is not None:
+        if "ly1s" in data and data["ly1s"] is not None:
             for (w1, w2), alp in zip(data["ly1s"].T, data["ly2s"]):
                 cvx_n1.append(w1*alp)
                 cvx_n2.append(w2*alp)
@@ -156,8 +156,8 @@ class LessNiceAnim:
             if alpha > 0:
                 colors.append("green")
             else:
-                colors.append("green")
-                #colors.append("red")
+                #colors.append("green")
+                colors.append("red")
             d = self.fun_marker.transformed(mpl.transforms.Affine2D().rotate_deg(np.arctan(w2/w1)*360/2/np.pi+90))
             mks.append(d)
 
@@ -180,7 +180,7 @@ class LessNiceAnim:
         return animation.FuncAnimation(self.fig, self.update, frames=self.frames, blit=blit, interval=interval)
 
 class NiceAnim:
-    def __init__(self, fig, data, runanim=False):
+    def __init__(self, fig, data, runanim=False, frames=None):
         self.fig = fig
         # load data
         self.Xb, self.Y, self.X = data["Xb"], data["Y"][:, 0], data["X"]
@@ -193,6 +193,11 @@ class NiceAnim:
         else:
             self.D = data["iterdata"]
             self.Nframe = len(self.D)
+
+            if frames is None:
+                self.frames = list(range(self.Nframe))
+            else:
+                self.frames = frames
             # sanity checks on data, looks useless but this is python
             assert np.all([di["ly1"].shape == (self.d, self.m) for di in self.D])
             assert np.all([di["ly2"].shape == (self.m, 1) for di in self.D])
@@ -229,7 +234,9 @@ class NiceAnim:
         for i in range(self.m):
             w1, w2 = ly1.T[i]
             alpha, = ly2[i]
-            xl[i], yl[i] = lact[i], lnorm[i]*100
+            xl[i], yl[i] = lact[i], 0.5
+            xl[i], yl[i] = lact[i], min(1, max(alpha*20, 0.1))
+            xl[i], yl[i] = lact[i], lnorm[i]*10#*100
             if alpha > 0:
                 colors.append("green")
             else:
@@ -257,4 +264,4 @@ class NiceAnim:
         return self.update_aux(di, frame)
 
     def getAnim(self, interval, blit=True):
-        return animation.FuncAnimation(self.fig, self.update, frames=list(range(self.Nframe)), blit=blit, interval=interval)
+        return animation.FuncAnimation(self.fig, self.update, frames=self.frames, blit=blit, interval=interval)

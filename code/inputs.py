@@ -36,7 +36,7 @@ def getInput2(args):
 
     rng = np.random.default_rng(seed) # do not use np.random, see https://numpy.org/doc/stable/reference/random/generator.html#distributions
 
-    c = 4
+    c = 45
     if c == 1: # old
         m, d, n = 10, 2, 20
         #X, Y = add_bias(Xb), np.sin(10*Xb)*Xb*0.3
@@ -67,6 +67,36 @@ def getInput2(args):
         # double the number of neurons to allow for negative neurons..
         ly1 = np.concatenate((ly1, ly1*1.0), axis=1)
         ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0)
+    elif c == 45: # working but simpler
+        m, d, n = 5, 2, 5
+        Xb = np.linspace(-1, 1, n)[:, None]
+        #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
+        X, Y = add_bias(Xb), Xb*0.5+0.6
+
+        newneu = []
+        m = 100
+        laydeu = []
+        for acti in np.linspace(-2, 2, m):
+            if rng.integers(0, 2) == 0:
+                a = 1
+            else:
+                a = -1
+            b = (acti+1e-5)/a
+            #a = -b/(acti+1e-5)
+            newneu.append([a, b])
+            if rng.integers(0, 2) == 0:
+                laydeu.append(1)
+            else:
+                laydeu.append(-1)
+
+
+        ly1 = np.array(newneu).T
+        ly1 = ly1 / np.linalg.norm(ly1, axis=0)
+        ly2 = np.ones((len(ly1.T), 1))
+        ly2 = np.array(laydeu)[:, None]
+        # double the number of neurons to allow for negative neurons..
+        # ly1 = np.concatenate((ly1, ly1*1.0), axis=1)
+        # ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0)
     elif c == 4: # working but simpler
         m, d, n = 5, 2, 5
         Xb = np.linspace(-1, 1, n)[:, None]

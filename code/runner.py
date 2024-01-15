@@ -27,10 +27,10 @@ def NNtoIter(Xt, Yt, allX, ly1, ly2, run=False):
     #lnorm = np.abs(ly1[1,:].flatten() * ly2.flatten()) # -> slope of the ReLU unit
     #lnorm =np.abs(ly2.flatten()) # -> similar alpha = similar speed. But the first layer's norm also matter...
     lspeed = 1/np.linalg.norm(ly1, ord=2, axis=0) * np.abs(ly2.flatten())
-    lslope = np.abs(ly1[1,:].flatten() * ly2.flatten())
+    lslope = np.abs(ly1[0,:].flatten() * ly2.flatten())
     lsize = 1/(lspeed+1) + (40 if run else 0)# slower = bigger
-    lnorm = lslope
     lnorm = np.linalg.norm(ly1, ord=2, axis=0) * ly2.flatten() # -> mult or addition, just an "idea" of how big the neuron is
+    lnorm = lslope
     lact = np.array([-w2/w1 for w1, w2 in ly1.T])
     Yout = np_2layers(allX, ly1, ly2)
     Yhat = np_2layers(Xt, ly1, ly2)
@@ -116,7 +116,9 @@ def simpleArun(X, myanim):
             if not already[0]:
                 print("it=", i, "loss=", opti.loss())
                 already[0] = True
-            di = NNtoIter(X, Y, Xout, lly1[0], lly2[0], run=True)
+
+            nly1, nly2 = opti.params()
+            di = NNtoIter(X, Y, Xout, nly1, nly2, run=True)
             return animobj.update_aux(di, i) # so we simply don't do the step
         opti.step()
         nly1, nly2 = opti.params()
@@ -137,6 +139,8 @@ def simpleArun(X, myanim):
         ani = animation.FuncAnimation(fig, update_ok, frames=list(range(100000)), blit=True, interval=1)
         animobj.ax.set_xlim(-1.2, 1.2)
         animobj.ax.set_ylim(-1.2, 1.2)
+        animobj.ax.set_xlim(-2.2, 2.2)
+        animobj.ax.set_ylim(-0.2, 2.4)
         plt.show()
     except KeyboardInterrupt:
         print("Normal interrupt at num=", num)
@@ -152,7 +156,8 @@ def simplecalcs(X):
     allXb = np.linspace(-2,2, 1000)
     allX = add_bias(allXb)
     iterdata = [NNtoIter(X, Y, allX, lly1[i], lly2[i]) for i in range(len(lly1))]
-    normData(iterdata, "lnorm", 0, 1)
+    normData(iterdata, "lnorm", 0, 1) 
+    print("wtf")
     normData(iterdata, "lsize", 10, 70)
     return {"Xout": allXb, "iterdata": iterdata}
 
@@ -186,6 +191,7 @@ if __name__ == '__main__':
     parser.add_argument("--proxf", default="scipy", choices=["scipy", "torch"], help="algo=jko, how to compute the prox")
     parser.add_argument("--adamlr", default=1e-3, type=float, help="algo=jko, proxf=torch, learning rate for gradient descent")
     parser.add_argument("--seed", type=int, default=4, help="seed")
+    parser.add_argument("--skiptoseconds", default=10, type=float, help="maximum time in seconds, will skip frame to match")
     args = parser.parse_args()
     code = args.output
     if code != "out_new" and args.movieout == "out_new":
@@ -240,12 +246,22 @@ if __name__ == '__main__':
         print("No animation requested")
         sys.exit(0)
 
+
+    XXX = X1|X2|X3
+    nframe = len(XXX["iterdata"])
+    skipv = nframe/args.fps/args.skiptoseconds
+    l = [i for i in range(0, nframe, int(skipv+0.99))]
+    if (nframe-1) not in l:
+        l.append(nframe-1)
+    #l = list(range(0, 70))
     print("Animation setup..")
     fig = plt.figure(figsize=(10,10))
-    animobj = myanim(fig, X1|X2|X3)
+    animobj = myanim(fig, X1|X2|X3, frames=l)
     ani = animobj.getAnim(1)
     animobj.ax.set_xlim(-1.2, 1.2)
     animobj.ax.set_ylim(-1.2, 1.2)
+    animobj.ax.set_xlim(-2.2, 2.2)
+    animobj.ax.set_ylim(-0.2, 2.4)
 
     # todo implement some frame skipping
     if args.movie:
@@ -253,6 +269,6 @@ if __name__ == '__main__':
         writer = animation.FFMpegWriter(fps=args.fps)#, bitrate=1800)
         name = f"outputs/{codemov}_movie.gif"
         ani.save(name, writer=writer)
-        print("saved as name")
+        print(f"saved as {name}")
     else:
         plt.show()

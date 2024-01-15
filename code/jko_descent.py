@@ -38,19 +38,19 @@ class jko_descent:
             #print("ly1", ly1.shape, "its norm", norm.shape)
             self.normori = norm
             #self.grid = ly1.T*norm
-            self.grid = ly1.T*ly2
-            #self.p = np.ones_like(ly2)/len(ly2)
-            self.p = np.zeros_like(ly2)/len(ly2)
-            self.p[2] = 1
+            self.grid = ly1.T#*ly2
+            self.p = np.ones_like(ly2)
+            #self.p = np.zeros_like(ly2)/len(ly2)
+            #self.p[25] = 1
         else:
             self.normori = 1
             self.grid = grid
             self.p = p
 
-        self.K = getKernel(self.grid, self.gamma)
+        self.K = getKernel(self.grid, self.gamma) # maybe psigns, maybe not TODO
 
     def step(self):
-        print("here", [f"{x:.4f}" for x in self.p.flatten()])
+        #print("here", [f"{x:.4f}" for x in self.p.flatten()])
         q = self.p
 
         a, b = ( np.ones_like(self.p) for _ in range(2) )
@@ -93,7 +93,7 @@ class jko_descent:
             return ly1, ly2
         else:
             ly1 = self.grid.T
-            return ly1, self.p
+            return ly1, self.p * self.psigns
 
     def gridout(self):
         return self.grid, self.p, self.psigns
@@ -369,7 +369,7 @@ class jko_descent:
         #print(step)
         def objective(p):
             # annoying facts: p=(N,) q=(N, 1)
-            return self.f(p)*step + kl_div(p,q.flatten()).sum()
+            return self.f(p)+ kl_div(p,q.flatten()).sum()*step
         bounds = [(0, None) for _ in q] # positivity
         res = minimize(objective , q.flatten(), bounds=bounds)
 
@@ -388,6 +388,21 @@ def getKernel(grid, gamma):
     dist = distance.pdist(grid, metric="sqeuclidean") #sq-uared
     d = distance.squareform(dist) # get NxN matrix of all distance diffs
     Gibbs = np.exp(-d/gamma)
+    #Gibbs = np.eye(len(grid))+1e-3 # don't allow movement... basically
+    print(Gibbs)
+
+    def aux(p):  # Gibbs Kernel applied to a vector p 
+        return np.dot(Gibbs,p)
+    return aux
+
+# kernel with only distance between activation points
+def getKernel(grid, gamma):
+    grid = [[-b/a,1] for (a, b) in grid]
+    dist = distance.pdist(grid, metric="sqeuclidean") #sq-uared
+    d = distance.squareform(dist) # get NxN matrix of all distance diffs
+    Gibbs = np.exp(-d/gamma)
+    #Gibbs = np.eye(len(grid))+1e-3 # don't allow movement... basically
+    print(Gibbs)
 
     def aux(p):  # Gibbs Kernel applied to a vector p 
         return np.dot(Gibbs,p)

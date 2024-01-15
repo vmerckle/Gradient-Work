@@ -20,10 +20,6 @@ Y, X = np.meshgrid(t, t)
 # Gaussian function
 gaussian = lambda m, s: np.exp(-((X - m[0])**2 + (Y - m[1])**2) / (2 * s**2))
 
-# Load attracting potential and initial density
-rectangle = lambda c, w: np.double(np.maximum(np.abs(X - c[0]) / w[0], np.abs(Y - c[1]) / w[1]) < 1)
-disk = lambda m, s: (X - m[0])**2 + (Y - m[1])**2 <= s**2
-
 # Set the size of the matrix
 Ne = N**2
 
@@ -33,9 +29,6 @@ p0 = gaussian([0.5, 0.9], 0.14)
 # Mask
 r = 0.23
 mask = np.double((X - 0.5)**2 + (Y - 0.45)**2 >= r**2)
-
-# Target point
-target = np.round(N * np.array([0.5, 0.03]))
 
 # Attraction potential
 w = 0.5 * Y
