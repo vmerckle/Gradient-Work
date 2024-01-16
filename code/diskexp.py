@@ -76,7 +76,7 @@ for it in range(nsteps - 1):
             sys.exit(0)
         if Constr[0][-1] < tol and Constr[1][-1] < tol:
             break
-        print(np.sum(p))
+        #print(np.sum(p))
     p_list.append(p)
 
 
@@ -87,6 +87,3 @@ def update(frame):
     ax.imshow(p_list[frame], cmap='gray')
     ax.set_title(f'Frame {frame}/{len(p_list)}')
 
-ani = FuncAnimation(fig, update, frames=len(p_list), interval=100)
-ani.save("outputs/disk_py.gif", writer=animation.FFMpegWriter())#, bitrate=1800)
-plt.show()

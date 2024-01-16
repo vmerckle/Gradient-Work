@@ -40,6 +40,7 @@ class jko_descent:
             #self.grid = ly1.T*norm
             self.grid = ly1.T#*ly2
             self.p = np.ones_like(ly2)
+            self.p = np.zeros_like(ly2)/len(ly2)+1e0
             #self.p = np.zeros_like(ly2)/len(ly2)
             #self.p[25] = 1
         else:
@@ -79,6 +80,30 @@ class jko_descent:
             print("psum before norma:" ,self.p.sum())
         print("so needed?", self.p.sum())
         #self.p = self.p/self.p.sum()
+
+    def step(self):
+        q = self.p
+        qnorm = self.mynorm(q)
+        a, b = (np.ones_like(self.p) for _ in range(2))
+
+        # this seems to remove a few early useless iterations
+        a = self.p
+        ka = self.K(a)
+        b = q / ka
+        kb = self.K(b)
+
+        for i in range(self.interiter):
+            self.p = self.proxf(kb)
+            a = self.p / kb
+            ka = self.K(a)
+            ConstrEven = self.mynorm(b * ka - q) / qnorm
+            b = q / ka
+            kb = self.K(b)
+            ConstrOdd = self.mynorm(a * kb - self.p) / qnorm
+           
+            if ConstrOdd < self.tol and ConstrEven < self.tol:
+                print(f"early exit after {i} iterations")
+                return
 
     def params(self, regopti=False, oneway=False):
         #ly1 = self.grid * np.sqrt(self.p)
@@ -372,7 +397,6 @@ class jko_descent:
             return self.f(p)+ kl_div(p,q.flatten()).sum()*step
         bounds = [(0, None) for _ in q] # positivity
         res = minimize(objective , q.flatten(), bounds=bounds)
-
         return res.x.reshape(-1,1)
 
     def f(self, p):

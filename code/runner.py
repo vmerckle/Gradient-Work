@@ -89,7 +89,6 @@ def simpleCrun(X):
                 #assert False
     except KeyboardInterrupt:
         print("Normal interrupt at num=", num)
-    print("say something?")
     #except Exception as e:
     #   print("Something went really wrong at num=", num)
     #   print(e)
@@ -119,11 +118,15 @@ def simpleArun(X, myanim):
 
             nly1, nly2 = opti.params()
             di = NNtoIter(X, Y, Xout, nly1, nly2, run=True)
+            p = opti.p
+            di["p"] = p
             return animobj.update_aux(di, i) # so we simply don't do the step
         opti.step()
         nly1, nly2 = opti.params()
         #print(nly1, nly2)
         di = NNtoIter(X, Y, Xout, nly1, nly2, run=True)
+        p = opti.p
+        di["p"] = p
         lly1.append(nly1)
         lly2.append(nly2)
         print("it=", i, "loss=", opti.loss())
@@ -157,7 +160,6 @@ def simplecalcs(X):
     allX = add_bias(allXb)
     iterdata = [NNtoIter(X, Y, allX, lly1[i], lly2[i]) for i in range(len(lly1))]
     normData(iterdata, "lnorm", 0, 1) 
-    print("wtf")
     normData(iterdata, "lsize", 10, 70)
     return {"Xout": allXb, "iterdata": iterdata}
 
@@ -183,12 +185,12 @@ if __name__ == '__main__':
     parser.add_argument("-o", "--output", help="output name", default="out_new")
     parser.add_argument( "--verbose", action="store_true")
     parser.add_argument("--scaleinit", default=1e-3, type=float, help="scalar factor to weight matrix")
-    parser.add_argument("--algo", default="torch", choices=["torch", "jko"])
+    parser.add_argument("--algo", default="torch", choices=["torch", "jko", "jkocvx"])
     parser.add_argument("-lr", type=float, default=1e-3, help="learning rate for algo='torch'")
     parser.add_argument("--jkosteps", default=10, type=int, help="algo=jko, number of internal iterations")
     parser.add_argument("--jkogamma", default=1, type=float, help="algo=jko, float")
     parser.add_argument("--jkotau", default=1, type=float, help="algo=jko, float")
-    parser.add_argument("--proxf", default="scipy", choices=["scipy", "torch"], help="algo=jko, how to compute the prox")
+    parser.add_argument("--proxf", default="scipy", choices=["scipy", "torch", "cvxpy"], help="algo=jko, how to compute the prox")
     parser.add_argument("--adamlr", default=1e-3, type=float, help="algo=jko, proxf=torch, learning rate for gradient descent")
     parser.add_argument("--seed", type=int, default=4, help="seed")
     parser.add_argument("--skiptoseconds", default=10, type=float, help="maximum time in seconds, will skip frame to match")

@@ -18,6 +18,7 @@ import pickle
 from utils import *
 from torch_descent import torch_descent
 from jko_descent import jko_descent
+from jko_cvxpy import jko_cvxpy
 
 
 
@@ -67,21 +68,20 @@ def getInput2(args):
         # double the number of neurons to allow for negative neurons..
         ly1 = np.concatenate((ly1, ly1*1.0), axis=1)
         ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0)
-    elif c == 45: # working but simpler
-        m, d, n = 5, 2, 5
+    elif c == 45: # linear data, neurons uniform by activation
+        m, d, n = 1000, 2, 5
         Xb = np.linspace(-1, 1, n)[:, None]
         #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
         X, Y = add_bias(Xb), Xb*0.5+0.6
 
         newneu = []
-        m = 100
         laydeu = []
         for acti in np.linspace(-2, 2, m):
             if rng.integers(0, 2) == 0:
                 a = 1
             else:
                 a = -1
-            b = (acti+1e-5)/a
+            b = (acti+1e-5)*a
             #a = -b/(acti+1e-5)
             newneu.append([a, b])
             if rng.integers(0, 2) == 0:
@@ -142,15 +142,16 @@ def getInput2(args):
         ly1 = np.array([[2, 0.5], [0.002, 0.0005], [0.002, 0.0005]]).T*scaling
         scales = np.linspace(0.01, 5, 5)
         ly2 = np.ones((len(ly1.T), 1))*scaling
+
     if args.algo == "torch":
         opti = torch_descent(device=device, algo="gd")
         opti.load(X, Y, ly1, ly2, lr, beta)
     elif args.algo == "jko":
         opti = jko_descent(interiter=args.jkosteps, gamma=args.jkogamma, tau=args.jkotau, verb=args.verbose, proxf=args.proxf, adamlr=args.adamlr)
         opti.load(X, Y, ly1, ly2, lr, beta)
-        optit = torch_descent(device=device)
-        optit.load(X, Y, ly1, ly2, lr, beta)
-        print(f"jkoloss:{opti.loss()} vs torchloss {optit.loss()}")
+    elif args.algo == "jkocvx":
+        opti = jko_cvxpy(interiter=args.jkosteps, gamma=args.jkogamma, tau=args.jkotau, verb=args.verbose, proxf=args.proxf, adamlr=args.adamlr)
+        opti.load(X, Y, ly1, ly2, lr, beta)
 
     return {"seed": seed,
             "gpudevice": gpudevice,
