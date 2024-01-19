@@ -127,12 +127,16 @@ def simpleArun(X, myanim):
         di = NNtoIter(X, Y, Xout, nly1, nly2, run=True)
         p = opti.p
         di["p"] = p
+
         lly1.append(nly1)
         lly2.append(nly2)
         print("it=", i, "loss=", opti.loss())
         l = opti.loss()
         if l < bestloss[0]:
             bestloss[0] = l
+        if abs(np.sum(p) - 1) > 1e-1 and False:
+            print("we probably diverged here.")
+            print("psum:", np.sum(p))
         if l/bestloss[0] > 10:
             print(".. completely diverged.")
              #assert False

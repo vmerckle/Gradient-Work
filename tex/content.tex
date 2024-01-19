@@ -1,11 +1,6 @@
 Discretize mean-field limit using JKO, see if it is similar to GD.
 
-\textbf{Mean-field limit}\citep{chizatGlobalConvergenceGradient2018}: For a sufficiently large width, the training dynamics of a NN can be coupled with the evolution of a probability distribution described by a PDE. \textbf{Pros:} Using a smaller initialization scale than in the NTK regime, feature learning is allowed to happen. \textbf{Cons:} Discretization is not trivial, and PDE are a bit harder than linear models. The theory is lacking a lot of useful results.
-
-\begin{itemize}
-	\item \colorbox{Thistle!40}{Block:} obligé de modifier l'algo du papier pour que ça converge, on sait plus trop se qu'il se passe (potentiellement on fait une GD..)
-	\item \colorbox{Emerald!30}{Next step:} donner une initialisation spécifique (uniquement une activation) et voir si ça se diffuse en suivant les coûts. Utiliser JKOnet pour tester aussi.
-\end{itemize}
+\textbf{Mean-field limit}\citep{chizatGlobalConvergenceGradient2018}: For a sufficiently large width, the training dynamics of a NN can be coupled with the evolution of a probability distribution described by a PDE.
 
 \section{Classic setup}
 

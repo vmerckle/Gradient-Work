@@ -40,9 +40,19 @@ class jko_descent:
             #self.grid = ly1.T*norm
             self.grid = ly1.T#*ly2
             self.p = np.ones_like(ly2)
-            self.p = np.zeros_like(ly2)/len(ly2)+1e0
+            self.p = np.zeros_like(ly2)/len(ly2)+1e1
             #self.p = np.zeros_like(ly2)/len(ly2)
             #self.p[25] = 1
+            self.p = np.zeros_like(ly2)*1.0 # important 1.0 otherwise it's an int array
+            self.p = self.p + 1e-10 # important 1.0 otherwise it's an int array
+            # and if you do intarray[0] = 0.2, it will truncate to 0.
+            ss = [3, 49, 400, 700, 900]
+            for sss in ss:
+                self.p[sss] = 0.2
+
+            self.p = np.zeros_like(ly2)*1.0 # important 1.0 otherwise it's an int array
+            self.p = self.p + 1e-10 # important 1.0 otherwise it's an int array
+            self.p[777] = 1.0
         else:
             self.normori = 1
             self.grid = grid
@@ -421,7 +431,7 @@ def getKernel(grid, gamma):
 
 # kernel with only distance between activation points
 def getKernel(grid, gamma):
-    grid = [[-b/a,1] for (a, b) in grid]
+    #grid = [[-b/a,1] for (a, b) in grid]
     dist = distance.pdist(grid, metric="sqeuclidean") #sq-uared
     d = distance.squareform(dist) # get NxN matrix of all distance diffs
     Gibbs = np.exp(-d/gamma)

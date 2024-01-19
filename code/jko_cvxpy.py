@@ -40,10 +40,16 @@ class jko_cvxpy:
             self.grid = ly1.T#*ly2
             self.p = np.ones_like(ly2)
             #self.p = np.ones_like(ly2)/len(ly2)
-            self.p = np.zeros_like(ly2)/len(ly2)
-            #self.p = np.zeros_like(ly2)/len(ly2)+1e-8
-            
-            self.p[25] = 0.2
+            #self.p = np.zeros_like(ly2)
+            self.p = np.zeros_like(ly2)*1.0 # important 1.0 otherwise it's an int array
+            self.p = self.p + 1e-10 # important 1.0 otherwise it's an int array
+            # and if you do intarray[0] = 0.2, it will truncate to 0.
+            ss = [3, 49, 400, 700, 900]
+            for sss in ss:
+                self.p[sss] = 0.2
+            self.p = np.zeros_like(ly2)*1.0 # important 1.0 otherwise it's an int array
+            self.p = self.p + 1e-10 # important 1.0 otherwise it's an int array
+            self.p[777] = 1.0
         else:
             self.normori = 1
             self.grid = grid
@@ -63,7 +69,8 @@ class jko_cvxpy:
         Yhat = cp.reshape(Yhat, (self.n, 1))
         self.residuals = cp.quad_over_lin(Yhat-self.Y, self.n)
         self.regularization = cp.sum(cp.kl_div(self.pvar, self.qparam))
-        constraints = [self.pvar >= 1e-8]
+        #constraints = [self.pvar >= 1e-10]
+        constraints = []
         obj = cp.Minimize(self.residuals + self.tau/self.gamma * self.regularization)
         self.problem = cp.Problem(obj, constraints)
 
@@ -73,22 +80,38 @@ class jko_cvxpy:
         qnorm = self.mynorm(q)
         a, b = (np.ones_like(self.p) for _ in range(2))
 
-        # this seems to remove a few early useless iterations
         kb = self.K(b)
+
+        a = self.p
+        ka = self.K(a)
+        b = q / ka
+        kb = self.K(b)
+        # this seems to remove a few early useless iterations
+        if 0:
+            a = self.p / self.K(b)
+            b = q / self.K(a)
+            kb = self.K(b)
+            print("a", np.max(a), np.min(a), np.any(np.isnan(a)))
+            print("b = q / ka", np.max(b), np.min(b), np.any(np.isnan(b)))
+            print(np.any(np.isnan(kb)))
 
         #los,kl = self.f(self.p), kl_div(kb.flatten(),self.p.flatten()).sum()*self.tau/self.gamma
         print("current sum:", np.sum(self.p))
         #print(self.p)
 
-
         for i in range(self.interiter):
             print(f".", end="", flush=True)
 
+            if np.any(np.isnan(kb)):
+                print("EXIT: kb is", np.sum(np.isnan(kb))/len(kb), "nan")
+            if np.any(kb<0):
+                print("EXIT: kb is", np.sum(kb<0)/len(kb), "neg")
             self.qparam.value = kb.flatten()
-            verb = False
+            verb = False 
             for _ in range(1):
                 try:
-                    self.problem.solve(verbose=verb)
+                    #self.problem.solve(verbose=verb, solver=cp.ECOS_BB, max_iters=50)
+                    self.problem.solve(verbose=verb, solver=cp.ECOS, max_iters=100)
                     self.p = self.pvar.value[:, None]
                     break
                 except cp.error.SolverError as e:
@@ -99,6 +122,8 @@ class jko_cvxpy:
                 print("some are negs..")
             #print(f"error={self.res.value:.9f}, kldiv={self.reg.value:.9f}, kldiv*step = {self.reg.value*self.tau/self.gamma:.4f}")
 
+            psum = np.sum(self.pvar.value)
+            print("psum=", psum)
             a = self.p / kb
             ka = self.K(a)
             ConstrEven = self.mynorm(b * ka - q) / qnorm
@@ -142,13 +167,13 @@ class jko_cvxpy:
 
 # kernel with only distance between activation points
 def getKernel(grid, gamma):
-    grid = [[-b/a,1] for (a, b) in grid]
+    #grid = [[-b/a,1] for (a, b) in grid]
     dist = distance.pdist(grid, metric="sqeuclidean") #sq-uared
     d = distance.squareform(dist) # get NxN matrix of all distance diffs
     Gibbs = np.exp(-d/gamma)
     #Gibbs = np.eye(len(grid))+1e-3 # some very uniform movement
     #Gibbs = np.eye(len(grid)) # don't allow movement... basically
-    print("[" ,[f"{x:.3f}" for x in Gibbs[0]])
+    print([f"{x:.3f}" for x in Gibbs[0][0:10]])
 
     def aux(p):  # Gibbs Kernel applied to a vector p 
         return np.dot(Gibbs,p)

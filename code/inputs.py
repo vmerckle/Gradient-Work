@@ -80,14 +80,14 @@ def getInput2(args):
             if rng.integers(0, 2) == 0:
                 a = 1
             else:
-                a = -1
+                a = 1
             b = (acti+1e-5)*a
             #a = -b/(acti+1e-5)
             newneu.append([a, b])
             if rng.integers(0, 2) == 0:
                 laydeu.append(1)
             else:
-                laydeu.append(-1)
+                laydeu.append(1)
 
 
         ly1 = np.array(newneu).T
