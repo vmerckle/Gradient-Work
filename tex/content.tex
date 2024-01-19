@@ -1,6 +1,5 @@
 Discretize mean-field limit using JKO, see if it is similar to GD.
 
-\textbf{Mean-field limit}\citep{chizatGlobalConvergenceGradient2018}: For a sufficiently large width, the training dynamics of a NN can be coupled with the evolution of a probability distribution described by a PDE.
 
 \section{Classic setup}
 
@@ -34,6 +33,14 @@ Implicit
 Taking $\step \to 0$, we get the gradient flow: $\frac{\dd \param_t}{\dd t} = - \nabla \mathcal{L}(\param_t)$. We make ReLU differentiable with $\sigma'(0)=0$ as justified in \citep{boursierGradientFlowDynamics2022}.
 
 \section{Using a measure}
+
+\textbf{Mean-field limit}\citep{chizatGlobalConvergenceGradient2018}: For a sufficiently large width, the training dynamics of a NN can be coupled with the evolution of a probability distribution described by a PDE.
+
+If [...] converges, with $m \rightarrow \infty$ (many-particle limit), our particles of interest converges to a Wasserstein gradient flow of F:
+
+\begin{equation}
+	\partial \mu_t = - \diver(v_t \mu_t) \text{ where } v_t \in - \partial F'(\mu_t)
+\end{equation}
 
 \begin{equation}
 	\int_\paramS m(\param; x) \dd \mu(\param) = \frac{1}{m} \sum_{i=1}^{m} \inp{\vw_i}{\vx_j}_+ \alpha_i
