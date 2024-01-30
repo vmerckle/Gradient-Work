@@ -69,14 +69,14 @@ def getInput2(args):
         ly1 = np.concatenate((ly1, ly1*1.0), axis=1)
         ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0)
     elif c == 45: # linear data, neurons uniform by activation
-        m, d, n = 1000, 2, 5
-        Xb = np.linspace(-1, 1, n)[:, None]
+        m, d, n = 100, 2, 5
+        Xb = np.linspace(2, 4, n)[:, None]
         #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
-        X, Y = add_bias(Xb), Xb*0.5+0.6
+        X, Y = add_bias(Xb), Xb*0.1+0.1
 
         newneu = []
         laydeu = []
-        for acti in np.linspace(-2, 2, m):
+        for acti in np.linspace(-4, 4, m):
             if rng.integers(0, 2) == 0:
                 a = 1
             else:
@@ -91,7 +91,7 @@ def getInput2(args):
 
 
         ly1 = np.array(newneu).T
-        ly1 = ly1 / np.linalg.norm(ly1, axis=0)
+        ly1 = ly1# / np.linalg.norm(ly1, axis=0)
         ly2 = np.ones((len(ly1.T), 1))
         ly2 = np.array(laydeu)[:, None]
         # double the number of neurons to allow for negative neurons..

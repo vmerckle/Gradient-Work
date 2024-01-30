@@ -44,12 +44,12 @@ class jko_cvxpy:
             self.p = np.zeros_like(ly2)*1.0 # important 1.0 otherwise it's an int array
             self.p = self.p + 1e-10 # important 1.0 otherwise it's an int array
             # and if you do intarray[0] = 0.2, it will truncate to 0.
-            ss = [3, 49, 400, 700, 900]
-            for sss in ss:
-                self.p[sss] = 0.2
+            #ss = [3, 49, 400, 700, 900]
+            #for sss in ss:
+            #    self.p[sss] = 0.2
             self.p = np.zeros_like(ly2)*1.0 # important 1.0 otherwise it's an int array
             self.p = self.p + 1e-10 # important 1.0 otherwise it's an int array
-            self.p[777] = 1.0
+            self.p[50] = 0.1
         else:
             self.normori = 1
             self.grid = grid

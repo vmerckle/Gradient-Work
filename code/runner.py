@@ -105,7 +105,7 @@ def simpleArun(X, myanim):
 
     print("Animation setup..")
     fig = plt.figure(figsize=(10,4))
-    Xoutb = np.linspace(-2,2, 1000)
+    Xoutb = np.linspace(-4,4, 1000)
     Xout = add_bias(Xoutb)
     animobj = myanim(fig, data|{"Xout":Xoutb}, runanim=True)
     already = [False] # see comment about i=0
@@ -146,7 +146,7 @@ def simpleArun(X, myanim):
         ani = animation.FuncAnimation(fig, update_ok, frames=list(range(100000)), blit=True, interval=1)
         animobj.ax.set_xlim(-1.2, 1.2)
         animobj.ax.set_ylim(-1.2, 1.2)
-        animobj.ax.set_xlim(-2.2, 2.2)
+        animobj.ax.set_xlim(-4.2, 4.2)
         animobj.ax.set_ylim(-0.2, 2.4)
         plt.show()
     except KeyboardInterrupt:
@@ -160,7 +160,7 @@ def simpleArun(X, myanim):
 
 def simplecalcs(X):
     X, Y, lly1, lly2, rng = [X[x] for x in ["X", "Y", "lly1", "lly2", "rng"]]
-    allXb = np.linspace(-2,2, 1000)
+    allXb = np.linspace(-4,4, 1000)
     allX = add_bias(allXb)
     iterdata = [NNtoIter(X, Y, allX, lly1[i], lly2[i]) for i in range(len(lly1))]
     normData(iterdata, "lnorm", 0, 1) 
