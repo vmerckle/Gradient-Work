@@ -1,18 +1,10 @@
 import numpy as np
-import argparse
-import sys
-from scipy.spatial import distance
-from scipy.special import kl_div
 import cvxpy as cp
 
-from numpy.random import default_rng
-
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 from utils import *
 
 class jko_cvxpy:
-    def __init__(self, gamma=1, tau=1, interiter=10, verb=False, tol=1e-6, dtype=torch.float32, device="cpu", adamlr=1e-3, proxf="scipy"):
+    def __init__(self, gamma=1, tau=1, interiter=10, verb=False, tol=1e-6, dtype=np.float32, device="cpu", adamlr=1e-3, proxf="cvxpy"):
         self.gamma = gamma
         self.tau = tau
         self.tol = tol

@@ -1,8 +1,4 @@
 import numpy as np
-import time
-
-import torch
-from numpy.random import default_rng
 
 def add_bias(x):
     """ add a column of 1 to data to allow for bias """
@@ -11,8 +7,9 @@ def add_bias(x):
     
     return np.hstack((x, np.ones((x.shape[0], 1))))
 
-def torch_2layers(X, ly1, ly2):
-    return torch.relu(X@ly1)@ly2
+# attempt to not load torch here
+# def torch_2layers(X, ly1, ly2):
+    # return torch.relu(X@ly1)@ly2
 
 def np_2layers(X, ly1, ly2):
     #a = X@ly1

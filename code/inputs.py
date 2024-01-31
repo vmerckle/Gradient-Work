@@ -1,32 +1,14 @@
 import numpy as np
-import cvxpy as cp
-import time
 
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import matplotlib.animation as animation
-
-import torch
-from numpy.random import default_rng
-
-import argparse
-import os.path
-import sys
-import pickle
-#import pandas as pd
+#import torch
 
 from utils import *
-from torch_descent import torch_descent
-from jko_descent import jko_descent
-from jko_cvxpy import jko_cvxpy
-
-
-
 
 def getInput2(args):
     seed = args.seed
-    torch.use_deterministic_algorithms(True)
-    gpudevice = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+    #torch.use_deterministic_algorithms(True)
+    #gpudevice = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+    gpudevice = "cpu"
     if gpudevice != "cpu":
         print(f"Found a gpu: {gpudevice}..")
     device = "cpu"
@@ -144,12 +126,15 @@ def getInput2(args):
         ly2 = np.ones((len(ly1.T), 1))*scaling
 
     if args.algo == "torch":
+        from torch_descent import torch_descent
         opti = torch_descent(device=device, algo="gd")
         opti.load(X, Y, ly1, ly2, lr, beta)
     elif args.algo == "jko":
+        from jko_descent import jko_descent
         opti = jko_descent(interiter=args.jkosteps, gamma=args.jkogamma, tau=args.jkotau, verb=args.verbose, proxf=args.proxf, adamlr=args.adamlr)
         opti.load(X, Y, ly1, ly2, lr, beta)
     elif args.algo == "jkocvx":
+        from jko_cvxpy import jko_cvxpy
         opti = jko_cvxpy(interiter=args.jkosteps, gamma=args.jkogamma, tau=args.jkotau, verb=args.verbose, proxf=args.proxf, adamlr=args.adamlr)
         opti.load(X, Y, ly1, ly2, lr, beta)
 

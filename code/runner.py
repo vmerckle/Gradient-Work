@@ -1,24 +1,14 @@
 import numpy as np
-import cvxpy as cp
 import time
 
 import matplotlib.pyplot as plt
-import matplotlib as mpl
-import matplotlib.animation as animation
-
-import torch
-from numpy.random import default_rng
 
 import argparse
 import os.path
 import sys
 import pickle
-#import pandas as pd
 
 from utils import *
-from torch_descent import torch_descent
-from jko_descent import jko_descent
-from cvx_descent import cvx_solve
 from animations import LessNiceAnim
 from animations import NiceAnim
 from inputs import *
@@ -175,37 +165,34 @@ if __name__ == '__main__':
                  }
 
     parser = argparse.ArgumentParser()
+    parser.add_argument( "--verbose", action="store_true")
+    parser.add_argument("--seed", type=int, default=4, help="seed")
+    parser.add_argument("-o", "--output", help="output name", default="out_new")
     parser.add_argument("-k", "--keepfirst", help="keep first step", action="store_true")
     parser.add_argument("-r", "--keepsecond", help="keep second step", action="store_true")
-    parser.add_argument( "--run", action="store_true", help="ignore steps number and run until interrupted")
+    parser.add_argument("--run", action="store_true", help="ignore steps number and run until interrupted")
     parser.add_argument("--steps", default=10, type=int, help="how many iterations to optimize the network")
-    parser.add_argument( "--noanim", action="store_true", help="do not show the end animation")
-    parser.add_argument( "--runanim", action="store_true", help="show a real time animation, enables option 'run' as well")
-    parser.add_argument( "--anim", default="output+neurons", choices=animationDict.keys(), help="what animation")
-    parser.add_argument("-m", "--movie", help="save movie", action="store_true")
-    parser.add_argument("--fps", type=int, default=10, help="movie fps")
+    parser.add_argument("--noanim", action="store_true", help="do not show the end animation")
+    parser.add_argument("--runanim", action="store_true", help="show a real time animation, enables option 'run' as well")
+    parser.add_argument("--anim", default="output+neurons", choices=animationDict.keys(), help="what animation")
+    parser.add_argument("--movie", help="save movie", action="store_true")
     parser.add_argument("--movieout", help="output movie name", default="out_new")
-
-    parser.add_argument("-o", "--output", help="output name", default="out_new")
-    parser.add_argument( "--verbose", action="store_true")
+    parser.add_argument("--fps", type=int, default=10, help="movie fps")
+    parser.add_argument("--skiptoseconds", default=10, type=float, help="maximum time in seconds, will skip frame to match")
     parser.add_argument("--scaleinit", default=1e-3, type=float, help="scalar factor to weight matrix")
     parser.add_argument("--algo", default="torch", choices=["torch", "jko", "jkocvx"])
-    parser.add_argument("-lr", type=float, default=1e-3, help="learning rate for algo='torch'")
+    parser.add_argument("--proxf", default="scipy", choices=["scipy", "torch", "cvxpy"], help="algo=jko, how to compute the prox")
     parser.add_argument("--jkosteps", default=10, type=int, help="algo=jko, number of internal iterations")
     parser.add_argument("--jkogamma", default=1, type=float, help="algo=jko, float")
     parser.add_argument("--jkotau", default=1, type=float, help="algo=jko, float")
-    parser.add_argument("--proxf", default="scipy", choices=["scipy", "torch", "cvxpy"], help="algo=jko, how to compute the prox")
     parser.add_argument("--adamlr", default=1e-3, type=float, help="algo=jko, proxf=torch, learning rate for gradient descent")
-    parser.add_argument("--seed", type=int, default=4, help="seed")
-    parser.add_argument("--skiptoseconds", default=10, type=float, help="maximum time in seconds, will skip frame to match")
+    parser.add_argument("-lr", type=float, default=1e-3, help="algo='torch', learning rate")
     args = parser.parse_args()
     code = args.output
     if code != "out_new" and args.movieout == "out_new":
         codemov = code
     else:
         codemov = args.movieout
-
-
     myanim = animationDict[args.anim]
 
     stepname = f"data/settings_{code}.pkl"

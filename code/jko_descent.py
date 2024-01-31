@@ -5,8 +5,6 @@ from scipy.optimize import minimize
 from scipy.special import kl_div
 from scipy.spatial import distance
 
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 from utils import *
 import torch
 
