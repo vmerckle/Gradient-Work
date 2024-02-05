@@ -32,7 +32,7 @@ Implicit
 
 Taking $\step \to 0$, we get the gradient flow: $\frac{\dd \param_t}{\dd t} = - \nabla \mathcal{L}(\param_t)$. We make ReLU differentiable with $\sigma'(0)=0$ as justified in \citep{boursierGradientFlowDynamics2022}.
 
-\section{Using a measure}
+\section{Using a measure: mean-field}
 
 \textbf{Mean-field limit}\citep{chizatGlobalConvergenceGradient2018}: For a sufficiently large width, the training dynamics of a NN can be coupled with the evolution of a probability distribution described by a PDE.
 
@@ -46,7 +46,7 @@ If [...] converges, with $m \rightarrow \infty$ (many-particle limit), our parti
 	\int_\paramS m(\param; x) \dd \mu(\param) = \frac{1}{m} \sum_{i=1}^{m} \inp{\vw_i}{\vx_j}_+ \alpha_i
 \end{equation}
 
-Different ways to use a measure:
+Different ways to use a measure to represent the neurons of a two layer network:
 
 \begin{itemize}
 	\item $\paramS = \R^d \times \R$, measure $\mu = \frac{1}{m} \sum_{i=1}^{m} \dirac_{\param_i = (\vw_i, \alpha_i)}$, output of one neuron $m(\param=(\vw,\alpha); \vx) = \inp{\vx}{\vw}_+ \alpha$: (works, output matches discrete)
@@ -63,13 +63,11 @@ Take a grid of $N$ points in $\paramS$, we can match the notation above by takin
 	\mu(t+1) = \argmin_{\mu \in \mathcal{M}(\paramS)} F(\mu) + \frac{1}{2 \step} W_2(\mu; \mu(t))
 \end{equation}
 
-A essayer: KL à la place de distance wasserstein.
+% A essayer: KL à la place de distance wasserstein.
 
-Remark: le 1/m c'est principalement pour être ok à l'infini. Dans le papier JKO \citep{carlierConvergenceEntropicSchemes2017} ils utilisent un vecteur de proba
+% Remark: le 1/m c'est principalement pour être ok à l'infini. Dans le papier JKO \citep{carlierConvergenceEntropicSchemes2017} ils utilisent un vecteur de proba
 
-\subsection{Infinity and beyond}
-
-Take $\step \to 0$, get gradient flow. Take $m \to \infty$, get wasserstein gradient flow \citep{bachGradientDescentInfinitely2021}, and if it converges, it goes to the global optimal.
+% Take $\step \to 0$, get gradient flow. Take $m \to \infty$, get wasserstein gradient flow \citep{bachGradientDescentInfinitely2021}, and if it converges, it goes to the global optimal.
 
 \subsection{JKO}
 
@@ -81,7 +79,7 @@ What we compute by using the entropic JKO flow iterations.
 							= &\argmin_{p \in \text{simplex}}  \left( \min_{\pi \in \Pi(p, q)} \inp{c}{\pi} + \gamma E(\pi) \right) + \tau f(p)
 \end{align}
 
-$f$ "should" be convex and with a closed form proximal
+% $f$ "should" be convex and with a closed form proximal % from JKO paper.
 
 \begin{itemize}
 	\item \href{https://arxiv.org/pdf/2206.05262.pdf}{Meta Optimal Transport (paper)} and \href{https://github.com/facebookresearch/meta-ot}{(code git)}: InputConvexNN to predict solution of OT problem

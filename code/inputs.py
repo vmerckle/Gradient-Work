@@ -52,7 +52,7 @@ def getInput2(args):
         ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0)
     elif c == 45: # linear data, neurons uniform by activation
         m, d, n = 100, 2, 5
-        Xb = np.linspace(2, 4, n)[:, None]
+        Xb = np.linspace(0, 2, n)[:, None]
         #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
         X, Y = add_bias(Xb), Xb*0.1+0.1
 

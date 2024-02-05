@@ -291,10 +291,13 @@ class NiceAnim:
             assert np.all([di["ly2"].shape == (self.m, 1) for di in self.D])
         # plotting setup
         self.ax = self.fig.add_subplot()
+        #self.ax.xaxis.set_major_locator(plt.MaxNLocator(5)) # only 5 ticks
+        #self.ax.yaxis.set_major_locator(plt.MaxNLocator(5)) # it's just cleaner
         self.ax.axhline(y=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
         self.ax.axvline(x=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
         self.ax.grid(True, alpha=0.2)
         self.ax.scatter(self.Xb, self.Y, marker="x", color="red", s=40, alpha=1)
+
         ## not very useful but works
         #self.signedE = self.ax.scatter([], [], marker="*", color="blue", s=60, alpha=1)
         #self.pdirecs= self.ax.scatter([], [], marker="^", color="blue", s=60, alpha=1)

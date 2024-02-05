@@ -8,6 +8,10 @@ from scipy.spatial import distance
 from utils import *
 import torch
 
+
+def torch_2layers(X, ly1, ly2):
+    return torch.relu(X@ly1)@ly2
+
 class jko_descent:
     def __init__(self, gamma=1, tau=1, interiter=10, verb=False, tol=1e-6, dtype=torch.float32, device="cpu", adamlr=1e-3, proxf="scipy"):
         self.gamma = gamma

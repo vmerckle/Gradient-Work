@@ -1,6 +1,7 @@
 import numpy as np
 import cvxpy as cp
 
+from scipy.spatial import distance
 from utils import *
 
 class jko_cvxpy:

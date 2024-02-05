@@ -1,18 +1,21 @@
 import numpy as np
 import time
 
-import matplotlib.pyplot as plt
-
 import argparse
 import os.path
 import sys
 import pickle
 
-from utils import *
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
 from animations import LessNiceAnim
 from animations import NiceAnim
+from utils import *
 from inputs import *
 
+# compute plot information from data and layers
+# used in live and post animation
 def NNtoIter(Xt, Yt, allX, ly1, ly2, run=False):
     #lnorm = np.abs(ly1[1,:].flatten() * ly2.flatten()) # -> slope of the ReLU unit
     #lnorm =np.abs(ly2.flatten()) # -> similar alpha = similar speed. But the first layer's norm also matter...
@@ -38,24 +41,8 @@ def NNtoIter(Xt, Yt, allX, ly1, ly2, run=False):
     return {"ly1": ly1, "ly2": ly2, "lact": lact, "lnorm": lnorm, "loss": loss, "Yout": Yout, "lsize": lsize, "signedE":signedE, "pdirecs":np.array(pdirecs)}
 
 
-def simplerun(X):
-    lly1, lly2 = [X["ly1"]], [X["ly2"]]
-    opti, Nstep = X["opti"], X["Nstep"]
-    #print(lly2[0])
-    for num in range(Nstep-1):
-        opti.step()
-        nly1, nly2 = opti.params()
-        if num%1 == 0:
-            #print(nly2)
-            #print("ly1 dist", np.linalg.norm(lly1[0]-nly1)) #indeed, it's 0
-            print("ly2 dist", np.linalg.norm(lly2[0]-nly2))
-            lly1.append(nly1)
-            lly2.append(nly2)
-            print("loss=", opti.loss())
-
-    return {"lly1":lly1, "lly2":lly2}
-
-def simpleCrun(X):
+# run without animation
+def simpleRun(X):
     data = X
     lly1, lly2 = [X["ly1"]], [X["ly2"]]
     opti = X["opti"]
@@ -85,8 +72,8 @@ def simpleCrun(X):
 
     return {"lly1":lly1, "lly2":lly2}
 
-
-def simpleArun(X, myanim):
+# plot live animation
+def animationRun(X, myanim):
     data = X
     lly1, lly2 = [X["ly1"]], [X["ly2"]]
     opti = X["opti"]
@@ -157,12 +144,9 @@ def simplecalcs(X):
     normData(iterdata, "lsize", 10, 70)
     return {"Xout": allXb, "iterdata": iterdata}
 
-
-
 if __name__ == '__main__':
     animationDict = {"output+neurons":NiceAnim,
-                 "dataspace": LessNiceAnim,
-                 }
+                 "dataspace": LessNiceAnim}
 
     parser = argparse.ArgumentParser()
     parser.add_argument( "--verbose", action="store_true")
@@ -215,11 +199,11 @@ if __name__ == '__main__':
     else:
         print(f"Overwriting {stepname}")
         if args.runanim:
-            X2 = simpleArun(X1, myanim=myanim)
+            X2 = animationRun(X1, myanim=myanim)
         elif args.run:
-            X2 = simpleCrun(X1)
+            X2 = simpleRun(X1)
         else:
-            X2 = simplerun(X1)
+            sys.exit(0)
         with open(stepname, "wb") as f:
             pickle.dump(X2, f)
 
@@ -238,7 +222,6 @@ if __name__ == '__main__':
     if args.noanim and not args.movie:
         print("No animation requested")
         sys.exit(0)
-
 
     XXX = X1|X2|X3
     nframe = len(XXX["iterdata"])
