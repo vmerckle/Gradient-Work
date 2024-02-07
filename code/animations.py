@@ -314,8 +314,8 @@ class NiceAnim:
         self.verbose = False
 
     def update_aux(self, di, frame):
-        p = di["p"]
         ly1, ly2 = di["ly1"], di["ly2"]
+        d = ly1.shape[0]
         lact, lnorm = di["lact"], di["lnorm"]
         loss, Yout = di["loss"], di["Yout"]
         lsize = di["lsize"]
@@ -324,17 +324,20 @@ class NiceAnim:
         xl, yl, mks = np.zeros(self.m), np.zeros(self.m), []
         sizes, colors = lsize, []
         for i in range(self.m):
-            w1, w2 = ly1.T[i]
+            if d == 2:
+                w1, w2 = ly1.T[i]
+            elif d == 1:
+                w1 = ly1[0][i]
             alpha, = ly2[i]
             xl[i], yl[i] = lact[i], 0.5
             xl[i], yl[i] = lact[i], min(1, max(alpha*20, 0.1))
             xl[i], yl[i] = lact[i], lnorm[i]*10#*100
-            xl[i], yl[i] = lact[i], p[i]/np.max(p)
-            if alpha > 0:
+            xl[i], yl[i] = lact[i], ly1.flatten()[i]/np.max(ly1) # for jko
+            if alpha >= 0:
                 colors.append("green")
             else:
                 colors.append("red")
-            if w1 > 0:
+            if w1 >= 0:
                 mks.append(self.pos_marker)
             else:
                 mks.append(self.neg_marker)

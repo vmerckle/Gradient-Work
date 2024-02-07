@@ -9,60 +9,83 @@ import pickle
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-from animations import LessNiceAnim
-from animations import NiceAnim
+import animations
+import configs
 from utils import *
-from inputs import *
 
 # compute plot information from data and layers
 # used in live and post animation
 def NNtoIter(Xt, Yt, allX, ly1, ly2, run=False):
-    #lnorm = np.abs(ly1[1,:].flatten() * ly2.flatten()) # -> slope of the ReLU unit
-    #lnorm =np.abs(ly2.flatten()) # -> similar alpha = similar speed. But the first layer's norm also matter...
-    lspeed = 1/np.linalg.norm(ly1, ord=2, axis=0) * np.abs(ly2.flatten())
-    lslope = np.abs(ly1[0,:].flatten() * ly2.flatten())
-    lsize = 1/(lspeed+1) + (40 if run else 0)# slower = bigger
-    lnorm = np.linalg.norm(ly1, ord=2, axis=0) * ly2.flatten() # -> mult or addition, just an "idea" of how big the neuron is
-    lnorm = lslope
-    lact = np.array([-w2/w1 for w1, w2 in ly1.T])
-    Yout = np_2layers(allX, ly1, ly2)
-    Yhat = np_2layers(Xt, ly1, ly2)
-    signedE = Yhat-Yt
-    loss = MSEloss(Yhat, Yt)
-    pdirecs = []
-    motifs = getMotifNow(Xt, ly1)
-    for m in motifs:
-        w1, w2 = np.sum(np.atleast_2d(m).T*Xt * signedE , axis=0) # n,d * 10, * 10, =sum> 2
-        #print((np.sum(Xt * signedE * m, axis=0)).shape)
-        #print(-w2/w1)
-        if w1 != 0:
-            pdirecs.append(-w2/w1)
-            pdirecs.append(w2/w1)
-    return {"ly1": ly1, "ly2": ly2, "lact": lact, "lnorm": lnorm, "loss": loss, "Yout": Yout, "lsize": lsize, "signedE":signedE, "pdirecs":np.array(pdirecs)}
+    d, m = ly1.shape
+    if d == 2:
+        #lnorm = np.abs(ly1[1,:].flatten() * ly2.flatten()) # -> slope of the ReLU unit
+        #lnorm =np.abs(ly2.flatten()) # -> similar alpha = similar speed. But the first layer's norm also matter...
+        lspeed = 1/(1e-10+np.linalg.norm(ly1, ord=2, axis=0)) * np.abs(ly2.flatten())
+        lslope = np.abs(ly1[1,:].flatten() * ly2.flatten())
+        lnorm = np.linalg.norm(ly1, ord=2, axis=0) * ly2.flatten() # -> mult or addition, just an "idea" of how big the neuron is
+        lsize = 1/(lspeed+1) + (40 if run else 0)# slower = bigger
+        lsize = ly2.flatten() # size=slope
+        lnorm = lslope
+        lact = np.array([-w2/w1 for w1, w2 in ly1.T])
+        Yout = np_2layers(allX, ly1, ly2)
+        Yhat = np_2layers(Xt, ly1, ly2)
+        signedE = Yhat-Yt
+        loss = MSEloss(Yhat, Yt)
+        pdirecs = []
+        motifs = getMotifNow(Xt, ly1)
+        for m in motifs:
+            w1, w2 = np.sum(np.atleast_2d(m).T*Xt * signedE , axis=0) # n,d * 10, * 10, =sum> 2
+            #print((np.sum(Xt * signedE * m, axis=0)).shape)
+            #print(-w2/w1)
+            if w1 != 0:
+                pdirecs.append(-w2/w1)
+                pdirecs.append(w2/w1)
+        return {"ly1": ly1, "ly2": ly2, "lact": lact, "lnorm": lnorm, "loss": loss, "Yout": Yout, "lsize": lsize, "signedE":signedE, "pdirecs":np.array(pdirecs)}
+    elif d == 1:
+        lsize = ly2.flatten() # size=slope
+        lnorm = ly1[0, :].flatten()
+        lact = np.zeros_like(ly1[0])
+        Yout = np_2layers(allX, ly1, ly2)
+        Yhat = np_2layers(Xt, ly1, ly2)
+        signedE = Yhat-Yt
+        loss = MSEloss(Yhat, Yt)
+        return {"ly1": ly1, "ly2": ly2, "lact": lact, "lnorm": lnorm, "loss": loss, "Yout": Yout, "lsize": lsize}
+    else:
+        raise Exception("d>3 has no animation yet")
 
 
 # run without animation
 def simpleRun(X):
+    steps = X["steps"]
     data = X
     lly1, lly2 = [X["ly1"]], [X["ly2"]]
+    d, m = lly1[-1].shape
     opti = X["opti"]
     X, Y = X["X"], X["Y"] # no comment
     num = 0
     bestloss = opti.loss()
     print("it=", num, "loss=", opti.loss())
+    print("layer1", ", ".join([f"{x:.2f}" for x in lly1[-1].flatten()]))
+    print("layer2", ", ".join([f"{x:.2f}" for x in lly2[-1].flatten()]))
     try:
         while True:
+            if steps != -1 and num > steps:
+                break
             opti.step()
             nly1, nly2 = opti.params()
             lly1.append(nly1)
             lly2.append(nly2)
-            num += 1
-            print("it=", num, "loss=", opti.loss())
             l = opti.loss()
+            if m <= 10:
+                print("layer2", ", ".join([f"{x:.2f}" for x in lly2[-1].flatten()]), f"loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
+            else:
+                print(f"{num}: loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
+            num += 1
             if l < bestloss:
                 bestloss = l
             if l/bestloss > 10:
-                print(".. completely diverged.")
+                pass
+                #print(".. completely diverged.")
                 #assert False
     except KeyboardInterrupt:
         print("Normal interrupt at num=", num)
@@ -78,12 +101,16 @@ def animationRun(X, myanim):
     lly1, lly2 = [X["ly1"]], [X["ly2"]]
     opti = X["opti"]
     X, Y = X["X"], X["Y"] # no comment
+    n, d = X.shape
     num = 0
 
     print("Animation setup..")
     fig = plt.figure(figsize=(10,4))
     Xoutb = np.linspace(-4,4, 1000)
-    Xout = add_bias(Xoutb)
+    if d == 2:
+        Xout = add_bias(Xoutb)
+    elif d == 1:
+        Xout = Xoutb[:, None]
     animobj = myanim(fig, data|{"Xout":Xoutb}, runanim=True)
     already = [False] # see comment about i=0
     bestloss = [opti.loss()]
@@ -114,8 +141,8 @@ def animationRun(X, myanim):
         if abs(np.sum(p) - 1) > 1e-1 and False:
             print("we probably diverged here.")
             print("psum:", np.sum(p))
-        if l/bestloss[0] > 10:
-            print(".. completely diverged.")
+        #if l/bestloss[0] > 10: # jko we don't care
+            #print(".. completely diverged.")
              #assert False
         return animobj.update_aux(di, i)
 
@@ -137,25 +164,33 @@ def animationRun(X, myanim):
 
 def simplecalcs(X):
     X, Y, lly1, lly2, rng = [X[x] for x in ["X", "Y", "lly1", "lly2", "rng"]]
+    d = X.shape[1]
     allXb = np.linspace(-4,4, 1000)
-    allX = add_bias(allXb)
+    if d == 2:
+        allX = add_bias(allXb)
+    elif d == 1:
+        allX = allXb[:, None]
     iterdata = [NNtoIter(X, Y, allX, lly1[i], lly2[i]) for i in range(len(lly1))]
     normData(iterdata, "lnorm", 0, 1) 
     normData(iterdata, "lsize", 10, 70)
     return {"Xout": allXb, "iterdata": iterdata}
 
 if __name__ == '__main__':
-    animationDict = {"output+neurons":NiceAnim,
-                 "dataspace": LessNiceAnim}
+    animationDict = {"output+neurons":animations.NiceAnim,
+                 "dataspace": animations.LessNiceAnim}
+    configDict = {"config2d_new": configs.Config2DNew,
+                  "config2d_new_grid": configs.Config2DNew_grid,
+                  "config1d_new": configs.Config1DNew}
 
     parser = argparse.ArgumentParser()
     parser.add_argument( "--verbose", action="store_true")
-    parser.add_argument("--seed", type=int, default=4, help="seed")
+    parser.add_argument("--seed", type=int, default=None, help="seed")
+    parser.add_argument("--config", help="config name", default="config2d_new", choices=configDict.keys())
     parser.add_argument("-o", "--output", help="output name", default="out_new")
     parser.add_argument("-k", "--keepfirst", help="keep first step", action="store_true")
     parser.add_argument("-r", "--keepsecond", help="keep second step", action="store_true")
     parser.add_argument("--run", action="store_true", help="ignore steps number and run until interrupted")
-    parser.add_argument("--steps", default=10, type=int, help="how many iterations to optimize the network")
+    parser.add_argument("--steps", default=-1, type=int, help="how many iterations to optimize the network")
     parser.add_argument("--noanim", action="store_true", help="do not show the end animation")
     parser.add_argument("--runanim", action="store_true", help="show a real time animation, enables option 'run' as well")
     parser.add_argument("--anim", default="output+neurons", choices=animationDict.keys(), help="what animation")
@@ -163,14 +198,14 @@ if __name__ == '__main__':
     parser.add_argument("--movieout", help="output movie name", default="out_new")
     parser.add_argument("--fps", type=int, default=10, help="movie fps")
     parser.add_argument("--skiptoseconds", default=10, type=float, help="maximum time in seconds, will skip frame to match")
-    parser.add_argument("--scaleinit", default=1e-3, type=float, help="scalar factor to weight matrix")
-    parser.add_argument("--algo", default="torch", choices=["torch", "jko", "jkocvx"])
-    parser.add_argument("--proxf", default="scipy", choices=["scipy", "torch", "cvxpy"], help="algo=jko, how to compute the prox")
-    parser.add_argument("--jkosteps", default=10, type=int, help="algo=jko, number of internal iterations")
-    parser.add_argument("--jkogamma", default=1, type=float, help="algo=jko, float")
-    parser.add_argument("--jkotau", default=1, type=float, help="algo=jko, float")
-    parser.add_argument("--adamlr", default=1e-3, type=float, help="algo=jko, proxf=torch, learning rate for gradient descent")
-    parser.add_argument("-lr", type=float, default=1e-3, help="algo='torch', learning rate")
+    #parser.add_argument("--scaleinit", default=None, type=float, help="scalar factor to weight matrix")
+    #parser.add_argument("--algo", default=None, choices=["torch", "jko", "jkocvx"])
+    #parser.add_argument("--proxf", default=None, choices=["scipy", "torch", "cvxpy"], help="algo=jko, how to compute the prox")
+    #parser.add_argument("--jkosteps", default=None, type=int, help="algo=jko, number of internal iterations")
+    #parser.add_argument("--jkogamma", default=None, type=float, help="algo=jko, float")
+    #parser.add_argument("--jkotau", default=None, type=float, help="algo=jko, float")
+    #parser.add_argument("--adamlr", default=None, type=float, help="algo=jko, proxf=torch, learning rate for gradient descent")
+    #parser.add_argument("-lr", type=float, default=None, help="algo='torch', learning rate")
     args = parser.parse_args()
     code = args.output
     if code != "out_new" and args.movieout == "out_new":
@@ -178,6 +213,7 @@ if __name__ == '__main__':
     else:
         codemov = args.movieout
     myanim = animationDict[args.anim]
+    myconfig = configDict[args.config]
 
     stepname = f"data/settings_{code}.pkl"
     if args.keepfirst or args.keepsecond and os.path.isfile(stepname):
@@ -187,7 +223,7 @@ if __name__ == '__main__':
             X1 = getInput2(local_args)
     else:
         print(f"Overwriting {stepname}")
-        X1 = getInput2(args)
+        X1 = myconfig(args)
         with open(stepname, "wb") as f:
             pickle.dump(args, f)
 

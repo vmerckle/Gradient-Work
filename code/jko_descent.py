@@ -8,11 +8,12 @@ from scipy.spatial import distance
 from utils import *
 import torch
 
+import jko
 
 def torch_2layers(X, ly1, ly2):
     return torch.relu(X@ly1)@ly2
 
-class jko_descent:
+class jko_descent(jko.JKO):
     def __init__(self, gamma=1, tau=1, interiter=10, verb=False, tol=1e-6, dtype=torch.float32, device="cpu", adamlr=1e-3, proxf="scipy"):
         self.gamma = gamma
         self.tau = tau
@@ -23,126 +24,14 @@ class jko_descent:
         self.device = device
         self.adamlr = adamlr
         self.mynorm = lambda x: np.linalg.norm(x.flatten())
+        self.jkotot = 0
+
         if proxf == "scipy":
             self.proxf = self.prox_f_scipy
         elif proxf == "torch":
             self.proxf = self.prox_f_pytorch_new
         else:
             raise Exception("You're drunk")
-
-    def load(self, X, Y, ly1, ly2, lr=0, beta=0, grid=None, p=None):
-        self.X = X
-        self.Y = Y
-        self.psigns = np.sign(ly2)
-        ly2 = np.abs(ly2)
-        if grid is None or p is None:
-            norm = ly2.sum()
-            #print("ly1", ly1.shape, "its norm", norm.shape)
-            self.normori = norm
-            #self.grid = ly1.T*norm
-            self.grid = ly1.T#*ly2
-            self.p = np.ones_like(ly2)
-            self.p = np.zeros_like(ly2)/len(ly2)+1e1
-            #self.p = np.zeros_like(ly2)/len(ly2)
-            #self.p[25] = 1
-            self.p = np.zeros_like(ly2)*1.0 # important 1.0 otherwise it's an int array
-            self.p = self.p + 1e-10 # important 1.0 otherwise it's an int array
-            # and if you do intarray[0] = 0.2, it will truncate to 0.
-            #ss = [3, 49, 400, 700, 900]
-            #for sss in ss:
-            #    self.p[sss] = 0.2
-
-            self.p = np.zeros_like(ly2)*1.0 # important 1.0 otherwise it's an int array
-            self.p = self.p + 1e-10 # important 1.0 otherwise it's an int array
-            self.p[77] = 1.0
-            self.p = np.zeros_like(ly2)*1.0 # important 1.0 otherwise it's an int array
-            self.p = self.p + 1e-10 # important 1.0 otherwise it's an int array
-            self.p[50] = 0.1
-        else:
-            self.normori = 1
-            self.grid = grid
-            self.p = p
-
-        self.K = getKernel(self.grid, self.gamma) # maybe psigns, maybe not TODO
-
-    def step(self):
-        #print("here", [f"{x:.4f}" for x in self.p.flatten()])
-        q = self.p
-
-        a, b = ( np.ones_like(self.p) for _ in range(2) )
-
-        eps = 0
-        for i in range(self.interiter):
-            if self.verb == 1:
-                print(f".", end="", flush=True)
-
-            self.p = self.proxf(self.K(b))
-            #print(i, "psum=", self.p.sum())
-            a = self.p / (self.K(b)+eps)
-            ConstrEven = self.mynorm(b * self.K(a) - q) / self.mynorm(q)
-            b = q / (self.K(a)+eps)
-            ConstrOdd = self.mynorm(a * self.K(b) - self.p) / self.mynorm(q)
-            #print("<<<", ConstrEven, ConstrOdd, ">>>")
-           
-            if ConstrOdd < self.tol and ConstrEven < self.tol:
-                if self.verb == 1:
-                    print(f"early exit after {i} iterations")
-                    #print("INSIDE JKO iter")
-                return
-
-        if self.verb == 1:
-            print(f"went over {self.interiter} iterations, exit")
-            print("psum before norma:" ,self.p.sum())
-        print("so needed?", self.p.sum())
-        #self.p = self.p/self.p.sum()
-
-    def step(self):
-        q = self.p
-        qnorm = self.mynorm(q)
-        a, b = (np.ones_like(self.p) for _ in range(2))
-
-        # this seems to remove a few early useless iterations
-        a = self.p
-        ka = self.K(a)
-        b = q / ka
-        kb = self.K(b)
-
-        for i in range(self.interiter):
-            print(f".", end="", flush=True)
-            self.p = self.proxf(kb)
-            psum = np.sum(self.p)
-            print("psum=", psum)
-            a = self.p / kb
-            ka = self.K(a)
-            ConstrEven = self.mynorm(b * ka - q) / qnorm
-            b = q / ka
-            kb = self.K(b)
-            ConstrOdd = self.mynorm(a * kb - self.p) / qnorm
-           
-            if ConstrOdd < self.tol and ConstrEven < self.tol:
-                print(f"early exit after {i} iterations")
-                return
-
-    def params(self, regopti=False, oneway=False):
-        #ly1 = self.grid * np.sqrt(self.p)
-        #ly2 = np.sqrt(self.p)
-        if regopti:
-            ly1 = self.grid.T/self.normori # some attempt at not modifying the scale
-            ly2 = self.p*self.normori * self.psigns
-            return ly1, ly2
-        elif oneway:
-            ly1 = self.grid.T*self.p.flatten()
-            ly2 = np.ones_like(self.p)
-            return ly1, ly2
-        else:
-            ly1 = self.grid.T
-            return ly1, self.p * self.psigns
-
-    def gridout(self):
-        return self.grid, self.p, self.psigns
-
-    def loss(self):
-        return self.f(self.p)
 
     def prox_f_pytorch(self, q_in):
         X = torch.tensor(self.X, dtype=self.dtype, device=self.device)
@@ -416,36 +305,3 @@ class jko_descent:
         bounds = [(0, None) for _ in q] # positivity
         res = minimize(objective , q.flatten(), bounds=bounds)
         return res.x.reshape(-1,1)
-
-    def f(self, p):
-        p = p.flatten()
-        activ = (self.X @ self.grid.T) > 0 # (n, N)
-        effneurons = self.psigns.flatten() * p * self.grid.T # (d,N) 
-        out = activ * (self.X @ effneurons) # (n, d) * (d, N) = (n, N)
-        yhat = np.sum(out, axis=1)[:, None] # avoid broadcasting..
-
-        return MSEloss(yhat, self.Y, coeff=len(yhat))
-
-def getKernel(grid, gamma):
-    dist = distance.pdist(grid, metric="sqeuclidean") #sq-uared
-    d = distance.squareform(dist) # get NxN matrix of all distance diffs
-    Gibbs = np.exp(-d/gamma)
-    #Gibbs = np.eye(len(grid))+1e-3 # don't allow movement... basically
-    print(Gibbs)
-
-    def aux(p):  # Gibbs Kernel applied to a vector p 
-        return np.dot(Gibbs,p)
-    return aux
-
-# kernel with only distance between activation points
-def getKernel(grid, gamma):
-    #grid = [[-b/a,1] for (a, b) in grid]
-    dist = distance.pdist(grid, metric="sqeuclidean") #sq-uared
-    d = distance.squareform(dist) # get NxN matrix of all distance diffs
-    Gibbs = np.exp(-d/gamma)
-    #Gibbs = np.eye(len(grid))+1e-3 # don't allow movement... basically
-    print(Gibbs)
-
-    def aux(p):  # Gibbs Kernel applied to a vector p 
-        return np.dot(Gibbs,p)
-    return aux
