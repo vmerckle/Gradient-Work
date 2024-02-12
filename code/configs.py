@@ -39,7 +39,7 @@ def Config2DNew_grid(args):
     # Transform X and Y into 2x(m^2) matrices
     ly1 = np.vstack((Xm.flatten(), Ym.flatten()))
     m = ly1.shape[1]
-    ly2 = np.ones((m, 1))/m
+    ly2 = np.ones((m, 1))*10
 
     if include_negative_neurons:
         raise Exception("Not implemented")
@@ -178,23 +178,33 @@ def Config1DNew(args):
     proxf = "scipy"
     proxf = "cvxpy"
     gd_lr = 1e-3
-    beta = 0
+    beta = 1e-3
     jko_inter_maxstep = 100
-    jko_tol = 1e-6
-    coef_KLDIV = 0.5
+    jko_tol = 1e-6 # 1e-6 to 1e-7
+    coef_KLDIV = 0.1
     gamma = 0.1
     tau = coef_KLDIV*gamma
     scaling = 1
 
-    m, d, n = 20, 1, 5
-    Xb = np.linspace(0, 2, n)[:, None]
+    m, d, n = 100, 1, 5
+    Xb = np.linspace(0, 1, n)[:, None]
     X, Y = Xb, Xb*0.6
 
-    ly1 = np.linspace(0.0, 10, m)[:, None]
-    ly1 = ly1.T
+    dist_bet_2pts = 0.1
+    ly1 = np.array([c*dist_bet_2pts for c in range(0,m)])[:, None]
+    if 0:
+        ly1 = np.linspace(0.0, 1, m)[:, None]
     print(ly1.shape)
-    ly2 = np.zeros((m, 1))
-    ly2[0] = 1
+    ini = 2
+    if ini == 1: # dirac
+        ly2 = np.zeros((m, 1))
+        ly2[-1] = 1
+    elif ini == 2: #gauss
+        ly2 = np.maximum(np.exp(-(ly1-5)**2*10), 1e-6)
+    elif ini == 3: #uniform
+        ly2 = np.ones((m, 1))
+    ly2 = ly2/np.sum(ly2)
+    ly1 = ly1.T
 
     print(f"Running {algo} (with prox={proxf}) on {m} 1D neurons, startsum = {np.sum(ly2):.1f}")
 

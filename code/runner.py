@@ -13,6 +13,19 @@ import animations
 import configs
 from utils import *
 
+#from rich.traceback import install #rich as default traceback handler
+from rich.progress import track
+from rich.progress import Progress
+from rich.columns import Columns
+from rich.table import Column
+from rich.table import Table
+
+from rich.logging import RichHandler
+from rich import print
+from rich.pretty import pprint
+from rich.prompt import Confirm
+from rich.prompt import IntPrompt
+
 # compute plot information from data and layers
 # used in live and post animation
 def NNtoIter(Xt, Yt, allX, ly1, ly2, run=False):
@@ -65,19 +78,20 @@ def simpleRun(X):
     num = 0
     bestloss = opti.loss()
     print("it=", num, "loss=", opti.loss())
-    print("layer1", ", ".join([f"{x:.2f}" for x in lly1[-1].flatten()]))
-    print("layer2", ", ".join([f"{x:.2f}" for x in lly2[-1].flatten()]))
+    print("layer1", ",".join([f"{x:.2f}" for x in lly1[-1].flatten()]))
+    print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]))
     try:
         while True:
-            if steps != -1 and num > steps:
+            if steps != -1 and num >= steps:
                 break
             opti.step()
             nly1, nly2 = opti.params()
             lly1.append(nly1)
             lly2.append(nly2)
             l = opti.loss()
-            if m <= 10:
-                print("layer2", ", ".join([f"{x:.2f}" for x in lly2[-1].flatten()]), f"loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
+            if m <= 20 and 1:
+                print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]))
+                #print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]), f"loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
             else:
                 print(f"{num}: loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
             num += 1
@@ -172,12 +186,13 @@ def simplecalcs(X):
         allX = allXb[:, None]
     iterdata = [NNtoIter(X, Y, allX, lly1[i], lly2[i]) for i in range(len(lly1))]
     normData(iterdata, "lnorm", 0, 1) 
-    normData(iterdata, "lsize", 10, 70)
+    normData(iterdata, "lsize", 1, 100)
     return {"Xout": allXb, "iterdata": iterdata}
 
 if __name__ == '__main__':
     animationDict = {"output+neurons":animations.NiceAnim,
-                 "dataspace": animations.LessNiceAnim}
+                 "dataspace": animations.LessNiceAnim,
+                 "dataspaceb": animations.LessNiceAnim}
     configDict = {"config2d_new": configs.Config2DNew,
                   "config2d_new_grid": configs.Config2DNew_grid,
                   "config1d_new": configs.Config1DNew}
@@ -185,10 +200,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument( "--verbose", action="store_true")
     parser.add_argument("--seed", type=int, default=None, help="seed")
-    parser.add_argument("--config", help="config name", default="config2d_new", choices=configDict.keys())
+    parser.add_argument("--config", help="config name", default=None, choices=configDict.keys())
     parser.add_argument("-o", "--output", help="output name", default="out_new")
-    parser.add_argument("-k", "--keepfirst", help="keep first step", action="store_true")
-    parser.add_argument("-r", "--keepsecond", help="keep second step", action="store_true")
+    parser.add_argument("-k", "--keepfirst", help="reload descent", action="store_true")
+    parser.add_argument("-r", "--keepsecond", help="reload descent & postprocess", action="store_true")
     parser.add_argument("--run", action="store_true", help="ignore steps number and run until interrupted")
     parser.add_argument("--steps", default=-1, type=int, help="how many iterations to optimize the network")
     parser.add_argument("--noanim", action="store_true", help="do not show the end animation")
@@ -213,27 +228,39 @@ if __name__ == '__main__':
     else:
         codemov = args.movieout
     myanim = animationDict[args.anim]
-    myconfig = configDict[args.config]
+
+
 
     stepname = f"data/settings_{code}.pkl"
     if args.keepfirst or args.keepsecond and os.path.isfile(stepname):
         with open(stepname, "rb") as f:
-            print(f"Loading {stepname}")
             local_args = pickle.load(f)
-            X1 = getInput2(local_args)
+            print(f"Loading '{stepname}' - config='{local_args.config}'")
+            myconfig = configDict[local_args.config]
+            X1 = myconfig(local_args)
     else:
-        print(f"Overwriting {stepname}")
+        if args.config is None:
+            cl = list(configDict)
+            for i, c in enumerate(cl):
+                print(f"{i+1}\t'{c}'")
+            while True:
+                num = IntPrompt.ask(f"Enter a number between 1 and {len(cl)}")
+                if num >= 1 and num <= len(cl):
+                    args.config = cl[num-1]
+                    break
+        myconfig = configDict[args.config]
+        print(f"Overwriting '{stepname}'")
         X1 = myconfig(args)
         with open(stepname, "wb") as f:
             pickle.dump(args, f)
 
-    stepname = f"data/layer_{code}.pkl"
+    stepname = f"data/descent_{code}.pkl"
     if (args.keepfirst or args.keepsecond) and os.path.isfile(stepname):
         with open(stepname, "rb") as f:
-            print(f"Loading {stepname}")
+            print(f"Loading '{stepname}'")
             X2 = pickle.load(f)
     else:
-        print(f"Overwriting {stepname}")
+        print(f"Overwriting '{stepname}'")
         if args.runanim:
             X2 = animationRun(X1, myanim=myanim)
         elif args.run:
@@ -244,13 +271,13 @@ if __name__ == '__main__':
             pickle.dump(X2, f)
 
 
-    stepname = f"data/calcs_{code}.pkl"
+    stepname = f"data/postprocess_{code}.pkl"
     if args.keepfirst and args.keepsecond and os.path.isfile(stepname):
         with open(stepname, "rb") as f:
-            print(f"Loading {stepname}")
+            print(f"Loading '{stepname}'")
             X3 = pickle.load(f)
     else:
-        print(f"Overwriting {stepname}")
+        print(f"Overwriting '{stepname}'")
         X3 = simplecalcs(X2|X1)
         with open(stepname, "wb") as f:
             pickle.dump(X3, f)

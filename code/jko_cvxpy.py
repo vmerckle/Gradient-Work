@@ -23,6 +23,7 @@ class jko_cvxpy(jko.JKO):
         self.loadgrid(X, Y, ly1, ly2, grid, p)
         
         self.K = jko.getKernel(self.grid, self.gamma) # maybe psigns, maybe not TODO
+        self.beta = beta
 
         xwi = self.X @ ly1
         xwir = (xwi >0) * xwi # n,m
@@ -35,10 +36,12 @@ class jko_cvxpy(jko.JKO):
 
         Yhat = cp.reshape(Yhat, (self.n, 1))
         self.residuals = cp.quad_over_lin(Yhat-self.Y, self.n)
-        self.regularization = cp.sum(cp.kl_div(self.pvar, self.qparam))
-        constraints = [self.pvar >= 1e-8]
+        self.kl_regu = cp.sum(cp.kl_div(self.pvar, self.qparam))
+        self.weight_regu = cp.sum(self.pvar ** 2)
+        #self.l1norm = cp.sum(cp.abs(self.pvar)) # always one ofc..
         constraints = []
-        obj = cp.Minimize(self.residuals + self.tau/self.gamma * self.regularization)
+        constraints = [self.pvar >= 1e-6]
+        obj = cp.Minimize(self.residuals + self.beta * self.weight_regu + self.tau/self.gamma * self.kl_regu)
         self.problem = cp.Problem(obj, constraints)
 
     def proxf(self, kb):
@@ -55,12 +58,15 @@ class jko_cvxpy(jko.JKO):
             #self.problem.solve(verbose=verb, solver=cp.ECOS, max_iters=100)
         except cp.error.SolverError as e:
                     #'info': {'exitFlag': 0, 'pcost': -1052648.926085804, 'dcost': -1052648.925960286, 'pres': 4.7189265712903e-09, 'dres': 7.554818405757892e-10, 'pinf': 0.0, 'dinf': 0.0, 'pinfres': nan, 'dinfres': 1.116626843860054e-05, 'gap': 1.2996111340072398e-13, 'relgap': 1.234610231200013e-19, 'r0': 1e-08, 'iter': 23, 'mi_iter': -1, 'infostring': 'Optimal solution found', 'timing': {'runtime': 0.000631987, 'tsetup': 3.4505e-05, 'tsolve': 0.000597482}, 'numerr': 0}}
+            #print(e)
+            # when it really 
             pass
         infos = self.problem.solver_stats.extra_stats["info"]
         msg = infos["infostring"]
         flag = infos["exitFlag"]
         pres = infos["pres"]
         itern = infos["iter"]
-        #print(f"{flag}-", end="", flush=True)
-        #print(f"{msg}:{flag}: {pres} in {itern} iters")
+        if flag < 0 or 0:
+            print(f"{msg}:{flag}: {pres} in {itern} iters")
+        #print(f"res:{self.residuals.value:.2E} vs kld:{self.kl_regu.value:.2E}(*{self.tau/self.gamma:.4f}) vs wed:{self.weight_regu.value:.2E}(*{self.beta:.4f})")
         return self.pvar.value[:, None]

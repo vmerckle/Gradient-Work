@@ -35,6 +35,7 @@ class JKO:
             self.p = p
 
     def load(self, X, Y, ly1, ly2, beta=0, grid=None, p=None):
+        self.beta = beta
         self.loadgrid(X, Y, ly1, ly2, grid, p)
 
         self.K = getKernel(self.grid, self.gamma) # maybe psigns, maybe not TODO
@@ -42,7 +43,11 @@ class JKO:
     def step(self):
         q = self.p
         qnorm = self.mynorm(q)
+        startsum = np.sum(self.p)
         a, b = (np.ones_like(self.p) for _ in range(2))
+
+        stop_proto = 1e-3 # don't accelerate that much in the end
+        stop_proto = None
 
         # this seems to remove a few early useless iterations
         #a = self.p
@@ -62,10 +67,17 @@ class JKO:
             if proxres is None:
                 print("solver failed")
                 sys.exit(0)
+
             if np.any(proxres < 0):
                 print(f"{np.sum(proxres < 0)/len(proxres)*100:.2f}% of entries were negatives")
             self.p = np.maximum(proxres, eps)
             psum = np.sum(self.p)
+            if stop_proto is not None and abs(startsum-psum) < stop_proto:
+                print(f"psum={psum:.4f} exit after {i+1}/{self.interiter} iterations")
+                break
+            if (psum < 0.9 or psum > 1.1) and i > 10 and 0:
+                print(f"{i+1}/{self.interiter}: psum={psum:.2f}")
+
             # print("selfp", ", ".join([f"{x:.6f}" for x in self.p.flatten()]), f"sum(p)={psum:.3f}")
             a = self.p / kb
             ka = np.maximum(self.K(a), eps)
@@ -77,7 +89,10 @@ class JKO:
             if ConstrOdd < self.tol and ConstrEven < self.tol:
                 #print(f"early exit after {i} iterations")
                 break
-        #print(f"jko inter exit after {i+1}/{self.interiter} iterations")
+        if (psum < 0.9 or psum > 1.1) and 1:
+            print(f"jko inter exit after {i+1}/{self.interiter} iterations, psum=", psum)
+        print(psum)
+        #self.p = self.p/np.sum(self.p)
 
     def params(self, regopti=False, oneway=False):
         #ly1 = self.grid * np.sqrt(self.p)
@@ -124,7 +139,7 @@ def getKernel(grid, gamma):
     #Gibbs = Gibbs/np.median(Gibbs) # not like this
     #Gibbs = np.eye(len(grid))+1e-3 # some very uniform movement
     #Gibbs = np.eye(len(grid)) # don't allow movement... basically
-    print("Gibbs", [f"{x:.3f}" for x in Gibbs[0][0:10]])
+    print("GibbsK", ", ".join([f"{x:.1E}" for x in Gibbs[0][0:10]]))
 
     def aux(p):  # Gibbs Kernel applied to a vector p 
         return np.dot(Gibbs,p)
