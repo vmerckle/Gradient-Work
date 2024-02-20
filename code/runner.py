@@ -90,10 +90,11 @@ def simpleRun(X):
             lly2.append(nly2)
             l = opti.loss()
             if m <= 20 and 1:
-                print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]))
-                #print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]), f"loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
+                #print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]))
+                print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]), f"loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
             else:
-                print(f"{num}: loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
+                print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]), f"loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
+                #print(f"{num}: loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
             num += 1
             if l < bestloss:
                 bestloss = l
@@ -195,6 +196,7 @@ if __name__ == '__main__':
                  "dataspaceb": animations.LessNiceAnim}
     configDict = {"config2d_new": configs.Config2DNew,
                   "config2d_new_grid": configs.Config2DNew_grid,
+                  "config2d_new_grid_wasser": configs.Config2DNew_grid_wasser,
                   "config1d_new": configs.Config1DNew}
 
     parser = argparse.ArgumentParser()
