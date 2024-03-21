@@ -11,6 +11,8 @@ from matplotlib.animation import FuncAnimation
 from utils import *
 import torch
 
+# standalone file to reproduce the disk experience in Gpeyre's paper
+
 # tua=0.1, gamma = 0.001 is nice and need 50nsteps to cvg.
 N = 30
 tau = 0.003

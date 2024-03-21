@@ -48,14 +48,15 @@ class wasser(jko.JKO):
             mseloss = torch.nn.MSELoss()(yhat.flatten(), Y.flatten())
             return mseloss 
 
+        optimizer = torch.optim.SGD([W], lr=self.adamlr, weight_decay=0, momentum=0.9)
+        optimizer = torch.optim.AdamW([W], lr=self.adamlr, weight_decay=0)
         for i in range(self.wasseriter):
             if self.d>1:
                 sw = self.sliced_wasserstein(x_k, x_prev, self.num_projections, self.device, p=2)
             else:
                 sw = self.emd1D(x_k.reshape(1,-1), x_prev.reshape(1,-1), p=2)
 
-            loss = obj(W) #+ self.tau*sw
-            optimizer = torch.optim.SGD([W], lr=self.adamlr, weight_decay=0, momentum=0.9)
+            loss = 1/self.m * obj(W) + self.tau*sw
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
