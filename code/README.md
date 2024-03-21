@@ -1,47 +1,47 @@
-- *better_runner.py*: 1d animation runner
+# user interface: runner.py
 
-Example run: 
+options:
+  -h, --help            show this help message and exit
+  --verbose
+  --seed SEED           seed
+  --config {config2d_new,config2d_new_grid,config2d_new_grid_wasser,config1d_new}
+                        config name
+  -o OUTPUT, --output OUTPUT
+                        output name
+  -k, --keepfirst       reload descent
+  -r, --keepsecond      reload descent & postprocess
+  --run                 ignore steps number and run until interrupted
+  --steps STEPS         how many iterations to optimize the network
+  --noanim              do not show the end animation
+  --runanim             show a real time animation, enables option 'run' as well
+  --anim {output+neurons,dataspace,dataspaceb}
+                        what animation
+  --movie               save movie
+  --movieout MOVIEOUT   output movie name
+  --fps FPS             movie fps
+  --skiptoseconds SKIPTOSECONDS
+                        maximum time in seconds, will skip frame to match
 
-start by a real time animation
+## --config?
 
-    python better_runner.py --algo jko --jkosteps 100 --jkogamma 0.001 --jkotau 0.00001 --runanim --noanim
+- *config.py*: configuration are python files (contain algo choice, data setup, hyperparameters...)
 
-all data has been saved, now run a smoother animation on the same data:
+## sliced wasserstein
 
-    python better_runner.py -kr
+- *wasserstein.py*: 1D, projections.. c/c as of now
 
-encode animation in "bestrun_movie.mp4"
+## "library" files
 
-    python better_runner.py -kr --movie --ouput bestrun
-
-all options:
-
-      -h, --help            show this help message and exit
-      -k, --keepfirst       keep first step
-      -r, --keepsecond      keep second step
-      --run                 ignore steps number and run until interrupted
-      --steps STEPS         how many iterations to optimize the network
-      --noanim              do not show the end animation
-      --runanim             show a real time animation, enables option 'run' as well
-      -m, --movie           save movie
-      -o OUTPUT, --output OUTPUT
-                            output name
-      --verbose
-      --algo {torch,jko}
-      -lr LR                learning rate for algo='torch'
-      --jkosteps JKOSTEPS   algo=jko, number of internal iterations
-      --jkogamma JKOGAMMA   algo=jko, float
-      --jkotau JKOTAU       algo=jko, float
-      --proxf {scipy,torch}
-                            algo=jko, how to compute the prox
-      --adamlr ADAMLR       algo=jko, proxf=torch, learning rate for gradient descent
-
-
-- *torch_descent.py*: pytorch implem of 2 layer ReLU
-- *jko_descent.py*: mean-field discretization using JKO
-- *anim_2d_classif.py*: algo visualization  with 2d data 
+- *animations.py*: 2d, 1d animations
 - *utils.py*: helper functions and such
+- *torch_descent.py*: pytorch implem of 2 layer ReLU gradient descent
+- *cvx_descent.py*: 2 layer ReLU gradient descent convex solver
 
-### obsolete files
-- *old_jko/*: (OLD) mean-field discretization using JKO -> all code in jko_descent.py
-- *anim_1d_allneurons.py*: algo visualization  with 1d data  -> recoded in better_runner.py
+## jko solvers
+- *jko.py*: mean-field discretization using JKO, replace Wasserstein proxf by kl_div proxf.
+- *jko_proxf_scipy.py*: proxf scipy solver
+- *jko_proxf_cvxpy.py*: proxf cvxpy solver
+- *jko_proxf_pytorch.py*: proxf pytorch gradient descent solver
+
+## obsolete files
+- *old/\**: some are useful code snippets
