@@ -1,25 +1,26 @@
 # user interface: runner.py
 
 options:
-  -h, --help            show this help message and exit
-  --verbose
-  --seed SEED           seed
-  --config {config2d_new,config2d_new_grid,config2d_new_grid_wasser,config1d_new}
-                        config name
-  -o OUTPUT, --output OUTPUT
-                        output name
-  -k, --keepfirst       reload descent
-  -r, --keepsecond      reload descent & postprocess
-  --run                 ignore steps number and run until interrupted
-  --steps STEPS         how many iterations to optimize the network
-  --noanim              do not show the end animation
-  --runanim             show a real time animation, enables option 'run' as well
-  --anim {output+neurons,dataspace,dataspaceb}
-                        what animation
-  --movie               save movie
-  --movieout MOVIEOUT   output movie name
-  --fps FPS             movie fps
-  --skiptoseconds SKIPTOSECONDS
+
+    -h, --help            show this help message and exit
+    --verbose
+    --seed SEED           seed
+    --config {config2d_new,config2d_new_grid,config2d_new_grid_wasser,config1d_new}
+                          config name
+    -o OUTPUT, --output OUTPUT
+                          output name
+    -k, --keepfirst       reload descent
+    -r, --keepsecond      reload descent & postprocess
+    --run                 ignore steps number and run until interrupted
+    --steps STEPS         how many iterations to optimize the network
+    --noanim              do not show the end animation
+    --runanim             show a real time animation, enables option 'run' as well
+    --anim {output+neurons,dataspace,dataspaceb}
+                          what animation
+    --movie               save movie
+    --movieout MOVIEOUT   output movie name
+    --fps FPS             movie fps
+    --skiptoseconds SKIPTOSECONDS
                         maximum time in seconds, will skip frame to match
 
 ## --config?
