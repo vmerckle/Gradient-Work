@@ -5,9 +5,74 @@ import numpy as np
 #gpudevice = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
 from utils import *
+from types import SimpleNamespace
 
+def loadalgo(X1):
+    x = SimpleNamespace(**X1)
+    algo = x.algo
+    if algo == "GD":
+        from algo_GD_pytorch import torch_descent
+        opti = torch_descent(device=x.device, algo="gd")
+    elif algo == "JKO":
+        proxf = x.proxf
+        if proxf == "cvxpy":
+            from jko_proxf_cvxpy import jko_cvxpy
+            opti = jko_cvxpy(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol, verb=x.args.verbose)
+        elif proxf == "scipy":
+            from jko_proxf_scipy import jko_scipy
+            opti = jko_scipy(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol, verb=x.args.verbose)
+        elif proxf == "pytorch":
+            from jko_proxf_pytorch import jko_pytorch
+            opti = jko_pytorch(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol, verb=x.args.verbose)
+        else:
+            raise Exception("config bad proxf choice")
+    elif algo == "wasser":
+            from algo_wasserstein import wasser
+            opti = wasser(wasseriter=x.wasser_gd_maxit, tau=x.wassertau, num_projections=x.num_projections, verb=x.args.verbose, adamlr=x.wasser_gd_lr, rng=x.rng)
+    else:
+        raise Exception("config bad algo choice")
+
+    opti.load(x.X, x.Y, x.ly1, x.ly2, x.beta)
+    return {"opti": opti}
 
 def Config2DNew_grid_wasser(args):
+    seed = 4
+    device = "cpu"
+    rng = np.random.default_rng(seed)
+
+    algo = "wasser"
+    wassertau = 1e5
+    wasser_gd_lr = 1e-2
+    wasser_gd_maxit = 100
+    num_projections = 20
+    include_negative_neurons = False
+    steps = 1
+
+    beta = 1e0
+    m, d, n = 10, 2, 5
+    Xb = np.linspace(-0.5, 0.5, n)[:, None]
+    #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
+    X, Y = add_bias(Xb), Xb*0.1+0.1
+
+    s= 1e-4
+    t = np.linspace(-s, s, m)
+    Xm, Ym = np.meshgrid(t, t)
+    # Transform X and Y into 2x(m^2) matrices
+    ly1 = np.vstack((Xm.flatten(), Ym.flatten()))
+    m = ly1.shape[1]
+    ly2 = np.ones((m, 1))
+
+    if include_negative_neurons:
+        raise Exception("Not implemented")
+    # double the number of neurons to allow for negative neurons..
+    # ly1 = np.concatenate((ly1, ly1*1.0), axis=1)
+    # ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0)
+
+    X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
+    X1.update(loadalgo(X1))
+    return X1
+
+def Config2DNew_grid_wassera(args):
     seed = 4
     gpudevice = "cpu"
     device = "cpu"
@@ -18,7 +83,7 @@ def Config2DNew_grid_wasser(args):
     proxf = "scipy"
     proxf = "cvxpy"
     algo, proxf = "wasser", "no"
-    wasseriter = 1000
+    wasseriter = 100
     wassertau = 1e2
     num_projections = 1000
     gd_lr = 1e-4
@@ -52,47 +117,9 @@ def Config2DNew_grid_wasser(args):
     # ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0)
 
     print(f"Running {algo} (with prox={proxf}) on {m} 2D neurons, startsum = {np.sum(ly2):.1f}")
-
-    if algo == "GD":
-        from torch_descent import torch_descent
-        opti = torch_descent(device=device, algo="gd")
-    elif algo == "JKO":
-        if proxf == "cvxpy":
-            from jko_proxf_cvxpy import jko_cvxpy
-            opti = jko_cvxpy(interiter=jko_inter_maxstep, gamma=gamma, tau=tau, tol=jko_tol, verb=args.verbose)
-        elif proxf == "scipy":
-            from jko_proxf_scipy import jko_scipy
-            opti = jko_scipy(interiter=jko_inter_maxstep, gamma=gamma, tau=tau, tol=jko_tol, verb=args.verbose)
-        elif proxf == "pytorch":
-            from jko_proxf_pytorch import jko_pytorch
-            opti = jko_pytorch(interiter=jko_inter_maxstep, gamma=gamma, tau=tau, tol=jko_tol, verb=args.verbose)
-        else:
-            raise Exception("config bad proxf choice")
-    elif algo == "wasser":
-            from wasserstein import wasser
-            opti = wasser(wasseriter=wasseriter, tau=wassertau, num_projections=num_projections, verb=args.verbose, adamlr=gd_lr)
-    else:
-        raise Exception("config bad algo choice")
-
-    opti.load(X, Y, ly1, ly2, beta)
-
-    return {"seed": seed,
-            "gpudevice": gpudevice,
-            "device": device,
-            "m": m,
-            "d": d,
-            "n": n,
-            "gd_lr": gd_lr,
-            "beta": beta,
-            "rng": rng,
-            "Xb": Xb,
-            "X": X,
-            "Y": Y,
-            "ly1": ly1,
-            "ly2": ly2,
-            "opti": opti,
-            "steps": args.steps
-            }
+    X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
+    X1.update(loadalgo(X1))
+    return X1
 
 def Config2DNew_grid(args):
     seed = 4
@@ -138,47 +165,9 @@ def Config2DNew_grid(args):
     # ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0)
 
     print(f"Running {algo} (with prox={proxf}) on {m} 2D neurons, startsum = {np.sum(ly2):.1f}")
-
-    if algo == "GD":
-        from torch_descent import torch_descent
-        opti = torch_descent(device=device, algo="gd")
-    elif algo == "JKO":
-        if proxf == "cvxpy":
-            from jko_proxf_cvxpy import jko_cvxpy
-            opti = jko_cvxpy(interiter=jko_inter_maxstep, gamma=gamma, tau=tau, tol=jko_tol, verb=args.verbose)
-        elif proxf == "scipy":
-            from jko_proxf_scipy import jko_scipy
-            opti = jko_scipy(interiter=jko_inter_maxstep, gamma=gamma, tau=tau, tol=jko_tol, verb=args.verbose)
-        elif proxf == "pytorch":
-            from jko_proxf_pytorch import jko_pytorch
-            opti = jko_pytorch(interiter=jko_inter_maxstep, gamma=gamma, tau=tau, tol=jko_tol, verb=args.verbose)
-        else:
-            raise Exception("config bad proxf choice")
-    elif algo == "wasser":
-            from wasserstein import wasser
-            opti = wasser(wasseriter=wasseriter, tau=wassertau, num_projections=num_projections, verb=args.verbose, adamlr=gd_lr)
-    else:
-        raise Exception("config bad algo choice")
-
-    opti.load(X, Y, ly1, ly2, beta)
-
-    return {"seed": seed,
-            "gpudevice": gpudevice,
-            "device": device,
-            "m": m,
-            "d": d,
-            "n": n,
-            "gd_lr": gd_lr,
-            "beta": beta,
-            "rng": rng,
-            "Xb": Xb,
-            "X": X,
-            "Y": Y,
-            "ly1": ly1,
-            "ly2": ly2,
-            "opti": opti,
-            "steps": args.steps
-            }
+    X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
+    X1.update(loadalgo(X1))
+    return X1
 
 
 def Config2DNew(args):
@@ -228,46 +217,10 @@ def Config2DNew(args):
     # ly1 = np.concatenate((ly1, ly1*1.0), axis=1)
     # ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0)
 
-    if algo == "GD":
-        from torch_descent import torch_descent
-        opti = torch_descent(device=device, algo="gd")
-    elif algo == "JKO":
-        if proxf == "cvxpy":
-            from jko_proxf_cvxpy import jko_cvxpy
-            opti = jko_cvxpy(interiter=jko_inter_maxstep, gamma=gamma, tau=tau, tol=jko_tol, verb=args.verbose)
-        elif proxf == "scipy":
-            from jko_proxf_scipy import jko_scipy
-            opti = jko_scipy(interiter=jko_inter_maxstep, gamma=gamma, tau=tau, tol=jko_tol, verb=args.verbose)
-        elif proxf == "pytorch":
-            from jko_proxf_pytorch import jko_pytorch
-            opti = jko_pytorch(interiter=jko_inter_maxstep, gamma=gamma, tau=tau, tol=jko_tol, verb=args.verbose)
-        else:
-            raise Exception("config bad proxf choice")
-    elif algo == "wasser":
-            from wasserstein import wasser
-            opti = wasser(wasseriter=wasseriter, tau=wassertau, num_projections=num_projections, verb=args.verbose, adamlr=gd_lr)
-    else:
-        raise Exception("config bad algo choice")
-
-    opti.load(X, Y, ly1, ly2, beta)
-
-    return {"seed": seed,
-            "gpudevice": gpudevice,
-            "device": device,
-            "m": m,
-            "d": d,
-            "n": n,
-            "gd_lr": gd_lr,
-            "beta": beta,
-            "rng": rng,
-            "Xb": Xb,
-            "X": X,
-            "Y": Y,
-            "ly1": ly1,
-            "ly2": ly2,
-            "opti": opti,
-            "steps": args.steps
-            }
+    print(f"Running {algo} (with prox={proxf}) on {m} 2D neurons, startsum = {np.sum(ly2):.1f}")
+    X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
+    X1.update(loadalgo(X1))
+    return X1
 
 def Config1DNew(args):
     seed = 4
@@ -311,50 +264,10 @@ def Config1DNew(args):
     ly2 = ly2/np.sum(ly2)
     ly1 = ly1.T
 
-    print(f"Running {algo} (with prox={proxf}) on {m} 1D neurons, startsum = {np.sum(ly2):.1f}")
-
-
-    if algo == "GD":
-        from torch_descent import torch_descent
-        opti = torch_descent(device=device, algo="gd")
-    elif algo == "JKO":
-        if proxf == "cvxpy":
-            from jko_proxf_cvxpy import jko_cvxpy
-            opti = jko_cvxpy(interiter=jko_inter_maxstep, gamma=gamma, tau=tau, tol=jko_tol, verb=args.verbose)
-        elif proxf == "scipy":
-            from jko_proxf_scipy import jko_scipy
-            opti = jko_scipy(interiter=jko_inter_maxstep, gamma=gamma, tau=tau, tol=jko_tol, verb=args.verbose)
-        elif proxf == "pytorch":
-            from jko_proxf_pytorch import jko_pytorch
-            opti = jko_pytorch(interiter=jko_inter_maxstep, gamma=gamma, tau=tau, tol=jko_tol, verb=args.verbose)
-        else:
-            raise Exception("config bad proxf choice")
-    elif algo == "wasser":
-            from wasserstein import wasser
-            opti = wasser(wasseriter=wasseriter, tau=wassertau, num_projections=num_projections, verb=args.verbose, adamlr=gd_lr)
-    else:
-        raise Exception("config bad algo choice")
-
-    opti.load(X, Y, ly1, ly2, beta)
-
-    return {"seed": seed,
-            "gpudevice": gpudevice,
-            "device": device,
-            "m": m,
-            "d": d,
-            "n": n,
-            "gd_lr": gd_lr,
-            "beta": beta,
-            "rng": rng,
-            "Xb": Xb,
-            "X": X,
-            "Y": Y,
-            "ly1": ly1,
-            "ly2": ly2,
-            "opti": opti,
-            "steps": args.steps
-            }
-
+    print(f"Running {algo} (with prox={proxf}) on {m} 2D neurons, startsum = {np.sum(ly2):.1f}")
+    X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
+    X1.update(loadalgo(X1))
+    return X1
 #
 #
 #    c = 45

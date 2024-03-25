@@ -26,7 +26,10 @@ def normData(D, key, left, right):
     allki = np.array([di[key] for di in D])
     b, a = np.min(allki), np.max(allki)
     for di in D:
-        di[key] = (di[key]-b)/(a-b)*(right-left)+left
+        if (a-b) == 0:
+            di[key] = 0
+        else:
+            di[key] = (di[key]-b)/(a-b)*(right-left)+left
 
 def getMotifNow(X, ly1):
     n, d = X.shape

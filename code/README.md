@@ -1,4 +1,4 @@
-# user interface: runner.py
+# user interface: main.py
 
 options:
 
@@ -29,17 +29,19 @@ options:
 
 ## sliced wasserstein
 
-- *wasserstein.py*: 1D, projections.. c/c as of now
+- *algo_wasserstein.py*: 1D, projections.. c/c as of now
 
 ## "library" files
 
+- *runner.py*: different loops (animation, loss display...)
+- *postprocess.py*: compute indicators and data for display purposes
 - *animations.py*: 2d, 1d animations
 - *utils.py*: helper functions and such
-- *torch_descent.py*: pytorch implem of 2 layer ReLU gradient descent
-- *cvx_descent.py*: 2 layer ReLU gradient descent convex solver
+- *algo_GD_torch.py*: pytorch implem of 2 layer ReLU gradient descent
+- *algo_convex_cvxpy.py*: 2 layer ReLU gradient descent convex solver
 
 ## jko solvers
-- *jko.py*: mean-field discretization using JKO, replace Wasserstein proxf by kl_div proxf.
+- *algo_jko.py*: mean-field discretization using JKO, replace Wasserstein proxf by kl_div proxf.
 - *jko_proxf_scipy.py*: proxf scipy solver
 - *jko_proxf_cvxpy.py*: proxf cvxpy solver
 - *jko_proxf_pytorch.py*: proxf pytorch gradient descent solver
