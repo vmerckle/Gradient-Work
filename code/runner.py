@@ -1,11 +1,7 @@
 import numpy as np
 import time
-
-import argparse
-import os.path
 import sys
-import pickle
-
+from types import SimpleNamespace
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
@@ -15,27 +11,14 @@ import animations
 
 from utils import *
 
-#from rich.traceback import install #rich as default traceback handler
-from rich.progress import track
-from rich.progress import Progress
-from rich.columns import Columns
-from rich.table import Column
-from rich.table import Table
-
-from rich.logging import RichHandler
-from rich import print
-from rich.pretty import pprint
-from rich.prompt import Confirm
-from rich.prompt import IntPrompt
-
 # run without animation
-def simpleRun(X):
-    steps = X["steps"] if "steps" in X else -1
-    data = X
-    lly1, lly2 = [X["ly1"]], [X["ly2"]]
-    d, m = lly1[-1].shape
-    opti = X["opti"]
-    X, Y = X["X"], X["Y"] # no comment
+def simpleRun(setupDict):
+    setup = SimpleNamespace(**setupDict)
+    lly1, lly2 = [setup.ly1], [setup.ly2]
+    opti = setup.opti
+    X, Y = setup.X, setup.Y
+    d, m = setup.ly1.shape
+
     num = 0
     bestloss = opti.loss()
     print("it=", num, "loss=", opti.loss())
@@ -43,7 +26,7 @@ def simpleRun(X):
     #print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]))
     try:
         while True:
-            if steps != -1 and num >= steps:
+            if setup.steps != -1 and num >= setup.steps:
                 break
             opti.step()
             nly1, nly2 = opti.params()
@@ -58,7 +41,7 @@ def simpleRun(X):
                 # print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]), f"loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
                 #print(f"{num}: loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
                 pass
-            print(f"loss: {l}")
+            #print(f"loss: {l}")
             num += 1
             if l < bestloss:
                 bestloss = l
@@ -75,13 +58,13 @@ def simpleRun(X):
     return {"lly1":lly1, "lly2":lly2}
 
 # plot live animation
-def animationRun(X, myanim):
-    data = X
-    lly1, lly2 = [X["ly1"]], [X["ly2"]]
-    opti = X["opti"]
-    X, Y = X["X"], X["Y"] # no comment
+def animationRun(setupDict, myanim):
+    setup = SimpleNamespace(**setupDict)
+    lly1, lly2 = [setup.ly1], [setup.ly2]
+    opti = setup.opti
+    X, Y = setup.X, setup.Y
+    d, m = setup.ly1.shape
     n, d = X.shape
-    num = 0
 
     print("Animation setup..")
     fig = plt.figure(figsize=(10,4))
@@ -90,15 +73,11 @@ def animationRun(X, myanim):
         Xout = add_bias(Xoutb)
     elif d == 1:
         Xout = Xoutb[:, None]
-    animobj = myanim(fig, data|{"Xout":Xoutb}, runanim=True)
+    animobj = myanim(fig, setupDict|{"Xout":Xoutb}, runanim=True)
     already = [False] # see comment about i=0
     bestloss = [opti.loss()]
     def update_ok(i):
         if i == 0: # for some reason, this function is called 4 times with i=0
-            if not already[0]:
-                print("it=", i, "loss=", opti.loss())
-                already[0] = True
-
             nly1, nly2 = opti.params()
             di = postprocess.NNtoIter(X, Y, Xout, nly1, nly2, run=True)
             p = opti.p
@@ -127,17 +106,9 @@ def animationRun(X, myanim):
 
     try:
         ani = animation.FuncAnimation(fig, update_ok, frames=list(range(100000)), blit=True, interval=1)
-        animobj.ax.set_xlim(-1.2, 1.2)
-        animobj.ax.set_ylim(-1.2, 1.2)
-        animobj.ax.set_xlim(-4.2, 4.2)
-        animobj.ax.set_ylim(-0.2, 2.4)
         plt.show()
     except KeyboardInterrupt:
-        print("Normal interrupt at num=", num)
-    print("say something?")
-    #except Exception as e:
-    #   print("Something went really wrong at num=", num)
-    #   print(e)
+        print("Keyboard interrupt")
 
     return {"lly1":lly1, "lly2":lly2}
 

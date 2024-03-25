@@ -25,25 +25,21 @@ class wasser(algo_jko.JKO): #just for grid stuff
 
 
     def load(self, X, Y, ly1, ly2, beta=0, grid=None, p=None):
-        self.loadgrid(X, Y, ly1, ly2, grid, p)
         self.beta = beta
+        self.ly1 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=True)
+        self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device)
+        self.X = torch.tensor(self.X, dtype=self.dtype, device=self.device)
+        self.Y = torch.tensor(self.Y, dtype=self.dtype, device=self.device)
 
     def step(self):
-        q_in = self.p
-        X = torch.tensor(self.X, dtype=self.dtype, device=self.device)
-        Y = torch.tensor(self.Y, dtype=self.dtype, device=self.device)
-        q = torch.tensor(q_in, dtype=self.dtype, device=self.device)
-        #p = torch.tensor(q_in, dtype=self.dtype, device=self.device, requires_grad=True)
-        #p = deepcopy(q).requires_grad_(True)
-        grid = torch.tensor(self.grid, dtype=self.dtype, device=self.device)
-        W = deepcopy(grid.T).requires_grad_(True)
-        x_prev = grid.T
+        W = deepcopy(self.ly1).requires_grad_(True)
+        x_prev = self.ly1.clone().detach()
         x_k = W
 
-        activ = (X @ grid.T) > 0
 
         def obj(Wn, verb=False):
             #effneurons = grid.T # (d,N) 
+            activ = (X @ ly1) > 0
             out = activ * (X @ Wn) # (n, d) * (d, N) = (n, N)
             yhat = torch.sum(out, axis=1)
             mseloss = torch.nn.MSELoss()(yhat.flatten(), Y.flatten())
@@ -79,10 +75,10 @@ class wasser(algo_jko.JKO): #just for grid stuff
             nowlr = optimizer.param_groups[0]["lr"]
             if abs(lastlr - nowlr) > 1e-10:
                 lastlr = nowlr
-                print("newlr", nowlr)
+                #print("newlr", nowlr)
             if i == 0:
                 startloss=lossval
-                print("startloss", lossval)
+                #print("startloss", lossval)
                 bestloss=lossval
             noimprovsince += 1
             #with torch.no_grad():
@@ -106,13 +102,13 @@ class wasser(algo_jko.JKO): #just for grid stuff
             #scheduler.step()
             #scheduler.step(lossval)
             optimizer.zero_grad()
-        print("")
-        print("final loss", lossval)
+        #print("")
+        #print("final loss", lossval)
         stableprojec_numb = 1 #10 000 is a good number, but slow
         sw = self.sliced_wasserstein(x_k, x_prev, 1, self.device, p=2)
         loss = obj(W) + self.tau*sw
         loss.backward()
-        print(f"gradnorm : {W.grad.norm(2):.7f}")
+        #print(f"gradnorm : {W.grad.norm(2):.7f}")
         lossval = loss.item()
         improvement = (1-lossval/startloss)/startloss
         bimprovement = (1-bestloss/startloss)/startloss

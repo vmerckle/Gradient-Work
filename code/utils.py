@@ -27,7 +27,7 @@ def normData(D, key, left, right):
     b, a = np.min(allki), np.max(allki)
     for di in D:
         if (a-b) == 0:
-            di[key] = 0
+            di[key] = di[key]*0 + (right-left)/2
         else:
             di[key] = (di[key]-b)/(a-b)*(right-left)+left
 

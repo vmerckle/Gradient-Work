@@ -51,6 +51,6 @@ def simplecalcs(X):
     elif d == 1:
         allX = allXb[:, None]
     iterdata = [NNtoIter(X, Y, allX, lly1[i], lly2[i]) for i in range(len(lly1))]
-    normData(iterdata, "lnorm", 0, 1) 
-    normData(iterdata, "lsize", 1, 100)
+    #normData(iterdata, "lnorm", 0, 1) 
+    #normData(iterdata, "lsize", 1, 100)
     return {"Xout": allXb, "iterdata": iterdata}

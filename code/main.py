@@ -31,6 +31,7 @@ from utils import *
 
 if __name__ == '__main__':
     animationDict = {"output+neurons":animations.NiceAnim,
+                 "wasser": animations.WasserNiceAnim,
                  "dataspace": animations.LessNiceAnim,
                  "dataspaceb": animations.LessNiceAnim}
     configDict = {"config2d_new": configs.Config2DNew,
@@ -49,8 +50,9 @@ if __name__ == '__main__':
     parser.add_argument("--runanim", action="store_true", help="show a real time animation, enables option 'run' as well")
     parser.add_argument("--anim_choice", default="output+neurons", choices=animationDict.keys(), help="what animation")
     parser.add_argument("--movie", help="save movie", action="store_true")
+    parser.add_argument("--save_movie", help="save movie", action="store_true")
     parser.add_argument("--fps", type=int, default=10, help="movie fps")
-    parser.add_argument("--skiptoseconds", default=10, type=float, help="maximum time in seconds, will skip frame to match")
+    parser.add_argument("--skiptoseconds", default=-1, type=float, help="maximum time in seconds, will skip frame to match")
     #parser.add_argument("--scaleinit", default=None, type=float, help="scalar factor to weight matrix")
     #parser.add_argument("--algo", default=None, choices=["torch", "jko", "jkocvx"])
     #parser.add_argument("--proxf", default=None, choices=["scipy", "torch", "cvxpy"], help="algo=jko, how to compute the prox")
@@ -67,12 +69,14 @@ if __name__ == '__main__':
     ####### Load the setup ####### 
     stepname = f"data/settings_{code}.pkl"
     if args.keepfirst or args.keepsecond and os.path.isfile(stepname):
+        print(f"Loading '{stepname}'") 
         with open(stepname, "rb") as f:
             local_args = pickle.load(f)
-            print(f"Loading '{stepname}' - config='{local_args.config}'")
             myconfig = configDict[local_args.config]
             X1 = myconfig(local_args)
+        print(f"Loaded config='{local_args.config}'")
     else:
+        print(f"Overwriting '{stepname}'")
         if args.config is None:
             cl = list(configDict)
             for i, c in enumerate(cl):
@@ -83,7 +87,6 @@ if __name__ == '__main__':
                     args.config = cl[num-1]
                     break
         myconfig = configDict[args.config]
-        print(f"Overwriting '{stepname}'")
         X1 = myconfig(args)
         with open(stepname, "wb") as f:
             pickle.dump(args, f)
@@ -91,26 +94,24 @@ if __name__ == '__main__':
     ####### Execute the algorithm ####### 
     stepname = f"data/descent_{code}.pkl"
     if (args.keepfirst or args.keepsecond) and os.path.isfile(stepname):
+        print(f"Loading '{stepname}'")
         with open(stepname, "rb") as f:
-            print(f"Loading '{stepname}'")
             X2 = pickle.load(f)
+        print(f"Loaded {len(X2['lly1'])} steps")
     else:
         print(f"Overwriting '{stepname}'")
         if args.runanim:
             X2 = runner.animationRun(X1, myanim=myanim)
-        elif args.run:
-            X2 = runner.simpleRun(X1)
         else:
-            sys.exit(0)
+            X2 = runner.simpleRun(X1)
         with open(stepname, "wb") as f:
             pickle.dump(X2, f)
-
 
     ####### Apply postprocess to iteration data ####### 
     stepname = f"data/postprocess_{code}.pkl"
     if args.keepfirst and args.keepsecond and os.path.isfile(stepname):
+        print(f"Loading '{stepname}'")
         with open(stepname, "rb") as f:
-            print(f"Loading '{stepname}'")
             X3 = pickle.load(f)
     else:
         print(f"Overwriting '{stepname}'")
@@ -118,7 +119,7 @@ if __name__ == '__main__':
         with open(stepname, "wb") as f:
             pickle.dump(X3, f)
 
-    if not args.movie:
+    if not (args.movie or args.save_movie):
         sys.exit(0)
     print(f"'{args.anim_choice}' animation requested")
 
@@ -126,22 +127,24 @@ if __name__ == '__main__':
 
     XXX = X1|X2|X3
     nframe = len(XXX["iterdata"])
-    skipv = nframe/args.fps/args.skiptoseconds
-    l = [i for i in range(0, nframe, int(skipv+0.99))]
-    if (nframe-1) not in l:
-        l.append(nframe-1)
-    #l = list(range(0, 70))
+    if args.skiptoseconds != -1:
+        skipv = nframe/args.fps/args.skiptoseconds
+        l = [i for i in range(0, nframe, int(skipv+0.99))]
+        if (nframe-1) not in l:
+            l.append(nframe-1)
+    else:
+        l = list(range(0, nframe))
+
     print("Animation setup..")
     fig = plt.figure(figsize=(10,10))
     animobj = myanim(fig, X1|X2|X3, frames=l)
-    ani = animobj.getAnim(1)
-    animobj.ax.set_xlim(-1.2, 1.2)
-    animobj.ax.set_ylim(-1.2, 1.2)
-    animobj.ax.set_xlim(-2.2, 2.2)
-    animobj.ax.set_ylim(-0.2, 2.4)
+    ani = animobj.getAnim(interval=1000/args.fps, blit=True)
 
-    # todo implement some frame skipping
-    if args.movie:
+    #a = 2
+    #animobj.ax.set_xlim(-a, a)
+    #animobj.ax.set_ylim(-a, a)
+
+    if args.save_movie:
         print("Saving animation")
         writer = animation.FFMpegWriter(fps=args.fps)#, bitrate=1800)
         name = f"outputs/{code}_movie.gif"

@@ -41,15 +41,15 @@ def Config2DNew_grid_wasser(args):
     rng = np.random.default_rng(seed)
 
     algo = "wasser"
-    wassertau = 1e5
-    wasser_gd_lr = 1e-2
-    wasser_gd_maxit = 100
+    wassertau = 1e0
+    wasser_gd_lr = 1e-4
+    wasser_gd_maxit = 500
     num_projections = 20
-    include_negative_neurons = False
-    steps = 1
+    include_negative_neurons = True
+    steps = -1
 
-    beta = 1e0
-    m, d, n = 10, 2, 5
+    beta = 1e0*0
+    m, d, n = 5, 2, 5
     Xb = np.linspace(-0.5, 0.5, n)[:, None]
     #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
     X, Y = add_bias(Xb), Xb*0.1+0.1
@@ -62,11 +62,9 @@ def Config2DNew_grid_wasser(args):
     m = ly1.shape[1]
     ly2 = np.ones((m, 1))
 
-    if include_negative_neurons:
-        raise Exception("Not implemented")
-    # double the number of neurons to allow for negative neurons..
-    # ly1 = np.concatenate((ly1, ly1*1.0), axis=1)
-    # ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0)
+    #double the number of neurons to allow for negative neurons..
+    ly1 = np.concatenate((ly1, ly1*1.0), axis=1) # (d, m) -> (d, 2m)
+    ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0) #(m, 1) -> (2m, 1)
 
     X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
     X1.update(loadalgo(X1))
