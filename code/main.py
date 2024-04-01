@@ -101,7 +101,8 @@ if __name__ == '__main__':
     else:
         print(f"Overwriting '{stepname}'")
         if args.runanim:
-            X2 = runner.animationRun(X1, myanim=myanim)
+            X2 = runner.simpleAnim(X1, myanim=myanim)
+            #X2 = runner.animationRun(X1, myanim=myanim)
         else:
             X2 = runner.simpleRun(X1)
         with open(stepname, "wb") as f:

@@ -41,15 +41,15 @@ def Config2DNew_grid_wasser(args):
     rng = np.random.default_rng(seed)
 
     algo = "wasser"
-    wassertau = 1e0
-    wasser_gd_lr = 1e-4
+    wassertau = 1e6
+    wasser_gd_lr = 1e0
     wasser_gd_maxit = 500
-    num_projections = 20
+    num_projections = 10
     include_negative_neurons = True
     steps = -1
 
     beta = 1e0*0
-    m, d, n = 5, 2, 5
+    m, d, n = 8, 2, 5
     Xb = np.linspace(-0.5, 0.5, n)[:, None]
     #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
     X, Y = add_bias(Xb), Xb*0.1+0.1

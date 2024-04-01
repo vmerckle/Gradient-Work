@@ -387,6 +387,7 @@ class WasserNiceAnim:
         self.allscat = self.ax.scatter([], [], marker='o')
 
         a = 0.004
+        a = 0.004
         self.ax.set_xlim(-a, a)
         self.ax.set_ylim(-a, a)
 
@@ -404,7 +405,7 @@ class WasserNiceAnim:
         for j in range(self.m):
             w1, w2 = ly1.T[j]
             alpha, = ly2[j]
-            xl[j], yl[j] = lact[j], ly1.flatten()[j]/np.max(ly1) # for jko
+            #xl[j], yl[j] = lact[j], 0.5*ly2.flatten()[j]#/np.max(ly1) # for jko
             xl[j], yl[j] = w1, w2
             colors.append("green" if alpha >= 0 else "red")
             mks.append(pos_marker if w1 >= 0 else neg_marker)

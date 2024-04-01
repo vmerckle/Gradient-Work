@@ -10,7 +10,7 @@ from utils import *
 from copy import deepcopy
 import algo_jko
 
-class wasser(algo_jko.JKO): #just for grid stuff
+class wasser(): #just for grid stuff
     def __init__(self, rng, wasseriter=100, tau=1, num_projections=10, verb=False, dtype=torch.float32, device="cpu", adamlr=1e-3):
         self.wasseriter=wasseriter
         self.num_projections = num_projections
@@ -24,99 +24,47 @@ class wasser(algo_jko.JKO): #just for grid stuff
     ## c/c https://raw.githubusercontent.com/clbonet/Sliced-Wasserstein_Gradient_Flows/main/Particles/sw.py
 
 
-    def load(self, X, Y, ly1, ly2, beta=0, grid=None, p=None):
+    def load(self, X, Y, ly1, ly2, beta=0):
         self.beta = beta
-        self.ly1 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=True)
+        self.n, self.d = ly1.shape
+        self.ly1 = torch.tensor(ly1, dtype=self.dtype, device=self.device, requires_grad=True)
         self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device)
-        self.X = torch.tensor(self.X, dtype=self.dtype, device=self.device)
-        self.Y = torch.tensor(self.Y, dtype=self.dtype, device=self.device)
+        self.X = torch.tensor(X, dtype=self.dtype, device=self.device)
+        self.Y = torch.tensor(Y, dtype=self.dtype, device=self.device)
+
+    def obj(self, Wn):
+        out = torch.relu(self.X @ Wn)@self.ly2
+        yhat = torch.sum(out, axis=1)
+        mseloss = torch.nn.MSELoss()(yhat.flatten(), self.Y.flatten())
+        return mseloss 
+
+    def sliced_wasser(self, Wn, x_prev):
+        if self.d>1:
+            return self.sliced_wasserstein(Wn, x_prev, self.num_projections, self.device, p=2)
+        else:
+            return self.emd1D(Wn.reshape(1,-1), x_prev.reshape(1,-1), p=2)
 
     def step(self):
-        W = deepcopy(self.ly1).requires_grad_(True)
         x_prev = self.ly1.clone().detach()
-        x_k = W
-
-
-        def obj(Wn, verb=False):
-            #effneurons = grid.T # (d,N) 
-            activ = (X @ ly1) > 0
-            out = activ * (X @ Wn) # (n, d) * (d, N) = (n, N)
-            yhat = torch.sum(out, axis=1)
-            mseloss = torch.nn.MSELoss()(yhat.flatten(), Y.flatten())
-            return mseloss 
-
-        #optimizer = torch.optim.SGD([W], lr=self.adamlr, weight_decay=self.beta, momentum=0.9)
-        optimizer = torch.optim.AdamW([W], lr=self.adamlr, weight_decay=self.beta)
         from mechanic_pytorch import mechanize # lr magic (rollbacks)
-        optimizer = mechanize(torch.optim.SGD)([W], lr=self.adamlr)
-        #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
-        #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min")
-
-        noimprovstop = 20000
-
-        noimprovsince = 0
-        biggestnoimprov = 0
-        bestloss = 1e10
-        bestloss_i = 0
-        startloss=0
-        lastlr = 1
-        bestW = W.data.clone().detach()
-
+        optimizer = mechanize(torch.optim.SGD)([self.ly1], lr=self.adamlr)
+        
         for i in range(self.wasseriter):
-            if self.d>1:
-                sw = self.sliced_wasserstein(x_k, x_prev, self.num_projections, self.device, p=2)
-            else:
-                sw = self.emd1D(x_k.reshape(1,-1), x_prev.reshape(1,-1), p=2)
-
-            # loss = 1/self.m * obj(W) + self.tau*sw # not sure about 1/m
-            loss = obj(W) + self.tau*sw
+            loss = self.obj(self.ly1) + self.tau*self.sliced_wasser(self.ly1, x_prev)
             loss.backward()
-            lossval = loss.item()
-            nowlr = optimizer.param_groups[0]["lr"]
-            if abs(lastlr - nowlr) > 1e-10:
-                lastlr = nowlr
-                #print("newlr", nowlr)
-            if i == 0:
-                startloss=lossval
-                #print("startloss", lossval)
-                bestloss=lossval
-            noimprovsince += 1
-            #with torch.no_grad():
-                #print(f"wgrad norm: {W.grad.norm(2):.7f}")
-            if lossval < bestloss:
-                #bestW = W.data.clone().detach()
-                improvement = (1-lossval/startloss)/startloss
-                #print(f"{i}({improvement:.1f}%) .. ", end="", flush=True)
-
-                biggestnoimprov = noimprovsince if noimprovsince > biggestnoimprov else biggestnoimprov
-                noimprovsince = 0
-                bestloss = lossval
-                bestloss_i = i
-                # print(f"bestloss at i={bestloss_i}: {bestloss}")
-            #else:
-            #    with torch.no_grad():
-            #        W.data = bestW.clone()
-            if noimprovsince > noimprovstop:
-                break
+            self.lossi = loss.item()
             optimizer.step()
-            #scheduler.step()
-            #scheduler.step(lossval)
             optimizer.zero_grad()
-        #print("")
-        #print("final loss", lossval)
-        stableprojec_numb = 1 #10 000 is a good number, but slow
-        sw = self.sliced_wasserstein(x_k, x_prev, 1, self.device, p=2)
-        loss = obj(W) + self.tau*sw
-        loss.backward()
-        #print(f"gradnorm : {W.grad.norm(2):.7f}")
-        lossval = loss.item()
-        improvement = (1-lossval/startloss)/startloss
-        bimprovement = (1-bestloss/startloss)/startloss
-        print(f"END(it={i}) bestloss at i={bestloss_i}: {bestloss}, biggest noimprov={biggestnoimprov}, final(stable):{improvement:.2f}%(best(unstable) {bimprovement:.2f}%)")
 
-        self.grid = x_k.detach().numpy().T
-        #self.p = (self.p > 0)*self.p
-        #self.p = self.p/np.sum(self.p)
+    def loss(self):
+        with torch.no_grad():
+            return self.obj(self.ly1).item()
+
+    def params(self):
+        ly1 = self.ly1.cpu().detach().numpy()
+        ly2 = self.ly2.cpu().detach().numpy()
+        return np.array(ly1), np.array(ly2) # otherwise it's just a pointer...
+
 
     def emd1D(self, u_values, v_values, u_weights=None, v_weights=None,p=1, require_sort=True):
         n = u_values.shape[-1]
