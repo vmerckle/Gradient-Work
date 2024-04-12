@@ -368,6 +368,7 @@ class WasserNiceAnim:
             assert np.all([di["ly2"].shape == (self.m, 1) for di in self.D])
         # plotting setup
         self.ax = self.fig.add_subplot(111)
+        self.ax2 = self.ax.twinx().twiny()
 
         self.ax.spines['top'].set_visible(False)
         self.ax.spines['right'].set_visible(False)
@@ -375,21 +376,26 @@ class WasserNiceAnim:
         self.ax.spines['left'].set_visible(False)
         self.ax.xaxis.set_major_locator(plt.MaxNLocator(3)) # set number of ticks
         self.ax.yaxis.set_major_locator(plt.MaxNLocator(3))
-        self.ax.axhline(y=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
-        self.ax.axvline(x=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
-        self.ax.grid(True, alpha=0.2)
+        self.ax2.axhline(y=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
+        self.ax2.axvline(x=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
+        self.ax2.grid(True, alpha=0.2)
 
-        self.ax.scatter(self.Xb, self.Y, marker="x", color="red", s=40, alpha=1)
 
         # Initialization of animation artists
         self.text = self.ax.text(0.05, 0.9, f"start frame", transform=self.ax.transAxes)
-        self.outline, = self.ax.plot([], [])
         self.allscat = self.ax.scatter([], [], marker='o')
-
-        a = 0.004
-        a = 0.004
+        self.ax2.scatter(self.Xb, self.Y, marker="x", color="red", s=40, alpha=1)
+        self.outline, = self.ax2.plot([], [])
+        #self.ax.set_yscale("symlog")
+        #self.ax.set_xscale("symlog")
+        a = 0.1
+        self.ax.set_xlim(-0.3*a, a*0.5)
+        self.ax.set_ylim(-0.2*a, a)
+        a = 0.8
         self.ax.set_xlim(-a, a)
         self.ax.set_ylim(-a, a)
+        self.ax2.set_xlim(-a*1, a*1)
+        self.ax2.set_ylim(-a*2, a*5)
 
     # update only depends on the data of the i-th iteration
     # so that it can be used for live data
@@ -405,7 +411,7 @@ class WasserNiceAnim:
         for j in range(self.m):
             w1, w2 = ly1.T[j]
             alpha, = ly2[j]
-            #xl[j], yl[j] = lact[j], 0.5*ly2.flatten()[j]#/np.max(ly1) # for jko
+            xl[j], yl[j] = lact[j], 0.5*ly2.flatten()[j]#/np.max(ly1) # for jko
             xl[j], yl[j] = w1, w2
             colors.append("green" if alpha >= 0 else "red")
             mks.append(pos_marker if w1 >= 0 else neg_marker)
@@ -414,8 +420,10 @@ class WasserNiceAnim:
         self.allscat.set_paths(mks)
         self.allscat.set_sizes([20]*self.m)
         self.allscat.set_color(colors)
+        self.allscat.set_alpha(0.5)
         self.text.set_text(f"frame {frame}, loss {loss}")
         self.outline.set_data(self.Xout, Yout)
+        focuslim(self.ax, xl, yl)
         return self.outline, self.text, self.allscat
 
     def update(self, frame):

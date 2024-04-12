@@ -11,8 +11,8 @@ def loadalgo(X1):
     x = SimpleNamespace(**X1)
     algo = x.algo
     if algo == "GD":
-        from algo_GD_pytorch import torch_descent
-        opti = torch_descent(device=x.device, algo="gd")
+        from algo_GD_torch import torch_descent
+        opti = torch_descent("gd", x.lr, device=x.device)
     elif algo == "JKO":
         proxf = x.proxf
         if proxf == "cvxpy":
@@ -26,14 +26,60 @@ def loadalgo(X1):
             opti = jko_pytorch(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol, verb=x.args.verbose)
         else:
             raise Exception("config bad proxf choice")
+    elif algo == "sliced wasser":
+            from algo_sliced_wasserstein import sliced_wasser
+            opti = sliced_wasser(wasseriter=x.wasser_gd_maxit, tau=x.wassertau, num_projections=x.num_projections, verb=x.args.verbose, adamlr=x.wasser_gd_lr, rng=x.rng)
     elif algo == "wasser":
             from algo_wasserstein import wasser
-            opti = wasser(wasseriter=x.wasser_gd_maxit, tau=x.wassertau, num_projections=x.num_projections, verb=x.args.verbose, adamlr=x.wasser_gd_lr, rng=x.rng)
+            opti = wasser(wasseriter=x.wasser_gd_maxit, tau=x.wassertau, verb=x.args.verbose, adamlr=x.wasser_gd_lr, rng=x.rng)
     else:
         raise Exception("config bad algo choice")
 
     opti.load(x.X, x.Y, x.ly1, x.ly2, x.beta)
     return {"opti": opti}
+
+
+
+def Config2DNew_grid_wasser_ex(args):
+    seed = 4
+    device = "cpu"
+    rng = np.random.default_rng(seed)
+
+    algo = "wasser"
+    wassertau = 1e1
+    wasser_gd_lr = 1e1
+    wasser_gd_maxit = 10
+    include_negative_neurons = True
+    steps = -1
+
+    algo = "GD"
+    lr= 1e-5 # slooow
+    lr= 1e-2 # fail
+    lr= 1e-4 # ok
+
+
+    beta = 1e0*0
+    m, d, n = 100, 2, 20
+    Xb = np.linspace(-0.5, 0.5, n)[:, None]
+    X, Y = add_bias(Xb), np.sin(10*Xb-np.pi/2)+0.2*Xb - 0.5
+    #X, Y = add_bias(Xb), Xb*0.1+0.1
+
+    s= 1e0
+    t = np.linspace(-s, s, m)
+    Xm, Ym = np.meshgrid(t, t)
+    # Transform X and Y into 2x(m^2) matrices
+    ly1 = np.vstack((Xm.flatten(), Ym.flatten()))
+    m = ly1.shape[1]
+    ly2 = np.ones((m, 1)) * np.sign(1-2*rng.random((m, 1)))
+
+
+    #double the number of neurons to allow for negative neurons..
+    #ly1 = np.concatenate((ly1, ly1*1.0), axis=1) # (d, m) -> (d, 2m)
+    #ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0) #(m, 1) -> (2m, 1)
+
+    X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
+    X1.update(loadalgo(X1))
+    return X1
 
 def Config2DNew_grid_wasser(args):
     seed = 4
@@ -41,6 +87,44 @@ def Config2DNew_grid_wasser(args):
     rng = np.random.default_rng(seed)
 
     algo = "wasser"
+    wassertau = 1e3
+    wasser_gd_lr = 1e-1
+    wasser_gd_maxit = 50
+    include_negative_neurons = True
+    steps = -1
+
+    #algo = "GD"
+    lr= 1e-4
+
+
+    beta = 1e0*0
+    m, d, n = 8, 2, 5
+    Xb = np.linspace(-0.5, 0.5, n)[:, None]
+    #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
+    X, Y = add_bias(Xb), Xb*0.1+0.1
+
+    s= 1e-4
+    t = np.linspace(-s, s, m)
+    Xm, Ym = np.meshgrid(t, t)
+    # Transform X and Y into 2x(m^2) matrices
+    ly1 = np.vstack((Xm.flatten(), Ym.flatten()))
+    m = ly1.shape[1]
+    ly2 = np.ones((m, 1))
+
+    #double the number of neurons to allow for negative neurons..
+    ly1 = np.concatenate((ly1, ly1*1.0), axis=1) # (d, m) -> (d, 2m)
+    ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0) #(m, 1) -> (2m, 1)
+
+    X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
+    X1.update(loadalgo(X1))
+    return X1
+
+def Config2DNew_grid_wasser_gifs(args):
+    seed = 4
+    device = "cpu"
+    rng = np.random.default_rng(seed)
+
+    algo = "sliced wasser"
     wassertau = 1e6
     wasser_gd_lr = 1e0
     wasser_gd_maxit = 500

@@ -37,6 +37,7 @@ if __name__ == '__main__':
     configDict = {"config2d_new": configs.Config2DNew,
                   "config2d_new_grid": configs.Config2DNew_grid,
                   "config2d_new_grid_wasser": configs.Config2DNew_grid_wasser,
+                  "config2d_new_grid_wasser_ex": configs.Config2DNew_grid_wasser_ex,
                   "config1d_new": configs.Config1DNew}
 
     parser = argparse.ArgumentParser()
@@ -44,6 +45,7 @@ if __name__ == '__main__':
     parser.add_argument("--seed", type=int, default=None, help="seed")
     parser.add_argument("--config", help="config name", default=None, choices=configDict.keys())
     parser.add_argument("--name", help="output name", default="out_new")
+    parser.add_argument("--nowrite", help="do not write anything to disk", action="store_true")
     parser.add_argument("-k", "--keepfirst", help="Only redo postprocess and animation", action="store_true")
     parser.add_argument("-r", "--keepsecond", help="Only redo animation", action="store_true")
     parser.add_argument("--noanim", action="store_true", help="do not show the end animation")
@@ -105,8 +107,9 @@ if __name__ == '__main__':
             #X2 = runner.animationRun(X1, myanim=myanim)
         else:
             X2 = runner.simpleRun(X1)
-        with open(stepname, "wb") as f:
-            pickle.dump(X2, f)
+        if not args.nowrite:
+            with open(stepname, "wb") as f:
+                pickle.dump(X2, f)
 
     ####### Apply postprocess to iteration data ####### 
     stepname = f"data/postprocess_{code}.pkl"
@@ -115,10 +118,11 @@ if __name__ == '__main__':
         with open(stepname, "rb") as f:
             X3 = pickle.load(f)
     else:
-        print(f"Overwriting '{stepname}'")
-        X3 = postprocess.simplecalcs(X2|X1)
-        with open(stepname, "wb") as f:
-            pickle.dump(X3, f)
+        if not args.nowrite:
+            print(f"Overwriting '{stepname}'")
+            X3 = postprocess.simplecalcs(X2|X1)
+            with open(stepname, "wb") as f:
+                pickle.dump(X3, f)
 
     if not (args.movie or args.save_movie):
         sys.exit(0)

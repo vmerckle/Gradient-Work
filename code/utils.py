@@ -31,6 +31,15 @@ def normData(D, key, left, right):
         else:
             di[key] = (di[key]-b)/(a-b)*(right-left)+left
 
+def focuslim(axis, xl, yl):
+    ax, bx = np.min(xl), np.max(xl)
+    ay, by = np.min(yl), np.max(yl)
+    eps = 1e-1
+    axis.set_xlim(ax-eps, bx+eps)
+    axis.set_ylim(ay-eps, by+eps)
+    #axis.set_xlim(-eps, bx+eps)
+    #axis.set_ylim(-eps, by+eps)
+
 def getMotifNow(X, ly1):
     n, d = X.shape
     nl = []

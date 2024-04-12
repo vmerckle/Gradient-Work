@@ -7,8 +7,12 @@ import torch
 
 from utils import *
 
+
+def torch_2layers(X, ly1, ly2):
+    return torch.relu(X@ly1)@ly2
+
 class torch_descent:
-    def __init__(self, algo="gd", momentum=0, dtype=torch.float32, device="cpu"):
+    def __init__(self, algo, lr, momentum=0, dtype=torch.float32, device="cpu"):
         self.algo = algo
         self.momentum = momentum
         self.dtype = dtype  # float16 does a runtime error in pred
@@ -17,17 +21,23 @@ class torch_descent:
         # self.loss_fn = torch.nn.SoftMarginLoss() # loss for 2-class classif
         self.pred_fn = torch_2layers
         self.optimizer = None
+        self.lr = lr
 
-    def load(self, X, Y, ly1, ly2, lr, beta):
-        self.lr, self.beta = lr, beta
+    def load(self, X, Y, ly1, ly2, beta):
+        self.beta = beta
         self.n, self.d = X.shape
         self.m = ly1.shape[1]
         self.X = torch.tensor(X, dtype=self.dtype, device=self.device)
         self.Y = torch.tensor(Y, dtype=self.dtype, device=self.device)
         self.ly1 = torch.tensor(ly1, dtype=self.dtype, device=self.device, requires_grad=True)
         self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=True)
+
         if self.algo == "gd":
-            self.optimizer = torch.optim.SGD([self.ly1, self.ly2], lr=self.lr, momentum=self.momentum, weight_decay=self.beta)
+            self.optimizer = torch.optim.SGD([self.ly1], lr=self.lr, momentum=self.momentum, weight_decay=self.beta)
+            # really slower(for large neurons, for some reason) or very far from GD
+            #from mechanic_pytorch import mechanize # lr magic (rollbacks)
+            #self.optimizer = mechanize(torch.optim.SGD)([self.ly1], lr=self.lr, momentum=self.momentum, weight_decay=self.beta)
+
         elif self.algo == "adam":
             self.optimizer = torch.optim.AdamW([self.ly1, self.ly2], lr=self.lr, weight_decay=self.beta)
         else:
