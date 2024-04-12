@@ -1,6 +1,6 @@
-Discretize mean-field limit using JKO, see if it is similar to GD.
+%Discretize mean-field limit using JKO, see if it is similar to GD.
 
-\section{Current in code}
+\section{Gradient Flow vs Wasserstein GF}
 
 From one dimensional data, we add a dimension filled with ones to act as a bias for the first layer. The output of one ReLU neuron for one data point $(x, 1) \in \R^2$:
 
@@ -14,13 +14,13 @@ The loss against labels $y_j \in \R$ using squared loss of the whole network of 
 	 \mathcal{L} = \sum_{j=1}^n \left(\left(\sum_{i=1}^m \max(0, w_i x_j + b_i) \alpha_i \right)  - y_j \right)^2
 \end{equation}
 
-We can define a wasserstein gradient flow on the mean-field limit of this network, this requires taking an infinite-width ReLU network where parameters are described by a measure $\mu$, and its output by an integral:
+The mean-field limit of this network requires taking an infinite-width ReLU network where parameters are described by a measure $\mu$, and its output by an integral:
 
 \begin{equation}
-	\int_{\R^2} m((w, b); x) \dd \mu((w, b))
+	\int_{\R^2} m((w, b); x) ~ \dd \mu((w, b))
 \end{equation}
  
-To simplify things, we restrict $\alpha_i$ to $\{-1, 1\}$ and to not be a trainable parameter anymore. We keep the same expressivity(as long as we provide both a positive($\alpha_i=1$) and negative($\alpha_i=-1$) version of the neuron) but slightly alter the training dynamic in some cases. For example , we can match the output of one neuron (of the original network) by simply scaling the first layer by the seconder layer ($\alpha$):
+To simplify things, we restrict $\alpha_i$ to $\{-1, 1\}$ and to not be a trainable parameter anymore. We keep the same expressivity(as long as we provide both a positive($\alpha_i=1$) and negative($\alpha_i=-1$) version of the neuron) but this change will slightly alter the training dynamic in some cases. For example , we can match the output of one neuron (of the original network) by simply scaling the first layer by the seconder layer ($\alpha$):
 
 \begin{equation}
 	\max(0, w_i x + b_i) \alpha_i = \max\left(0, |\alpha_i|(w_i x + b_i)\right) \ \text{sign}(\alpha_i)
@@ -46,7 +46,17 @@ The same wasserstein gradient flow can be computed by this step:
 	\mu(t+1) = \argmin_{\mu \in \mathcal{M}(\paramS)} F(\mu) + \frac{1}{2 \step} W_2(\mu; \mu(t))
 \end{equation}
 
-However, directly computing the wasserstein distance is too hard. We will compute the entropic wasserstein flow:
+We tried different ways of computing the Wasserstein Gradient Flow. 
+
+\begin{itemize}
+	\item JKO stepping: entropic approximation on a fixed grid. Pros: not very dependant on dimension $d$. Cons: add another loop and more parameters to fine tune, introduce diffusion.
+		\item Sliced Wasserstein: Pros: midly dependant on $d$ without diffusion. Differentiable with pytorch. Cons: Parameters to tune, distance to true WS distance has to be studied
+		\item Direct EMD distance from POT library. Pros: differentiable with pytorch. Cons: Might be slow with $d$
+\end{itemize}
+
+Preliminary results using the EMD distance indicate no particular differences between the gradient flow and the wasserstein gradient flow.
+
+\subsection{JKO stepping with Dykstra's algorithm}
 
 \begin{align}
 p_{t+1} := & \prox^{W_{\gamma}}_{\tau f}(p_t) \\
@@ -80,7 +90,7 @@ To do the step above, we'll use a bregman splitting approach that replace the si
 \end{algorithm}
 
 %\includegraphics[width=0.7\textwidth]{bigscale_start}
-
+\begin{comment}
 \section{Classic setup}
 
 Data $x_j \in \R^d$ and labels $y_j \in \R$, $j=1,..,n$
@@ -181,3 +191,4 @@ In the future, \href{https://arxiv.org/pdf/2106.00736.pdf}{large-scale waserstei
 \subsubsection{Grid problems}
 
 The grid currently dictate the neuron's scale, giving multiple choices. One solution: duplicate each neuron, make one with a small scale and one with a very big scale.
+\end{comment}
