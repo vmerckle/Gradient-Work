@@ -2,6 +2,58 @@
 
 \section{Gradient Flow vs Wasserstein GF}
 
+Take a two layer ReLU network with $m$ neurons. Each neuron has a trainable parameter $w_i \in \R^d$ and and a fixed output sign $\alpha_i \in \{-1, 1\}$. Each of the $n$ data points of dimension $d-1$ are augmented with a $1$, so each sample is of dimension $n$. Each sample $x_j$ is stored as a row $X \in \R^{n \times d}$  and is associated with a scalar label $y_j \in \R$.
+
+The output of one neuron is: $x \in \R^d \rightarrow \max(0, \inp{w_i}{x}) \alpha_i$, shorthand $\inp{w_i}{x}_+ ~ \alpha_i$.
+
+The output of a network of $m$ neurons on one data point is $f(x) = \sum_{i=1}^{m} \max(0, \inp{w_i}{x}) ~ \alpha_i$
+
+We store the neuron trainable parameter $w_i$ as the columns of $W \in \R^{d \times m}$. The loss for $n$ data points
+
+\begin{equation}
+	F(W) = \frac{1}{n} \sum_{j=1}^{n} \left(f(x_j) - y_j\right)^2
+\end{equation}
+
+Discretized, unregularized gradient descent with $\lambda \in \R^+$ stepsize: (resolving the non differentiable points $\max(0, 0)$ with 0 as gradient)
+
+\begin{equation}
+	W^{t+1} = W^t - \lambda \nabla F(W^t)
+\end{equation}
+
+Taking $\lambda \rightarrow 0$, we get the gradient flow.
+
+Explicit discret gradient:
+
+\begin{equation}
+	\frac{\partial F}{\partial \vw^t_i} = \frac{\alpha^t_i}{n} \sum_{j=1}^{n} e^t_j ~ s^t_{i, j} ~ \vx_j
+\end{equation}
+
+With real $e^t_j = f(W^t) - y_j$ the "signed error on input $j$"
+
+With boolean $s^t_{i, j} = \mathds{1}_{\inp{\vw^t_i}{\vx_j} > 0}$ the "is neuron $i$ activating on datapoint $j$. The vector $\vs^t_{i} \in \{0, 1\}^n$ would be the activation pattern of neuron $i$ at time $t$.
+
+Remark: the gradient of a neuron is a linear combination of the data points it activates.
+
+Discretized wasserstein prox step:
+
+\begin{equation}
+	W^{t+1} = \argmin_{W \in \R^{d \times m}} F(W) + \frac{1}{2 \step} W_p(W; W^t))
+\end{equation}
+
+
+EMD($p=1$):
+
+\begin{align}
+	W_1(W; W^t) &= \min_{\gamma} \inp{\gamma}{M}_F \\
+	\text{s.t.  } \gamma ~ \mathbf{1} &= W \\
+	\gamma^\top ~ \mathbf{1} &= W^t \\
+	\gamma &\geq 0 \\
+	M_{i, j} &= \lVert w_i - w_j \rVert^2_2
+\end{align}
+
+
+\section{Simple example 2D setting, grid jko}
+
 From one dimensional data, we add a dimension filled with ones to act as a bias for the first layer. The output of one ReLU neuron for one data point $(x, 1) \in \R^2$:
 
 \begin{equation}
@@ -90,7 +142,6 @@ To do the step above, we'll use a bregman splitting approach that replace the si
 \end{algorithm}
 
 %\includegraphics[width=0.7\textwidth]{bigscale_start}
-\begin{comment}
 \section{Classic setup}
 
 Data $x_j \in \R^d$ and labels $y_j \in \R$, $j=1,..,n$
@@ -191,4 +242,3 @@ In the future, \href{https://arxiv.org/pdf/2106.00736.pdf}{large-scale waserstei
 \subsubsection{Grid problems}
 
 The grid currently dictate the neuron's scale, giving multiple choices. One solution: duplicate each neuron, make one with a small scale and one with a very big scale.
-\end{comment}
