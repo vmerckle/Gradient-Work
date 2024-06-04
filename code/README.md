@@ -1,3 +1,6 @@
+last commands: python main.py --config config2d_new_grid_wasser_ex --runanim --anim_choice wasser --nowrite
+
+
 # user interface: main.py
 
 options:

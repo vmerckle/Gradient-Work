@@ -391,9 +391,10 @@ class WasserNiceAnim:
         a = 0.1
         self.ax.set_xlim(-0.3*a, a*0.5)
         self.ax.set_ylim(-0.2*a, a)
-        a = 0.8
+        a = 0.0001
         self.ax.set_xlim(-a, a)
         self.ax.set_ylim(-a, a)
+        a = 0.8
         self.ax2.set_xlim(-a*1, a*1)
         self.ax2.set_ylim(-a*2, a*5)
 
@@ -423,7 +424,7 @@ class WasserNiceAnim:
         self.allscat.set_alpha(0.5)
         self.text.set_text(f"frame {frame}, loss {loss}")
         self.outline.set_data(self.Xout, Yout)
-        focuslim(self.ax, xl, yl)
+        #focuslim(self.ax, xl, yl)
         return self.outline, self.text, self.allscat
 
     def update(self, frame):

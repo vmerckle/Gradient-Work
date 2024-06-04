@@ -46,25 +46,26 @@ def Config2DNew_grid_wasser_ex(args):
     rng = np.random.default_rng(seed)
 
     algo = "wasser"
-    wassertau = 1e1
-    wasser_gd_lr = 1e1
-    wasser_gd_maxit = 10
+    wassertau = 1e7 # not identity
+    wassertau = 1e7*3 # identity
+    wasser_gd_lr = 1e-4
+    wasser_gd_maxit = 500
     include_negative_neurons = True
     steps = -1
 
-    algo = "GD"
+    #algo = "GD"
     lr= 1e-5 # slooow
     lr= 1e-2 # fail
     lr= 1e-4 # ok
 
 
     beta = 1e0*0
-    m, d, n = 100, 2, 20
+    m, d, n = 5, 2, 20
     Xb = np.linspace(-0.5, 0.5, n)[:, None]
     X, Y = add_bias(Xb), np.sin(10*Xb-np.pi/2)+0.2*Xb - 0.5
     #X, Y = add_bias(Xb), Xb*0.1+0.1
 
-    s= 1e0
+    s= 1e-5
     t = np.linspace(-s, s, m)
     Xm, Ym = np.meshgrid(t, t)
     # Transform X and Y into 2x(m^2) matrices

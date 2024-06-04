@@ -26,6 +26,7 @@ def simpleRun(setupDict):
     #print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]))
     try:
         while True:
+            num += 1
             if setup.steps != -1 and num >= setup.steps:
                 break
             opti.step()
@@ -43,7 +44,6 @@ def simpleRun(setupDict):
                 #print(f"{num}: loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
                 pass
             #print(f"loss: {l}")
-            num += 1
             if l < bestloss:
                 bestloss = l
             if l/bestloss > 10:
