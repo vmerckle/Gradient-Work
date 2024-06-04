@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
     ####### Load the setup ####### 
     stepname = f"data/settings_{code}.pkl"
-    if args.keepfirst or args.keepsecond and os.path.isfile(stepname):
+    if (args.keepfirst or args.keepsecond) and os.path.isfile(stepname):
         print(f"Loading '{stepname}'") 
         with open(stepname, "rb") as f:
             local_args = pickle.load(f)
@@ -93,7 +93,7 @@ if __name__ == '__main__':
         with open(stepname, "wb") as f:
             pickle.dump(args, f)
 
-    ####### Execute the algorithm ####### 
+    ####### Execute the algorithm #######
     stepname = f"data/descent_{code}.pkl"
     if (args.keepfirst or args.keepsecond) and os.path.isfile(stepname):
         print(f"Loading '{stepname}'")
@@ -111,6 +111,8 @@ if __name__ == '__main__':
             with open(stepname, "wb") as f:
                 pickle.dump(X2, f)
 
+    animations.niceplots(X2["wasserstats"])
+    assert False
     ####### Apply postprocess to iteration data ####### 
     stepname = f"data/postprocess_{code}.pkl"
     if args.keepfirst and args.keepsecond and os.path.isfile(stepname):

@@ -4,6 +4,7 @@ from utils import *
 
 # compute plot information from data and layers
 # used in live and post animation
+# ONE iteration.
 def NNtoIter(Xt, Yt, allX, ly1, ly2, run=False):
     d, m = ly1.shape
     if d == 2:

@@ -53,6 +53,11 @@ class wasser: #just for grid stuff
             optimizer.zero_grad()
         #print("right?", loss.item())
         with torch.no_grad():
+            self.objectif = (self.obj(self.ly1)).item()
+            self.wasserdist = (self.wasserstein(self.ly1, x_prev)).item()
+            self.ldeuxdist = (torch.sum((self.ly1 - x_prev)**2)/self.m).item()
+            #print(f"obj={a}, wasser={b}, tau={self.tau}")
+        with torch.no_grad():
             M = ot.emd(torch.Tensor([]), torch.Tensor([]), ot.dist(self.ly1.T, x_prev.T)).detach().numpy()
             a = np.abs(self.wasserstein(self.ly1, x_prev) - torch.sum((self.ly1 - x_prev)**2)/self.m).item()
             b = np.sum(np.abs(np.eye(self.m)/self.m - M))

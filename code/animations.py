@@ -389,9 +389,6 @@ class WasserNiceAnim:
         #self.ax.set_yscale("symlog")
         #self.ax.set_xscale("symlog")
         a = 0.1
-        self.ax.set_xlim(-0.3*a, a*0.5)
-        self.ax.set_ylim(-0.2*a, a)
-        a = 0.0001
         self.ax.set_xlim(-a, a)
         self.ax.set_ylim(-a, a)
         a = 0.8
@@ -433,3 +430,26 @@ class WasserNiceAnim:
 
     def getAnim(self, interval, blit=True):
         return animation.FuncAnimation(self.fig, self.update, frames=self.frames, blit=blit, interval=interval)
+
+def niceplots(wasserstats):
+    fig = plt.figure(figsize=(8,4))
+    ax = fig.add_subplot(frameon=False)
+
+    ax.xaxis.set_major_locator(plt.MaxNLocator(3))
+    ax.yaxis.set_major_locator(plt.MaxNLocator(3))
+    ax.set_xlabel('gradient step', loc='center')
+    ax.set_ylabel('values', loc='center')
+    ax.axhline(y=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
+    ax.axvline(x=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
+    ax.grid(True, alpha=0.2)
+    ax.set_yscale("log")
+    A, B, C = wasserstats["obj"], wasserstats["wasser"], wasserstats["ldeuxdist"]
+    #cc = list(range(len(tloss)))
+    #print(len(tloss))
+    ax.plot(A, label="Objective", color="C3")
+    ax.plot(B, label="Wasser_2^2", color="C4")
+    ax.plot(C, label="L_2^2", color="C5")
+    plt.legend()
+
+    #plt.savefig(f"{codemov}_plot.png", dpi=400)
+    plt.show()
