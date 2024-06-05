@@ -1,3 +1,25 @@
+\section{Implemented descents}
+\subsection{Gradient descent}
+\subsection{Proximal point}
+\subsubsection{dist = L2 sq}
+\subsubsection{dist = wasserstein2 sq}
+
+\section{Small vs Big initialization in ReLU}
+
+Why is it that as the scale gets smaller, the training dynamic consist of an alignment phase and then a convergence phase?
+
+Notation: Take a neuron $w \in \R^d$. The norm of the neuron is $\norm{w}_2 = \sqrt{\sum_{i=1}^{d} w_i^2}$, the direction of a neuron is a vector of norm $1$: $\frac{w}{\norm{w}_2}$.
+
+A training step is approximately $w^{(t+1)} = w^{(t)} + \gamma ~ \mathbf{v}$ with $\gamma$ a coefficient correlated with the current $(t)$ output, labels, error and step size. However, it is not directly correlated to the norm of the neuron.
+
+$\mathbf{v} \in \R^d$ is a partial sum of training examples. It has its own norm and direction.
+
+If $\norm{w^{(0)}}$ is large, $w^{(1)}$ will be close to $w^{(0)} + \gamma ~ \mathbf{v}$.
+
+If $\norm{w^{(0)}}$ is close to 0, $w^{(1)}$ will be close to equal to $\gamma ~ \mathbf{v}$ as every coefficient of $w$ is negligible compared to the update. Therefore, its direction will (after some updates) be dominated by $\mathbf{v}$. The same for every neuron that activate the same data points. (Since activation pattern is entirely decided by direction, activation pattern will all converge to extremal vectors..)
+
+Refs: (expés, some results) \citep{maennel2018gradient}, (the orthogonal paper) \citep{boursierGradientFlowDynamics2022}. (incremental learning) \citep{berthierIncrementalLearningDiagonal}, (scaling path) \citep{neumayerEffectInitializationScaling2023}.
+
 \section{direct result}
 
 Minimization of a linear combination of ('neurons' $\{\phi(\theta)\}_{\theta \in \Theta}$) through an unknown measure $\mu$: $J^* = \min_{\mu \in \mathcal{M}(\Theta)} J(\mu) = R(\int \phi \dd \mu) + G(\mu)$
