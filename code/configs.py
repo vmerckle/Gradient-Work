@@ -48,9 +48,9 @@ def Config2DNew_grid_wasser_ex(args):
     algo = "wasser"
     wassertau = 1e7 # not identity
     wassertau = 1e7*3 # identity
-    wassertau = 1e2
-    wasser_gd_lr = 1e-1
-    wasser_gd_maxit = 500
+    wassertau = 1e1*1
+    wasser_gd_lr = 1e0
+    wasser_gd_maxit = 50
     include_negative_neurons = True
     steps = -1
 

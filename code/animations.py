@@ -444,11 +444,13 @@ def niceplots(wasserstats):
     ax.grid(True, alpha=0.2)
     ax.set_yscale("log")
     A, B, C = wasserstats["obj"], wasserstats["wasser"], wasserstats["ldeuxdist"]
+    D = np.abs(np.array(B)-np.array(C))
     #cc = list(range(len(tloss)))
     #print(len(tloss))
     ax.plot(A, label="Objective", color="C3")
     ax.plot(B, label="Wasser_2^2", color="C4")
     ax.plot(C, label="L_2^2", color="C5")
+    #ax.plot(D, label="|Frob-Wasser|", color="C5")
     plt.legend()
 
     #plt.savefig(f"{codemov}_plot.png", dpi=400)

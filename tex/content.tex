@@ -1,3 +1,32 @@
+\section{Objective value vs iterates norm}
+\subsection{proximal point}
+
+We run proximal point which optimize the objective $F(W^{t+1})$ and the distance between two iterates $d(W^{t+1)}, W^{(t)}$. We plot those two values for $\gamma=10$, and for Frobenius distance and Wasserstein distance as defined later.
+
+\includegraphics[width=0.7\textwidth]{imgs/tau10_graph_full.png}
+
+It loks like they are exactly the same. We also plot the difference between the two distances to confirm.
+
+\includegraphics[width=0.7\textwidth]{imgs/tau10_graph.png}
+
+
+Start and 'end' of convergence for proximal point:
+
+\includegraphics[width=0.7\textwidth]{imgs/tau10_plot_start.png}
+\includegraphics[width=0.7\textwidth]{imgs/tau10_plot_end.png}
+
+It's a relatively large stepsize but not a easy problem. The triangle of neuron that do not move are simply neurons that do not activate any data. Initialization is a random grid, with an output norm close to zero.
+
+\subsection{wasserstein descent}
+
+\includegraphics[width=0.7\textwidth]{imgs/tau10_plot_wasser_end.png}
+
+\includegraphics[width=0.7\textwidth]{imgs/tau10_graph_wasser.png}
+
+The early trajectory is very similar, but then it looks stuck for a while.
+
+Caveat: prox solution is not accurate due to small number of inner iterations.
+
 \section{Implemented descents}
 
 We only update the first layer $W^(0) \in \Theta = \R^{d \times m}$ for simplicity. $F : \Theta \rightarrow \R^+$ is the objective to minimize.
@@ -92,6 +121,8 @@ This is equivalent to what \texttt{OT.emd(d=squareeuclidian)} solves:
 	M_{i, j} &= \lVert w_i - w_j \rVert^2_2
 \end{align}
 
+However, we only need the gradient of the distance. I haven't yet read what it is exactly.
+
 \textbf{Small stepsize.}
 
 To sum up, for wasserstein descent we have this step
@@ -106,7 +137,7 @@ If $\gamma$ is small, the candidate $V$ will be close to $W^{(t)}$, and each $V_
 	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma ~ m} ~ \sum_{i=1}^{m} \norm{V_i - W_i}^2_2
 \end{equation}
 
-Which is exactly the proximal point. Additionnaly, as the step size gets smmaler, proximal point converges to the gradient flow (just like gradient descent).
+Which is exactly the proximal point. Additionnaly, as the step size gets smaller, proximal point converges to the gradient flow (just like gradient descent).
 
 \section{Small vs Big initialization in ReLU}
 
@@ -124,7 +155,9 @@ If $\norm{w^{(0)}}$ is close to 0, $w^{(1)}$ will be close to equal to $\gamma ~
 
 Refs: (expés, some results) \citep{maennel2018gradient}, (the orthogonal paper) \citep{boursierGradientFlowDynamics2022}. (incremental learning) \citep{berthierIncrementalLearningDiagonal}, (scaling path) \citep{neumayerEffectInitializationScaling2023}.
 
-\section{direct result}
+\section{Mean field}
+
+\subsection{direct result}
 
 Minimization of a linear combination of ('neurons' $\{\phi(\theta)\}_{\theta \in \Theta}$) through an unknown measure $\mu$: $J^* = \min_{\mu \in \mathcal{M}(\Theta)} J(\mu) = R(\int \phi \dd \mu) + G(\mu)$
 
@@ -136,7 +169,7 @@ Proved: if WGF cvg, it cvg to global minimizer. If $(w^{(m)}(t), \theta^{(m)}(t)
 
 p-Wasserstein distance between two measures $\mu, \nu \in \mathcal{P}(\R^d)$: $W_p(\mu, \nu)^p = \min_{\gamma \in \Pi(\mu, \nu)} \int |y - x|^p \dd \gamma(x, y)$
 
-\section{simple result}
+\subsection{simple result}
 
 Cast the parameters $w \in \mathcal{W}^{d+1}$ into $r \in \R, \eta \in \mathcal{S}^d = {w \in \R^{d+1}, \norm{w}_2 = 1}$ with $w = r ~ \eta$. The two flows will have exactly the same dynamics.
 
@@ -339,7 +372,6 @@ To do the step above, we'll use a bregman splitting approach that replace the si
 \end{algorithmic}
 \end{algorithm}
 
-%\includegraphics[width=0.7\textwidth]{bigscale_start}
 \section{Classic setup}
 
 Data $x_j \in \R^d$ and labels $y_j \in \R$, $j=1,..,n$

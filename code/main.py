@@ -112,7 +112,7 @@ if __name__ == '__main__':
                 pickle.dump(X2, f)
 
     animations.niceplots(X2["wasserstats"])
-    assert False
+    #assert False
     ####### Apply postprocess to iteration data ####### 
     stepname = f"data/postprocess_{code}.pkl"
     if args.keepfirst and args.keepsecond and os.path.isfile(stepname):
