@@ -1,8 +1,112 @@
 \section{Implemented descents}
+
+We only update the first layer $W^(0) \in \Theta = \R^{d \times m}$ for simplicity. $F : \Theta \rightarrow \R^+$ is the objective to minimize.
+
+\begin{equation}
+	\min_{W \in \Theta} \ F(W)
+\end{equation}
+
 \subsection{Gradient descent}
+
+\begin{equation}
+	W^{(t+1)} = W^{(t)} - \gamma \nabla F(W^{(t)}
+\end{equation}
+
 \subsection{Proximal point}
-\subsubsection{dist = L2 sq}
+
+$d: \Theta \times \Theta \rightarrow \R^+$ a distance between two parameters
+
+\begin{equation}
+	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma} ~ d(V, W^{(t)})
+\end{equation}
+
+To solve each $\argmin$, we use a gradient descent on $V$. $V^{(0)} = W^{(t)}$
+
+\begin{equation}
+	V^{(k+1)} = V^{(k)} - \beta \left(\nabla F(V^{(k)}) - \frac{1}{\gamma} \nabla d(V^{(k)}, W^{(t)})\right)
+\end{equation}
+
+\subsubsection{dist = L2 sq, frobenius}
+
+Frobenius norm ($L_{2,2}$): $\norm{W}_{2,2}^2 = \norm{W}_F^2 = \sum_{i=1}^{m} \sum_{j=1}^{d} W_{i, j}^2 = \sum_{i=1}^{m} \norm{W_i}_2^2$
+
+\begin{equation}
+	d : (V, W) \in \Theta \times \Theta \rightarrow \frac{1}{m} \sum_{i=1}^{m} \norm{V_i - W_i}^2_2
+\end{equation}
+
+To sum up, we're solving this 
+
+\begin{equation}
+	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma} ~ \frac{1}{m} \sum_{i=1}^{m} \norm{V_i - W_i}^2_2
+\end{equation}
+
+Using gradient descent for $\argmin$, one inner step (with inner step size $\beta$) on $V$ with $V^{(0)} = W^{(t)}$ is
+
+\begin{equation}
+	V^{(k+1)} = V^{(k)} - \beta \left(\nabla F(V^{(k)}) + \frac{1}{m ~ \gamma} (V^{k} - W^{(t)}) \right) 
+\end{equation}
+
+\begin{equation}
+	V^{(k+1)} = V^{(k)}\left(1 - \frac{\beta}{m ~ \gamma}\right) + \frac{\beta}{m ~ \gamma} W^{(t)}   - \beta \nabla F(V^{(k)})
+\end{equation}
+
+which is kinda the same thing as this? (trust region problem equivalence with proximal problem) $V^{(0)} = W^{(t)}$
+
+\begin{equation}
+	V^{(k+1)} = W^{(t)} - \gamma \nabla F(V^{(k)})
+\end{equation}
+
 \subsubsection{dist = wasserstein2 sq}
+
+\textbf{distance definition.}
+\begin{equation}
+	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma} ~ d(V, W^{(t)})
+\end{equation}
+
+
+With $V, W \in \R^d$ parameters.
+
+p-Wasserstein distance between two measures $\mu, \nu \in \mathcal{P}(\R^d)$: 
+
+\begin{equation}
+	W_p(\mu, \nu)^p = \inf_{\gamma \in \Pi(\mu, \nu)} \int |y - x|^p \dd \gamma(x, y)
+\end{equation}
+
+$\Pi$ set of probability measures on $\R^d$ with marginals $\mu$ and $\nu$.
+
+We take two sum of diracs measures $\mu = \frac{1}{m} \sum_{i=1}^{m} \delta_{V_i}$ and $\nu = \frac{1}{m} \sum_{i=1}^{m} \delta_{W_i}$. Then in that case $W_2$ is
+
+\begin{equation}
+	W_2(V, W)^2 = \min_{\sigma \in S_n} \frac{1}{m} \sum_{i=1}^{m} \norm{V_i - W_{\sigma(i)}}^2_2
+\end{equation}
+
+With $\sigma$ a permutation. This is the linear assignment problem which can be solved by the hungarian algorithm. It always has a solution so inf=min
+
+This is equivalent to what \texttt{OT.emd(d=squareeuclidian)} solves:
+
+\begin{align}
+	W_2^2(W; W^t) &= \min_{\gamma} \inp{\gamma}{M}_F \\
+	\text{s.t.  } \gamma ~ \mathbf{1} &= W \\
+	\gamma^\top ~ \mathbf{1} &= W^t \\
+	\gamma &\geq 0 \\
+	M_{i, j} &= \lVert w_i - w_j \rVert^2_2
+\end{align}
+
+\textbf{Small stepsize.}
+
+To sum up, for wasserstein descent we have this step
+
+\begin{equation}
+	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma ~ m} ~ \min_{\sigma \in S_n} \sum_{i=1}^{m} \norm{V_i - W_{\sigma(i)}}^2_2
+\end{equation}
+
+If $\gamma$ is small, the candidate $V$ will be close to $W^{(t)}$, and each $V_i$ will be close to $W^{(t)}_i$. Therefore the optimal assignment is the identity.
+
+\begin{equation}
+	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma ~ m} ~ \sum_{i=1}^{m} \norm{V_i - W_i}^2_2
+\end{equation}
+
+Which is exactly the proximal point. Additionnaly, as the step size gets smmaler, proximal point converges to the gradient flow (just like gradient descent).
 
 \section{Small vs Big initialization in ReLU}
 
