@@ -8,7 +8,7 @@ from utils import *
 
 class wasser: #just for grid stuff
     def __init__(self, rng, wasseriter=100, tau=1, num_projections=10, verb=False, dtype=torch.float32, device="cpu", adamlr=1e-3):
-        self.wasseriter=wasseriter
+        self.wasseriter = wasseriter
         self.num_projections = num_projections
         self.tau = tau
         self.verb = verb

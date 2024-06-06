@@ -29,50 +29,80 @@ def loadalgo(X1):
     elif algo == "sliced wasser":
             from algo_sliced_wasserstein import sliced_wasser
             opti = sliced_wasser(wasseriter=x.wasser_gd_maxit, tau=x.wassertau, num_projections=x.num_projections, verb=x.args.verbose, adamlr=x.wasser_gd_lr, rng=x.rng)
-    elif algo == "wasser":
-            from algo_wasserstein import wasser
-            opti = wasser(wasseriter=x.wasser_gd_maxit, tau=x.wassertau, verb=x.args.verbose, adamlr=x.wasser_gd_lr, rng=x.rng)
+    elif algo == "proxpoint":
+        from algo_prox import proxpoint
+        if x.proxdist == "wasser":
+            from proxdistance import wasserstein
+            proxdist = wasserstein
+        elif x.proxdist == "frobenius":
+            from proxdistance import frobenius 
+            proxdist = frobenius
+        elif x.proxdist == "sliced":
+            from proxdistance import slicedwasserstein
+            proxdist = slicedwasserstein
+        else:
+            raise Exception("config bad proxdist choice")
+        opti = proxpoint(rng=x.rng, proxdist=proxdist, inneriter=x.inneriter, gamma=x.gamma, dtype=x.dtype, device=x.device)
     else:
         raise Exception("config bad algo choice")
 
     opti.load(x.X, x.Y, x.ly1, x.ly2, x.beta)
     return {"opti": opti}
 
-
-
-def Config2DNew_grid_wasser_ex(args):
-    seed = 4
-    device = "cpu"
-    rng = np.random.default_rng(seed)
-
-    algo = "wasser"
-    wassertau = 1e7 # not identity
-    wassertau = 1e7*3 # identity
-    wassertau = 1e1*1
-    wasser_gd_lr = 1e0
-    wasser_gd_maxit = 50
-    include_negative_neurons = True
-    steps = -1
-
-    #algo = "GD"
-    lr= 1e-5 # slooow
-    lr= 1e-4 # ok
-    lr= 1e-2 # ok
-
-
-    beta = 1e0*0
-    m, d, n = 10, 2, 20
+def sinus2d(n):
     Xb = np.linspace(-0.5, 0.5, n)[:, None]
     X, Y = add_bias(Xb), np.sin(10*Xb-np.pi/2)+0.2*Xb - 0.5
     #X, Y = add_bias(Xb), Xb*0.1+0.1
+    return X, Y, Xb
 
-    s= 1e-2
+def linear(n, d):
+    Xb = np.linspace(-0.5, 0.5, n)[:, None]
+    X, Y = add_bias(Xb), Xb*0.1+0.1
+    return X, Y, Xb
+
+def grid2dneuron(rng, m, s):
     t = np.linspace(-s, s, m)
     Xm, Ym = np.meshgrid(t, t)
     # Transform X and Y into 2x(m^2) matrices
     ly1 = np.vstack((Xm.flatten(), Ym.flatten()))
     m = ly1.shape[1]
     ly2 = np.ones((m, 1)) * np.sign(1-2*rng.random((m, 1)))
+    return ly1, ly2
+
+def normalneuron(rng, m, d, s):
+    ly1 = rng.standard_normal((d, m))*s
+    ly2 = np.ones((m, 1)) * np.sign(1-2*rng.random((m, 1)))
+    return ly1, ly2
+
+
+def Config2DNew_grid_wasser_ex(args):
+    seed = 4
+    device = "cpu"
+    rng = np.random.default_rng(seed)
+    from torch import float32
+    dtype = float32
+
+    algo = "proxpoint"
+    proxdist = "sliced"
+    proxdist = "frobenius"
+    proxdist = "wasser"
+    gamma = 1e0
+    inneriter = 1000
+    steps = -1
+    steps = 3
+
+    #algo = "GD"
+    lr= 1e-2
+
+    beta = 0
+    scale = 1e-2
+    m, d, n = 300, 2, 10
+    X, Y, Xb = linear(n, d)
+    X, Y, Xb = sinus2d(n)
+
+    ly1, ly2 = grid2dneuron(rng, m, scale)
+    ly1, ly2 = normalneuron(rng, m, d, scale)
+
 
 
     #double the number of neurons to allow for negative neurons..

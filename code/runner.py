@@ -127,7 +127,7 @@ def simpleAnim(setupDict, myanim):
     Xoutb = np.linspace(-4,4, 1000)
     Xout = add_bias(Xoutb)
     animobj = myanim(fig, setupDict|{"Xout":Xoutb}, runanim=True)
-    wasserstats = {"obj":[], "wasser":[], "ldeuxdist":[]}
+    #wasserstats = {"obj":[], "wasser":[], "ldeuxdist":[]}
     def update_ok(i):
         if i == 0: # for some reason, this function is called 4 times with i=0
             nly1, nly2 = opti.params()
@@ -135,9 +135,9 @@ def simpleAnim(setupDict, myanim):
             return animobj.update_aux(di, i) # so we simply don't do the step
         opti.step()
         nly1, nly2 = opti.params()
-        wasserstats["obj"].append(opti.objectif)
-        wasserstats["wasser"].append(opti.wasserdist)
-        wasserstats["ldeuxdist"].append(opti.ldeuxdist)
+        #wasserstats["obj"].append(opti.objectif)
+        #wasserstats["wasser"].append(opti.wasserdist)
+        #wasserstats["ldeuxdist"].append(opti.ldeuxdist)
         di = postprocess.NNtoIter(X, Y, Xout, nly1, nly2, run=True)
 
         lly1.append(nly1)
@@ -151,5 +151,5 @@ def simpleAnim(setupDict, myanim):
     except KeyboardInterrupt:
         print("Keyboard interrupt")
 
-    #return {"lly1":lly1, "lly2":lly2}
-    return {"lly1":lly1, "lly2":lly2, "wasserstats":wasserstats}
+    return {"lly1":lly1, "lly2":lly2}
+    #return {"lly1":lly1, "lly2":lly2, "wasserstats":wasserstats}

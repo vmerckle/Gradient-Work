@@ -388,10 +388,10 @@ class WasserNiceAnim:
         self.outline, = self.ax2.plot([], [])
         #self.ax.set_yscale("symlog")
         #self.ax.set_xscale("symlog")
-        a = 0.1
+        a = 1.0
         self.ax.set_xlim(-a, a)
         self.ax.set_ylim(-a, a)
-        a = 0.8
+        a = 1.0
         self.ax2.set_xlim(-a*1, a*1)
         self.ax2.set_ylim(-a*2, a*5)
 

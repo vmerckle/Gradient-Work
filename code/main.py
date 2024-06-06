@@ -111,7 +111,8 @@ if __name__ == '__main__':
             with open(stepname, "wb") as f:
                 pickle.dump(X2, f)
 
-    animations.niceplots(X2["wasserstats"])
+    if "wasserstats" in X2:
+        animations.niceplots(X2["wasserstats"])
     #assert False
     ####### Apply postprocess to iteration data ####### 
     stepname = f"data/postprocess_{code}.pkl"
