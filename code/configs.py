@@ -26,9 +26,6 @@ def loadalgo(X1):
             opti = jko_pytorch(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol, verb=x.args.verbose)
         else:
             raise Exception("config bad proxf choice")
-    elif algo == "sliced wasser":
-            from algo_sliced_wasserstein import sliced_wasser
-            opti = sliced_wasser(wasseriter=x.wasser_gd_maxit, tau=x.wassertau, num_projections=x.num_projections, verb=x.args.verbose, adamlr=x.wasser_gd_lr, rng=x.rng)
     elif algo == "proxpoint":
         from algo_prox import proxpoint
         if x.proxdist == "wasser":
@@ -84,26 +81,24 @@ def Config2DNew_grid_wasser_ex(args):
 
     algo = "proxpoint"
     proxdist = "sliced"
-    proxdist = "frobenius"
     proxdist = "wasser"
-    gamma = 1e0
+    proxdist = "frobenius"
+    gamma = 1e-3
     inneriter = 1000
     steps = -1
-    steps = 3
+    steps = 10
 
     #algo = "GD"
     lr= 1e-2
 
     beta = 0
     scale = 1e-2
-    m, d, n = 300, 2, 10
+    m, d, n = 100, 2, 10
     X, Y, Xb = linear(n, d)
     X, Y, Xb = sinus2d(n)
 
     ly1, ly2 = grid2dneuron(rng, m, scale)
     ly1, ly2 = normalneuron(rng, m, d, scale)
-
-
 
     #double the number of neurons to allow for negative neurons..
     #ly1 = np.concatenate((ly1, ly1*1.0), axis=1) # (d, m) -> (d, 2m)

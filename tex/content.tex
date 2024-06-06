@@ -79,7 +79,7 @@ Using gradient descent for $\argmin$, one inner step (with inner step size $\bet
 	V^{(k+1)} = V^{(k)}\left(1 - \frac{\beta}{m ~ \gamma}\right) + \frac{\beta}{m ~ \gamma} W^{(t)}   - \beta \nabla F(V^{(k)})
 \end{equation}
 
-which is kinda the same thing as this? (trust region problem equivalence with proximal problem) $V^{(0)} = W^{(t)}$
+which is kinda the same thing as this(only for $\gamma \rightarrow 0$) (trust region problem equivalence with proximal problem) $V^{(0)} = W^{(t)}$
 
 \begin{equation}
 	V^{(k+1)} = W^{(t)} - \gamma \nabla F(V^{(k)})
