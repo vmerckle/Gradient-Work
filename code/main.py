@@ -32,8 +32,7 @@ from utils import *
 if __name__ == '__main__':
     animationDict = {"output+neurons":animations.NiceAnim,
                  "wasser": animations.WasserNiceAnim,
-                 "dataspace": animations.LessNiceAnim,
-                 "dataspaceb": animations.LessNiceAnim}
+                 "dataspace": animations.LessNiceAnim}
     configDict = {"config2d_new": configs.Config2DNew,
                   "config2d_new_grid": configs.Config2DNew_grid,
                   "config2d_new_grid_wasser": configs.Config2DNew_grid_wasser,
@@ -55,14 +54,6 @@ if __name__ == '__main__':
     parser.add_argument("--save_movie", help="save movie", action="store_true")
     parser.add_argument("--fps", type=int, default=10, help="movie fps")
     parser.add_argument("--skiptoseconds", default=-1, type=float, help="maximum time in seconds, will skip frame to match")
-    #parser.add_argument("--scaleinit", default=None, type=float, help="scalar factor to weight matrix")
-    #parser.add_argument("--algo", default=None, choices=["torch", "jko", "jkocvx"])
-    #parser.add_argument("--proxf", default=None, choices=["scipy", "torch", "cvxpy"], help="algo=jko, how to compute the prox")
-    #parser.add_argument("--jkosteps", default=None, type=int, help="algo=jko, number of internal iterations")
-    #parser.add_argument("--jkogamma", default=None, type=float, help="algo=jko, float")
-    #parser.add_argument("--jkotau", default=None, type=float, help="algo=jko, float")
-    #parser.add_argument("--adamlr", default=None, type=float, help="algo=jko, proxf=torch, learning rate for gradient descent")
-    #parser.add_argument("-lr", type=float, default=None, help="algo='torch', learning rate")
     args = parser.parse_args()
 
     code = f"{args.name}" # filename used
@@ -113,6 +104,7 @@ if __name__ == '__main__':
 
     if "wasserstats" in X2:
         animations.niceplots(X2["wasserstats"])
+
     #assert False
     ####### Apply postprocess to iteration data ####### 
     stepname = f"data/postprocess_{code}.pkl"

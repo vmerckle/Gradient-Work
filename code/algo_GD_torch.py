@@ -7,7 +7,6 @@ import torch
 
 from utils import *
 
-
 def torch_2layers(X, ly1, ly2):
     return torch.relu(X@ly1)@ly2
 
@@ -30,24 +29,24 @@ class torch_descent:
         self.X = torch.tensor(X, dtype=self.dtype, device=self.device)
         self.Y = torch.tensor(Y, dtype=self.dtype, device=self.device)
         self.ly1 = torch.tensor(ly1, dtype=self.dtype, device=self.device, requires_grad=True)
-        self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=True)
+        self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=False) # we only train First layer allo
 
         if self.algo == "gd":
-            self.optimizer = torch.optim.SGD([self.ly1], lr=self.lr, momentum=self.momentum, weight_decay=self.beta)
+            #self.optimizer = torch.optim.SGD([self.ly1], lr=self.lr, momentum=self.momentum, weight_decay=self.beta)
             # really slower(for large neurons, for some reason) or very far from GD
             #from mechanic_pytorch import mechanize # lr magic (rollbacks)
-            #self.optimizer = mechanize(torch.optim.SGD)([self.ly1], lr=self.lr, momentum=self.momentum, weight_decay=self.beta)
-
+            #self.optimizer = mechanize(torch.optim.SGD)([self.ly1], lr=10.0)#, momentum=0, weight_decay=self.beta)
+            self.optimizer = torch.optim.AdamW([self.ly1], lr=0.01, weight_decay=0.0)
         elif self.algo == "adam":
             self.optimizer = torch.optim.AdamW([self.ly1, self.ly2], lr=self.lr, weight_decay=self.beta)
         else:
             raise Exception
 
     def step(self):
-        self.optimizer.zero_grad()
         loss = self.loss_fn(self.pred_fn(self.X, self.ly1, self.ly2), self.Y)
         loss.backward()
         self.optimizer.step()
+        self.optimizer.zero_grad()
 
     def params(self):
         ly1 = self.ly1.cpu().detach().numpy()

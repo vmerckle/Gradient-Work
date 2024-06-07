@@ -85,15 +85,15 @@ def Config2DNew_grid_wasser_ex(args):
     proxdist = "frobenius"
     gamma = 1e-3
     inneriter = 1000
-    steps = -1
     steps = 10
+    steps = -1
 
-    #algo = "GD"
-    lr= 1e-2
+    algo = "GD"
+    lr= 1e-3*2
 
     beta = 0
-    scale = 1e-2
-    m, d, n = 100, 2, 10
+    scale = 1e0
+    m, d, n = 600, 2, 10
     X, Y, Xb = linear(n, d)
     X, Y, Xb = sinus2d(n)
 
