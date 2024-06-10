@@ -30,6 +30,7 @@ import configs
 from utils import *
 
 if __name__ == '__main__':
+    #animD = {n[4:]:f for n,f in getmembers(animations, isclass) if len(n) > 4 and n[:4] == "Anim"}
     animationDict = {"output+neurons":animations.NiceAnim,
                  "wasser": animations.WasserNiceAnim,
                  "dataspace": animations.LessNiceAnim}

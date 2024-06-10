@@ -17,7 +17,7 @@ fun_marker = MarkerStyle(s).get_path().transformed(MarkerStyle(s).get_transform(
 pos_marker = MarkerStyle('>').get_path().transformed(MarkerStyle('>').get_transform())
 neg_marker = MarkerStyle('<').get_path().transformed(MarkerStyle('<').get_transform())
 
-class LessNiceAnimNotUsed:
+class AnimNotUsed:
     def __init__(self, fig, data, runanim=False):
         # load and check data
         self.Xb, self.Y, self.X = data["Xb"], data["Y"][:, 0], data["X"]
@@ -86,7 +86,7 @@ class LessNiceAnimNotUsed:
     def getAnim(self, interval, blit=True):
         return animation.FuncAnimation(self.fig, self.update, frames=list(range(self.Nframe)), blit=blit, interval=interval)
 
-class LessNiceAnim:
+class AnimNormal:
     def __init__(self, fig, data, runanim=False, frames=None):
         # load and check data
         self.Xb, self.Y, self.X = data["Xb"], data["Y"][:, 0], data["X"]
@@ -173,7 +173,7 @@ class LessNiceAnim:
     def getAnim(self, interval, blit=True):
         return animation.FuncAnimation(self.fig, self.update, frames=self.frames, blit=blit, interval=interval)
 
-class oldNiceAnim:
+class AnimOldNormal:
     def __init__(self, fig, data, runanim=False, frames=None):
         self.fig = fig
         # load data
@@ -255,7 +255,7 @@ class oldNiceAnim:
         return animation.FuncAnimation(self.fig, self.update, frames=self.frames, blit=blit, interval=interval)
 
 
-class NiceAnim:
+class AnimNewNormal:
     def __init__(self, fig, data, runanim=False, frames=None):
         self.fig = fig
         # load data
@@ -344,7 +344,7 @@ class NiceAnim:
     def getAnim(self, interval, blit=True):
         return animation.FuncAnimation(self.fig, self.update, frames=self.frames, blit=blit, interval=interval)
 
-class WasserNiceAnim:
+class AnimWasser:
     def __init__(self, fig, data, runanim=False, frames=None):
         self.fig = fig
         # load data

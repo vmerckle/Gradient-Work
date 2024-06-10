@@ -17,13 +17,13 @@ def loadalgo(X1):
         proxf = x.proxf
         if proxf == "cvxpy":
             from jko_proxf_cvxpy import jko_cvxpy
-            opti = jko_cvxpy(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol, verb=x.args.verbose)
+            opti = jko_cvxpy(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol)
         elif proxf == "scipy":
             from jko_proxf_scipy import jko_scipy
-            opti = jko_scipy(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol, verb=x.args.verbose)
+            opti = jko_scipy(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol)
         elif proxf == "pytorch":
             from jko_proxf_pytorch import jko_pytorch
-            opti = jko_pytorch(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol, verb=x.args.verbose)
+            opti = jko_pytorch(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol)
         else:
             raise Exception("config bad proxf choice")
     elif algo == "proxpoint":
@@ -71,8 +71,7 @@ def normalneuron(rng, m, d, s):
     ly2 = np.ones((m, 1)) * np.sign(1-2*rng.random((m, 1)))
     return ly1, ly2
 
-
-def Config2DNew_grid_wasser_ex(args):
+def ConfigNormal():
     seed = 4
     device = "cpu"
     rng = np.random.default_rng(seed)
@@ -81,19 +80,19 @@ def Config2DNew_grid_wasser_ex(args):
 
     algo = "proxpoint"
     proxdist = "sliced"
-    proxdist = "frobenius"
     proxdist = "wasser"
-    gamma = 1e-5
-    inneriter = 10000
-    steps = 10
+    proxdist = "frobenius"
+    gamma = 1e-1
+    inneriter = 1000
     steps = -1
+    steps = 10
 
     #algo = "GD"
     lr= 1e-3*2
 
     beta = 0
-    scale = 1e0
-    m, d, n = 1000, 2, 1000
+    scale = 1e-2
+    m, d, n = 50, 2, 5
     X, Y, Xb = linear(n, d)
     X, Y, Xb = sinus2d(n)
 
@@ -105,198 +104,9 @@ def Config2DNew_grid_wasser_ex(args):
     #ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0) #(m, 1) -> (2m, 1)
 
     X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
-    X1.update(loadalgo(X1))
     return X1
 
-def Config2DNew_grid_wasser(args):
-    seed = 4
-    device = "cpu"
-    rng = np.random.default_rng(seed)
-
-    algo = "wasser"
-    wassertau = 1e3
-    wasser_gd_lr = 1e-1
-    wasser_gd_maxit = 50
-    include_negative_neurons = True
-    steps = -1
-
-    #algo = "GD"
-    lr= 1e-4
-
-
-    beta = 1e0*0
-    m, d, n = 8, 2, 5
-    Xb = np.linspace(-0.5, 0.5, n)[:, None]
-    #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
-    X, Y = add_bias(Xb), Xb*0.1+0.1
-
-    s= 1e-4
-    t = np.linspace(-s, s, m)
-    Xm, Ym = np.meshgrid(t, t)
-    # Transform X and Y into 2x(m^2) matrices
-    ly1 = np.vstack((Xm.flatten(), Ym.flatten()))
-    m = ly1.shape[1]
-    ly2 = np.ones((m, 1))
-
-    #double the number of neurons to allow for negative neurons..
-    ly1 = np.concatenate((ly1, ly1*1.0), axis=1) # (d, m) -> (d, 2m)
-    ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0) #(m, 1) -> (2m, 1)
-
-    X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
-    X1.update(loadalgo(X1))
-    return X1
-
-def Config2DNew_grid_wasser_gifs(args):
-    seed = 4
-    device = "cpu"
-    rng = np.random.default_rng(seed)
-
-    algo = "sliced wasser"
-    wassertau = 1e6
-    wasser_gd_lr = 1e0
-    wasser_gd_maxit = 500
-    num_projections = 10
-    include_negative_neurons = True
-    steps = -1
-
-    beta = 1e0*0
-    m, d, n = 8, 2, 5
-    Xb = np.linspace(-0.5, 0.5, n)[:, None]
-    #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
-    X, Y = add_bias(Xb), Xb*0.1+0.1
-
-    s= 1e-4
-    t = np.linspace(-s, s, m)
-    Xm, Ym = np.meshgrid(t, t)
-    # Transform X and Y into 2x(m^2) matrices
-    ly1 = np.vstack((Xm.flatten(), Ym.flatten()))
-    m = ly1.shape[1]
-    ly2 = np.ones((m, 1))
-
-    #double the number of neurons to allow for negative neurons..
-    ly1 = np.concatenate((ly1, ly1*1.0), axis=1) # (d, m) -> (d, 2m)
-    ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0) #(m, 1) -> (2m, 1)
-
-    X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
-    X1.update(loadalgo(X1))
-    return X1
-
-def Config2DNew_grid_wassera(args):
-    seed = 4
-    gpudevice = "cpu"
-    device = "cpu"
-    rng = np.random.default_rng(seed) # do not use np.random, see https://numpy.org/doc/stable/reference/random/generator.html#distributions
-
-    algo = "GD"
-    algo = "JKO"
-    proxf = "scipy"
-    proxf = "cvxpy"
-    algo, proxf = "wasser", "no"
-    wasseriter = 100
-    wassertau = 1e2
-    num_projections = 1000
-    gd_lr = 1e-4
-    beta = 0
-    jko_inter_maxstep = 100
-    jko_tol = 1e-6
-    cvxpy_tol = 1e-6
-    cvxpy_maxit = 100
-    coef_KLDIV = 0.01
-    gamma = 0.01
-    tau = coef_KLDIV*gamma
-    include_negative_neurons = False
-
-    m, d, n = 5, 2, 5
-    Xb = np.linspace(-0.5, 0.5, n)[:, None]
-    #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
-    X, Y = add_bias(Xb), Xb*0.1+0.1
-
-    s= 1e-4
-    t = np.linspace(-s, s, m)
-    Xm, Ym = np.meshgrid(t, t)
-    # Transform X and Y into 2x(m^2) matrices
-    ly1 = np.vstack((Xm.flatten(), Ym.flatten()))
-    m = ly1.shape[1]
-    ly2 = np.ones((m, 1))
-
-    if include_negative_neurons:
-        raise Exception("Not implemented")
-    # double the number of neurons to allow for negative neurons..
-    # ly1 = np.concatenate((ly1, ly1*1.0), axis=1)
-    # ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0)
-
-    print(f"Running {algo} (with prox={proxf}) on {m} 2D neurons, startsum = {np.sum(ly2):.1f}")
-    X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
-    X1.update(loadalgo(X1))
-    return X1
-
-def Config2DNew_grid(args):
-    seed = 4
-    gpudevice = "cpu"
-    device = "cpu"
-    rng = np.random.default_rng(seed) # do not use np.random, see https://numpy.org/doc/stable/reference/random/generator.html#distributions
-
-    algo = "GD"
-    algo = "JKO"
-    proxf = "scipy"
-    proxf = "cvxpy"
-    algo, proxf = "wasser", "no"
-    wasseriter = 1
-    wassertau = 1e3
-    gd_lr = 1e-3
-    beta = 0
-    jko_inter_maxstep = 100
-    jko_tol = 1e-6
-    cvxpy_tol = 1e-6
-    cvxpy_maxit = 100
-    coef_KLDIV = 0.01
-    gamma = 0.01
-    tau = coef_KLDIV*gamma
-    include_negative_neurons = False
-
-    m, d, n = 10, 2, 5
-    Xb = np.linspace(-0.5, 0.5, n)[:, None]
-    #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
-    X, Y = add_bias(Xb), Xb*0.1+0.1
-
-
-    t = np.linspace(-1, 1, m)
-    Xm, Ym = np.meshgrid(t, t)
-    # Transform X and Y into 2x(m^2) matrices
-    ly1 = np.vstack((Xm.flatten(), Ym.flatten()))
-    m = ly1.shape[1]
-    ly2 = np.ones((m, 1))/m
-
-    if include_negative_neurons:
-        raise Exception("Not implemented")
-    # double the number of neurons to allow for negative neurons..
-    # ly1 = np.concatenate((ly1, ly1*1.0), axis=1)
-    # ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0)
-
-    print(f"Running {algo} (with prox={proxf}) on {m} 2D neurons, startsum = {np.sum(ly2):.1f}")
-    X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
-    X1.update(loadalgo(X1))
-    return X1
-
-
-def Config2DNew(args):
-    seed = 4
-    gpudevice = "cpu"
-    device = "cpu"
-    rng = np.random.default_rng(seed) # do not use np.random, see https://numpy.org/doc/stable/reference/random/generator.html#distributions
-
-    algo = "GD"
-    algo = "JKO"
-    proxf = "scipy"
-    proxf = "cvxpy"
-    gd_lr = 1e-3
-    beta = 0
-    jko_inter_maxstep = 10
-    coef_KLDIV = 1.0
-    gamma = 0.001
-    tau = coef_KLDIV*gamma
-    include_negative_neurons = False
-
+def _Config2DNew():
     m, d, n = 10, 2, 10
     Xb = np.linspace(-0.5, 0.5, n)[:, None]
     #X, Y = add_bias(Xb), np.sin(Xb-np.pi/2)+1
@@ -326,33 +136,7 @@ def Config2DNew(args):
     # ly1 = np.concatenate((ly1, ly1*1.0), axis=1)
     # ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0)
 
-    print(f"Running {algo} (with prox={proxf}) on {m} 2D neurons, startsum = {np.sum(ly2):.1f}")
-    X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
-    X1.update(loadalgo(X1))
-    return X1
-
-def Config1DNew(args):
-    seed = 4
-    gpudevice = "cpu"
-    device = "cpu"
-    rng = np.random.default_rng(seed) # do not use np.random, see https://numpy.org/doc/stable/reference/random/generator.html#distributions
-
-    algo = "GD"
-    algo = "JKO"
-    proxf = "scipy"
-    proxf = "cvxpy"
-    algo, proxf = "wasser", "no"
-    wasseriter = 1
-    wassertau = 1e3
-    gd_lr = 1e-5
-    beta = 1e-3
-    jko_inter_maxstep = 300
-    jko_tol = 1e-6 # 1e-6 to 1e-7
-    coef_KLDIV = 0.1
-    gamma = 0.1
-    tau = coef_KLDIV*gamma
-    scaling = 1
-
+def _Config1DNew():
     m, d, n = 100, 1, 5
     Xb = np.linspace(0, 1, n)[:, None]
     X, Y = Xb, Xb*0.6
