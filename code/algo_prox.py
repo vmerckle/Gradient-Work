@@ -1,5 +1,6 @@
 import numpy as np
 
+from tqdm import tqdm
 import torch
 import ot
 #import geomloss as poto
@@ -24,7 +25,10 @@ class proxpoint: #just for grid stuff
 
     def step(self):
         x_prev = self.ly1.clone().detach()
-        for i in range(self.inneriter):
+        itero = range(self.inneriter)
+        if self.inneriter > 100:
+            itero = tqdm(itero, desc="prox loop")
+        for i in itero:
             loss = self.obj(self.ly1) + 1/self.gamma*self.proxdist(self.ly1, x_prev)
             loss.backward()
             self.optimizer.step()
