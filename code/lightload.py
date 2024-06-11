@@ -60,6 +60,11 @@ if __name__ == '__main__':
 
     for ts in datalist:
         x = datalist[ts]
+        missing = [v for v in ['meta', 'setup', 'postprocess', 'descent'] if not v in x]
+        if len(missing) > 0:
+            print(f"{x['config']} {ts} ({hoursago(ts)} ago) is missing {missing}")
+            continue
+
         with open(f"{args.folder}/{x['meta']}", "rb") as f:
             X4 = pickle.load(f)
 

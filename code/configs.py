@@ -71,21 +71,23 @@ def normalneuron(rng, m, d, s):
     ly2 = np.ones((m, 1)) * np.sign(1-2*rng.random((m, 1)))
     return ly1, ly2
 
+import torch
+
 def ConfigNormal():
+    stop = []
     seed = 4
-    device = "cpu"
     rng = np.random.default_rng(seed)
     from torch import float32
     dtype = float32
+    device = "cuda"
+    device = "cpu"
 
     algo = "proxpoint"
     proxdist = "sliced"
-    proxdist = "wasser"
     proxdist = "frobenius"
+    proxdist = "wasser"
     gamma = 1e-1
     inneriter = 1000
-    steps = -1
-    steps = 10
 
     #algo = "GD"
     lr= 1e-3*2
@@ -99,9 +101,9 @@ def ConfigNormal():
     ly1, ly2 = grid2dneuron(rng, m, scale)
     ly1, ly2 = normalneuron(rng, m, d, scale)
 
-    #double the number of neurons to allow for negative neurons..
-    #ly1 = np.concatenate((ly1, ly1*1.0), axis=1) # (d, m) -> (d, 2m)
-    #ly2 = np.concatenate((ly2, ly2*(-1.0)), axis=0) #(m, 1) -> (2m, 1)
+    if proxdist == "wasser":
+        device = "cpu"
+    torch.set_num_threads(1) # 10% perf loss but only use one core.
 
     X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
     return X1

@@ -11,7 +11,7 @@ def frobenius(x, x_prev):
     return torch.sum((x - x_prev)**2)/(d*m)
 
 def slicedwasserstein(x, x_prev): # x has grad=true
-    return ot.sliced_wasserstein_distance(x, x_prev+1e-7, n_projections=100)
+    return ot.sliced_wasserstein_distance(x, x_prev+1e-10, n_projections=20000)
     # this isn't made for stuff that's close together, hence the 1e-7
 
 # custom sliced wasserstein, no idea if it's different from POT.

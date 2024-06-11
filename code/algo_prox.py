@@ -25,11 +25,13 @@ class proxpoint: #just for grid stuff
 
     def step(self):
         x_prev = self.ly1.clone().detach()
+        assert self.ly1.requires_grad
         itero = range(self.inneriter)
         if self.inneriter > 100:
             itero = tqdm(itero, desc="prox loop")
         for i in itero:
             loss = self.obj(self.ly1) + 1/self.gamma*self.proxdist(self.ly1, x_prev)
+            assert self.ly1.requires_grad
             loss.backward()
             self.optimizer.step()
             self.optimizer.zero_grad()
@@ -60,6 +62,7 @@ class proxpoint: #just for grid stuff
         #print("")
 
     def load(self, X, Y, ly1, ly2, beta=0):
+        torch.set_grad_enabled(True) # keyboard interrupt in the middle of a torch.no_grad...
         self.beta = beta
         self.d, self.m = ly1.shape
         self.ly1 = torch.tensor(ly1, dtype=self.dtype, device=self.device, requires_grad=True)
@@ -69,6 +72,7 @@ class proxpoint: #just for grid stuff
 
         from mechanic_pytorch import mechanize # lr magic (rollbacks)
         self.optimizer = mechanize(torch.optim.SGD)([self.ly1], lr=1)
+        #self.optimizer = mechanize(torch.optim.AdamW)([self.ly1], lr=1, weight_decay=0)
         #self.optimizer = torch.optim.SGD([self.ly1], lr=self.gamma)
 
     def loss(self):
