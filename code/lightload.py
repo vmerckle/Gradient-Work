@@ -12,34 +12,6 @@ import runner
 import postprocess
 import configs
 
-def dosave(fname, res):
-    with open(fname, "wb") as f:
-        pickle.dump(args, f)
-    print("Saved", fname)
-    return res
-
-def gethours(timestamp):
-    delta = datetime.datetime.now() - datetime.datetime.fromtimestamp(float(timestamp))
-    return delta.total_seconds() / 3600
-
-def hoursago(timestamp):
-    delta = datetime.datetime.now() - datetime.datetime.fromtimestamp(float(timestamp))
-    s = delta.total_seconds()
-    return deltatimestring(s)
-
-def deltatimestring(s):
-    d = int(s//(60*60*24)) # i know it's available in the timedelta object
-    h = int(s//(60*60) - d*24) # shorter
-    m = int(s//60 - h*60)
-    s = int(s%60)
-    ss = ""
-    if d > 0:
-        return f"{d}d {h}h"
-    if h > 0:
-        return f"{h}h {m}m"
-    if m > 0:
-        return f"{m}m {s}s"
-    return f"{s}s"
 
 if __name__ == '__main__':
     configD = {n[6:]:f for n,f in getmembers(configs, isfunction) if len(n) > 6 and n[:6] == "Config"}
@@ -57,8 +29,9 @@ if __name__ == '__main__':
             datalist[timestamp][step] = fname
         else:
             datalist[timestamp] = {step:fname, 'config':config_name}
-
-    for ts in datalist:
+    tss = [ts for ts in datalist]
+    tss.sort()
+    for ts in tss:
         x = datalist[ts]
         missing = [v for v in ['meta', 'setup', 'postprocess', 'descent'] if not v in x]
         if len(missing) > 0:

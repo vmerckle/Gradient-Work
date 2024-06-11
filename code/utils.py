@@ -1,4 +1,52 @@
 import numpy as np
+import datetime
+
+def gethours(timestamp):
+    delta = datetime.datetime.now() - datetime.datetime.fromtimestamp(float(timestamp))
+    return delta.total_seconds() / 3600
+
+def hoursago(timestamp):
+    delta = datetime.datetime.now() - datetime.datetime.fromtimestamp(float(timestamp))
+    s = delta.total_seconds()
+    return deltatimestring(s)
+
+def deltatimestring(s):
+    d = int(s//(60*60*24)) # i know it's available in the timedelta object
+    h = int(s//(60*60) - d*24) # shorter
+    m = int(s//60 - h*60)
+    s = int(s%60)
+    ss = ""
+    if d > 0:
+        return f"{d}d {h}h"
+    if h > 0:
+        return f"{h}h {m}m"
+    if m > 0:
+        return f"{m}m {s}s"
+    return f"{s}s"
+
+def gethours(timestamp):
+    delta = datetime.datetime.now() - datetime.datetime.fromtimestamp(float(timestamp))
+    return delta.total_seconds() / 3600
+
+def hoursago(timestamp):
+    delta = datetime.datetime.now() - datetime.datetime.fromtimestamp(float(timestamp))
+    s = delta.total_seconds()
+    return deltatimestring(s)
+
+def deltatimestring(s):
+    d = int(s//(60*60*24)) # i know it's available in the timedelta object
+    h = int(s//(60*60) - d*24) # shorter
+    m = int(s//60 - h*60)
+    s = int(s%60)
+    ss = ""
+    if d > 0:
+        return f"{d}d {h}h"
+    if h > 0:
+        return f"{h}h {m}m"
+    if m > 0:
+        return f"{m}m {s}s"
+    return f"{s}s"
+
 
 def add_bias(x):
     """ add a column of 1 to data to allow for bias """

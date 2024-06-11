@@ -25,9 +25,9 @@ def shouldstop(X1, opti, num, start):
 
 if __name__ == '__main__':
     config = "Normal"
-    folder = "data"
+    folder = "datatut"
     dists = ["frobenius", "wasser"]
-    i = 100000
+    i = 100
     for dist in dists:
         #for i in [10,100, 1000, 10000, 50000]:
         for g in [1, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5]:
