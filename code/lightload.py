@@ -41,11 +41,19 @@ def deltatimestring(s):
         return f"{m}m {s}s"
     return f"{s}s"
 
+def movetrash(x):
+    present = [v for v in ['meta', 'setup', 'postprocess', 'descent'] if v in x]
+    for v in present:
+        fname = x[v]
+        os.rename(f"{args.folder}/{fname}", f".trash/{fname}")
+        print(f"moved {fname} to .trash")
+
 if __name__ == '__main__':
     configD = {n[6:]:f for n,f in getmembers(configs, isfunction) if len(n) > 6 and n[:6] == "Config"}
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--folder", help="folder name", default="data")
+    cleanup = False
     args = parser.parse_args()
 
     datalist = {}
@@ -63,6 +71,8 @@ if __name__ == '__main__':
         missing = [v for v in ['meta', 'setup', 'postprocess', 'descent'] if not v in x]
         if len(missing) > 0:
             print(f"{x['config']} {ts} ({hoursago(ts)} ago) is missing {missing}")
+            if cleanup:
+                movetrash(x)
             continue
 
         with open(f"{args.folder}/{x['meta']}", "rb") as f:
@@ -70,8 +80,10 @@ if __name__ == '__main__':
 
         with open(f"{args.folder}/{x['setup']}", "rb") as f:
             X1 = pickle.load(f)
-
         print(f"{x['config']} {ts} ({hoursago(ts)} ago) {X4['steps']} steps({deltatimestring(X4['timetaken'])}), m={X1['m']}, n={X1['n']}, {X1['algo']}-{X1['proxdist']}, g={X1['gamma']}, inner={X1['inneriter']}")
+        if X4['timetaken'] < 30:
+            if cleanup:
+                movetrash(x)
 
     #if (args.keepfirst or args.keepsecond) and os.path.isfile(stepname):
     #    print(f"Loading '{stepname}'") 
