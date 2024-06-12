@@ -6,9 +6,31 @@ import numpy as np
 
 from utils import *
 from types import SimpleNamespace
+import torch
 
-def loadalgo(X1):
+def applyconfig(X1):
     x = SimpleNamespace(**X1)
+    
+    if x.datatype == "linear":
+        X, Y, Xb = linear(x.n, x.d)
+    elif x.datatype == "sinus":
+        X, Y, Xb = sinus2d(x.n)
+    else:
+        raise Exception("wrong datatype", x.datatype)
+
+    rng = np.random.default_rng(x.seed)
+    if x.typefloat == "float32":
+        dtype = torch.float32
+    elif x.typefloat == "float64":
+        dtype = torch.float64
+    else:
+        raise Exception("wrong typefloat", x.typefloat)
+
+    ly1, ly2 = grid2dneuron(rng, x.m, x.scale)
+    ly1, ly2 = normalneuron(rng, x.m, x.d, x.scale)
+
+    torch.set_num_threads(1) # 10% perf loss but only use one core.
+
     algo = x.algo
     if algo == "GD":
         from algo_GD_torch import torch_descent
@@ -39,12 +61,12 @@ def loadalgo(X1):
             proxdist = slicedwasserstein
         else:
             raise Exception("config bad proxdist choice")
-        opti = proxpoint(rng=x.rng, proxdist=proxdist, inneriter=x.inneriter, gamma=x.gamma, dtype=x.dtype, device=x.device)
+        opti = proxpoint(rng=rng, proxdist=proxdist, inneriter=x.inneriter, gamma=x.gamma, dtype=dtype, device=x.device)
     else:
         raise Exception("config bad algo choice")
 
-    opti.load(x.X, x.Y, x.ly1, x.ly2, x.beta)
-    return {"opti": opti}
+    opti.load(X, Y, ly1, ly2, x.beta)
+    return {"opti": opti, "ly1":ly1, "X":X, "Y":Y, "ly2":ly2}
 
 def sinus2d(n):
     Xb = np.linspace(-0.5, 0.5, n)[:, None]
@@ -71,14 +93,9 @@ def normalneuron(rng, m, d, s):
     ly2 = np.ones((m, 1)) * np.sign(1-2*rng.random((m, 1)))
     return ly1, ly2
 
-import torch
-
 def ConfigNormal():
-    stop = []
     seed = 4
-    rng = np.random.default_rng(seed)
-    from torch import float32
-    dtype = float32
+    typefloat = "float32"
     device = "cuda"
     device = "cpu"
 
@@ -88,6 +105,10 @@ def ConfigNormal():
     proxdist = "wasser"
     gamma = 1e-1
     inneriter = 1000
+    datatype = "sinus"
+
+    if proxdist == "wasser":
+        device = "cpu"
 
     #algo = "GD"
     lr= 1e-3*2
@@ -95,15 +116,6 @@ def ConfigNormal():
     beta = 0
     scale = 1e-2
     m, d, n = 50, 2, 5
-    X, Y, Xb = linear(n, d)
-    X, Y, Xb = sinus2d(n)
-
-    ly1, ly2 = grid2dneuron(rng, m, scale)
-    ly1, ly2 = normalneuron(rng, m, d, scale)
-
-    if proxdist == "wasser":
-        device = "cpu"
-    torch.set_num_threads(1) # 10% perf loss but only use one core.
 
     X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
     return X1

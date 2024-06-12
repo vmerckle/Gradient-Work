@@ -28,7 +28,7 @@ def runexperiment(config, folder, update={}, shouldstop=dontstop):
     X1 = configD[config]()
     X1.update(update)
     save(f"{folder}/{file}-setup.pkl", X1)
-    X1.update(configs.loadalgo(X1))
+    X1.update(configs.applyconfig(X1))
 
     lly1, lly2 = [X1["ly1"]], [X1["ly2"]]
     opti = X1["opti"]

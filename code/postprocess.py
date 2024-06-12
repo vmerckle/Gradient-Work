@@ -44,7 +44,7 @@ def NNtoIter(Xt, Yt, allX, ly1, ly2, run=False):
         raise Exception("d>3 has no animation yet")
 
 def simplecalcs(X):
-    X, Y, lly1, lly2, rng = [X[x] for x in ["X", "Y", "lly1", "lly2", "rng"]]
+    X, Y, lly1, lly2 = [X[x] for x in ["X", "Y", "lly1", "lly2"]]
     d = X.shape[1]
     allXb = np.linspace(-4,4, 1000)
     if d == 2:

@@ -1,14 +1,23 @@
 import torch
 import ot
+import numpy as np
 
 def wasserstein(x, x_prev): # x has grad=true
     M = ot.dist(x.T, x_prev.T, metric='sqeuclidean', p=2)
     return ot.emd2(torch.Tensor([]), torch.Tensor([]), M)
 
+def wasserstein_np(x, x_prev): # x has grad=true
+    M = ot.dist(x.T, x_prev.T, metric='sqeuclidean', p=2)
+    return ot.emd2(np.array([]), np.array([]), M)
+
 
 def frobenius(x, x_prev):
     d, m = x.shape
     return torch.sum((x - x_prev)**2)/(d*m)
+
+def frobenius_np(x, x_prev):
+    d, m = x.shape
+    return np.sum((x - x_prev)**2)/(d*m)
 
 def slicedwasserstein(x, x_prev): # x has grad=true
     return ot.sliced_wasserstein_distance(x, x_prev+1e-10, n_projections=20000)
