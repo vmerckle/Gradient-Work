@@ -59,10 +59,13 @@ def comparetwo(ts1, ts2, folder):
     gammas = [Xs[i]["gamma"] for i in rg]
 
     wassers = []
+    numerop= []
     euclids = []
     for i in rg: # someone(no one) said no double list comprehensions.. for comprehension
         a = np.array([proxdistance.wasserstein_np(lys[i][j], lys[i][j+1]) for j in range(len(lys[i])-1)])
         wassers.append(a)
+        c = np.array([proxdistance.wasserstein_num(lys[i][j], lys[i][j+1]) for j in range(len(lys[i])-1)])
+        numerop.append(c)
         b = np.array([proxdistance.frobenius_np(lys[i][j], lys[i][j+1]) for j in range(len(lys[i])-1)])
         euclids.append(b)
 
@@ -78,6 +81,7 @@ def comparetwo(ts1, ts2, folder):
     ax2 = ax.twinx()  # instantiate a second Axes that shares the same x-axis
     for i in rg:
         ax.plot(objs[i], label=f"{dists[i]} Loss(MSE)")
+        ax.plot(numerop[i], label=f"{dists[i]} Nb of permut")
         ax2.plot(wassers[i], label=f"{dists[i]}-Distance($W_2^2$)", linestyle="dashed")
         ax2.plot(euclids[i], label=f"{dists[i]}-Distance($F$)", linestyle="dotted")
     ax2.set_yscale("log")
@@ -124,7 +128,6 @@ def comparetwoscatt(ts1, ts2, folder):
         ax.scatter(x=lys[i][0][0], y=lys[i][0][1], color=colorsc)
         for (trajx, trajy, color) in zip(trajsx, trajsy, colors):
             ax.plot(trajx, trajy, color=color, linestyle=linestyle[i], alpha=0.5)
-    plt.show()
 
 if __name__ == '__main__':
     
@@ -135,5 +138,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     comparetwoscatt(args.ts1, args.ts2, args.folder)
-
-
+    comparetwo(args.ts1, args.ts2, args.folder)
+    plt.show()

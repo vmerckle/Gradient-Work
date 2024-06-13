@@ -68,7 +68,7 @@ def runexperiment(config, folder, update={}, shouldstop=dontstop):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--config", help="config name", default=None, choices=configD.keys())
+    parser.add_argument("-c", "--config", help="config name", default='Normal', choices=configD.keys())
     #parser.add_argument("--folder", help="folder name", default="data")
     folder = "data"
     args = parser.parse_args()

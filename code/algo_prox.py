@@ -30,16 +30,18 @@ class proxpoint: #just for grid stuff
         if self.inneriter > 100:
             itero = tqdm(itero, desc="prox loop")
         for i in itero:
+            self.optimizer.zero_grad()
             loss = self.obj(self.ly1) + 1/self.gamma*self.proxdist(self.ly1, x_prev)
-            assert self.ly1.requires_grad
+            #assert self.ly1.requires_grad
             loss.backward()
             self.optimizer.step()
-            self.optimizer.zero_grad()
-        #with torch.no_grad(): 
         #    obji, disti = self.obj(self.ly1).item(), 1/self.gamma*self.proxdist(self.ly1, x_prev).item()
         #print(f"{obji:.1E}, {disti:.1E} so {obji/disti*100:.1f}%")
         #if i == self.inneriter-1:
             #print("warning, used all", self.inneriter, "iterations in prox")
+        with torch.no_grad():
+            nrm = torch.norm(self.ly1.grad).item()
+            print(nrm)
 
 
     def weirdstep(self):
@@ -77,6 +79,10 @@ class proxpoint: #just for grid stuff
 
     def loss(self):
         with torch.no_grad():
+            out = torch.relu(self.X @ self.ly1)@self.ly2
+            yhat = torch.sum(out, axis=1)
+            print(yhat.flatten().detach().cpu().numpy()[:10])
+            print(self.Y.flatten().detach().cpu().numpy()[:10])
             return self.obj(self.ly1).item()
 
     def params(self):

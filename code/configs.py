@@ -10,15 +10,19 @@ import torch
 
 def applyconfig(X1):
     x = SimpleNamespace(**X1)
+    rng = np.random.default_rng(x.seed)
     
-    if x.datatype == "linear":
-        X, Y, Xb = linear(x.n, x.d)
+    if x.datatype == "linear2d":
+        X, Y, Xb = linear2d(x.n, 0.1, 0.1)
+    elif x.datatype == "rnglinear":
+        X, Y, Xb = rnglinear(rng, x.n, x.d, x.Xsampling, eps=x.Ynoise)
     elif x.datatype == "sinus":
         X, Y, Xb = sinus2d(x.n)
+    elif x.datatype == "random":
+        X, Y, Xb = rngrng(rng, x.n, x.d, x.Xsampling)
     else:
         raise Exception("wrong datatype", x.datatype)
 
-    rng = np.random.default_rng(x.seed)
     if x.typefloat == "float32":
         dtype = torch.float32
     elif x.typefloat == "float64":
@@ -74,11 +78,32 @@ def sinus2d(n):
     #X, Y = add_bias(Xb), Xb*0.1+0.1
     return X, Y, Xb
 
-def linear(n, d):
+def linear2d(n, a, b):
     Xb = np.linspace(-0.5, 0.5, n)[:, None]
-    X, Y = add_bias(Xb), Xb*0.1+0.1
+    X, Y = add_bias(Xb), Xb*a+b
     return X, Y, Xb
 
+def rnglinear(rng, n, d, sampling, eps=0):
+    if sampling == "uniform":
+        Xb = rng.uniform(-0.5, 0.5, (n, d-1))
+    elif sampling == "normal":
+        Xb = rng.standard_normal((n, d-1))
+
+    b = rng.uniform(-1, 1, d-1)
+    noise = rng.uniform(-1, 1, n)*eps
+    return add_bias(Xb), (Xb.dot(b) + noise)[:, None], Xb
+
+def rngrng(rng, n, d, sampling):
+    if sampling == "uniform":
+        Xb = rng.uniform(-0.5, 0.5, (n, d-1))
+        Y = rng.uniform(-2, 2, (n, 1))
+    elif sampling == "normal":
+        Xb = rng.standard_normal((n, d-1))
+        Y = rng.normal(0.25, 1, (n, 1))
+        Y += rng.normal(-0.25, 1, (n, 1)) # attempt at creating something hard
+        Y = rng.uniform(-0.5, 0.5, (n, 1))
+
+    return add_bias(Xb), Y, Xb
 def grid2dneuron(rng, m, s):
     t = np.linspace(-s, s, m)
     Xm, Ym = np.meshgrid(t, t)
@@ -96,16 +121,20 @@ def normalneuron(rng, m, d, s):
 def ConfigNormal():
     seed = 4
     typefloat = "float32"
-    device = "cuda"
     device = "cpu"
+    device = "cuda"
 
     algo = "proxpoint"
     proxdist = "sliced"
-    proxdist = "frobenius"
     proxdist = "wasser"
-    gamma = 1e-1
+    proxdist = "frobenius"
+    gamma = 1e2
     inneriter = 1000
     datatype = "sinus"
+    datatype = "rnglinear"
+    datatype = "random"
+    Xsampling = "uniform"
+    Ynoise = 1e-1
 
     if proxdist == "wasser":
         device = "cpu"
@@ -114,8 +143,9 @@ def ConfigNormal():
     lr= 1e-3*2
 
     beta = 0
-    scale = 1e-2
-    m, d, n = 50, 2, 5
+    scale = 1e-8
+    m, d, n = 100, 100, 1000
+    #m, d, n = 100, 100, 10000
 
     X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
     return X1
