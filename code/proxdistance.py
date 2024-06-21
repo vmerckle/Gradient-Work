@@ -10,6 +10,13 @@ def wasserstein_np(x, x_prev): # x has grad=true
     M = ot.dist(x.T, x_prev.T, metric='sqeuclidean', p=2)
     return ot.emd2(np.array([]), np.array([]), M)
 
+def wasserstein_num(x, x_prev): # x has grad=true
+    M = ot.dist(x.T, x_prev.T, metric='sqeuclidean', p=2)
+    m = len(x[0])
+    M = ot.emd(np.array([]), np.array([]), M)*m
+    u = np.sum(np.abs(np.eye(m) - M))/2/m
+    print(u)
+    return u
 
 def frobenius(x, x_prev):
     d, m = x.shape

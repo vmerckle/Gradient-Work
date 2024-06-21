@@ -51,6 +51,9 @@ def simplecalcs(X):
         allX = add_bias(allXb)
     elif d == 1:
         allX = allXb[:, None]
+    else:
+        return {"Xout": allXb}
+
     iterdata = [NNtoIter(X, Y, allX, lly1[i], lly2[i]) for i in range(len(lly1))]
     #normData(iterdata, "lnorm", 0, 1) 
     #normData(iterdata, "lsize", 1, 100)
