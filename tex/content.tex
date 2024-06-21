@@ -1,9 +1,12 @@
 \section{Objective value vs iterates norm}
-\subsection{proximal point}
+\subsection{Early experiments}
+\subsubsection{proximal point}
 
-We run proximal point which optimize the objective $F(W^{t+1})$ and the distance between two iterates $d(W^{t+1)}, W^{(t)}$. We plot those two values for $\gamma=10$, and for Frobenius distance and Wasserstein distance as defined later.
+
+We run proximal point which optimize the objective $F(W^{t+1})$ and the distance between two iterates $d(W^{t+1)}, W^{(t)})$. We plot those two values for $\gamma=10$, and for Frobenius distance and Wasserstein distance as defined later.
 
 \includegraphics[width=0.7\textwidth]{imgs/tau10_graph_full.png}
+
 
 It looks like they are exactly the same. We also plot the difference between the two distances to confirm.
 
@@ -16,7 +19,7 @@ Start and 'end' of convergence for proximal point:
 
 It's a relatively large stepsize but not an easy problem. The triangle of neurons that do not move are simply neurons that do not activate any data. Initialization is a random grid, with an output norm close to zero.
 
-\subsection{wasserstein descent}
+\subsubsection{wasserstein descent}
 
 \includegraphics[width=0.7\textwidth]{imgs/tau10_plot_wasser_end.png}
 
@@ -26,9 +29,54 @@ The early trajectory is very similar, but then it looks stuck for a while.
 
 Caveat: prox solution is not accurate due to small number of inner iterations.
 
+\section{Accurate prox simulations}
+
+$m = 50$(scale $10^{-2}$), $n = 5$(some usual $[-1, 1]$ sinus data), we compute $10^6$ prox inner iterations (the bigger the stepsize the larger the step size might need to be) for both the frobenius and the wasserstein distance. 
+
+In blue/green filled lines we plot the normal MSE loss of the network (for frobenius proxpoint and wasserstein proxpoint)
+
+In dotted/dashed lines we compute $d(W^{t)}, W^{(t+1)})$ (distance between iterates, which is one of the two objectives minimized at each step) for $d=$wasserstein and $d=$frobenius.
+
+Because the only difference between wasserstein and frobenius is the assignement (which neuron/particle is assigned which particle to compute the distance), we also plot in thick green and red lines the number of permutations of the optimal mapping between two iterates. (1 = every particles has been permuted, 0 = each particle is associated to itself)
+
+For $\gamma = 10^{-3}$ (small stepsize):
+
+\includegraphics[width=1.0\textwidth]{imgs/petit_pas_10steps.png}
+
+The 3 lines associated with wasserstein descent are very close to the 3 lines of frobenius descent, as expected.
+
+For $\gamma = 10^0$ (big stepsize). This is one example where the convergence is very different. Wasserstein descent converges to 0 while Frobenius descent gets stuck on a bad local minima. We do the same plot as before.
+
+\includegraphics[width=1.0\textwidth]{imgs/grand_pas_10steps.png}
+
+We can see the loss is completely different after 10 steps (it's normal to converge very quickly as the stepsize of the prox is large).
+
+One thing to note, if we can focus on wasserstein descent lines (dashed green and dotted red), the distance between iterates in frobenius or wasserstein is very close. However we can see in filled red that the number of permutations is close to 100\% at some steps.
+
+This indicates that the actual distance value is not as important as the actual trajectories of the neurones which are decided by the gradient of the wasserstein distance used in the prox.
+
+We plot the trajectories of each neuron (dashed lines for wasserstein descent and filled lines for frobenius descent) for the 10 prox steps. Circles denotes the initial positions of the neurons, blue for negative neurons and red for positives neurons.
+
+\includegraphics[width=1.0\textwidth]{imgs/grand_pas_10steps_trajs.png}
+
+The trajectories are indeed different between the two descents. One major difference: neurons in the bottom quadrants are not moved at all by the frobenius descent, but in the wasserstein descent they are moved, they exchange positions (we can see two (dashed) trajectories very close going to and from the same initial neuron).
+
+Those neurons (bottom/center quadrants) do not activate any datapoint and as such their differential is 0, so they cannot possibly move under prox descent. If weight decay is used, they will converge to 0. This completely differ from wasserstein descent, so the differential of the wasserstein distance must be different.
+
+We'll focus on one proximal step by showing the first few \emph{inner} iterations for the two descents. We take two particles with different gradients. (this could happen near a non-differentiability, or as we see in the simulations if we can switch positive and negative neurons)
+
+\includegraphics[width=1.0\textwidth]{imgs/grand_pas_10steps_trajs.png}
+
+The inner iterations are dictated by the gradient of the objective $\frac{\partial F}{\partial w_i}$ to minimize the loss, and by gradient of the distance to the first iterate ($W^{(0)}$). The frobenius proximal point goes as usual, the distance gradient pulling the particle back to its initial position. However the wasserstein distance ends up pulling the particles to the other neuron's initial positions.
+
+Remark(not 100\% sure): in the mean field paper, the only results on ReLU are obtained by computing the wasserstein distance on two separate sets (i.e. you cannot assign a positive neuron to a negative neuron)
+
+
+Implementations details: Frobenius is ran on one GPU(15min per run) while wasserstein is ran on a single CPU core (30min per run) as that was found to be the most efficient to run multiple experiments. Results for $\gamma=10^{a}$, $a=[0, -1, -2, -3, -4, -5]$ are available but do not differ much.
+
 \section{Implemented descents}
 
-We only update the first layer $W^(0) \in \Theta = \R^{d \times m}$ for simplicity. $F : \Theta \rightarrow \R^+$ is the objective to minimize.
+We only update the first layer $W^{(0)} \in \Theta = \R^{d \times m}$ for simplicity. $F : \Theta \rightarrow \R^+$ is the objective to minimize.
 
 \begin{equation}
 	\min_{W \in \Theta} \ F(W)
