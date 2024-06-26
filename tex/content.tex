@@ -16,9 +16,19 @@ En étudiant en détail une étape de prox, càd:
 
 On trouve que: avec d = frob/eucli ($(x-x^{(t)})^2 + (y-y^{(t)})^2$), avec plusieurs étapes on converge toujours vers $(x=4, y=1)$ : $y$ est constant.
 
-Avec d = wasser($W^2_2$) (le plus petit entre frob et $(x-y^{(t)})^2 + (y-x^{(t)})^2$), en un étape et la limite pour un pas infini est $(x=4, y=0)$. On déplace donc le point $y$ qui a une dérivée nule pour la fonctioner $f$ à minimiser.
+Avec d = wasser($W^2_2$) (le plus petit entre frob et $(x-y^{(t)})^2 + (y-x^{(t)})^2$), en une étape et la limite pour un pas infini est $(x=4, y=0)$. On déplace donc le point $y$ qui a une dérivée nule pour la fonctioner $f$ à minimiser.
 
-\subsection{détails}
+\subsection{détail wasser}
+
+Préreq: $w_2$ avec mesures somme de diracs uniforme \verb|->| pb de permutation.
+
+On trouve facilement que l'assignement est l'identité si $x \leq  y$ et on inverse dans l'autre cas (avec deux solutions du coup pour l'égalité). On peut réécrire l'argmin avec la distance de wasserstein:
+
+\begin{equation}
+	(x^{(t+1)}, y^{(t+1)}) = \argmin_{(x, y)} \frac{1}{2}(x-4)^2 + \frac{1}{2 \gamma} \left[ \one_{x \leq y} ~ \left((x-x^{(t)})^2 + (y - y^{(t)})^2\right) + \one_{x > y} ~ \left((x-y^{(t)})^2 + (y - x^{(t)})^2\right) \right]
+\end{equation}
+
+\subsection{détails de la première étape}
 
 Pour $\gamma < 1/3$, la première étape de prox sera identique qu'importe la distance utilisé, car cela garantie que $x^{(1)} \leq y^{(0)}$. \sout{De même pour $\gamma \leq \sqrt{\frac{13}{12}} - 1 = 0.041 \dots $ et deux étapes.}(pas le bon calcul) On a :
 
