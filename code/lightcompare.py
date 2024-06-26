@@ -138,5 +138,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     comparetwoscatt(args.ts1, args.ts2, args.folder)
-    comparetwo(args.ts1, args.ts2, args.folder)
-    plt.show()
+    #plt.show()
+    #comparetwo(args.ts1, args.ts2, args.folder)
