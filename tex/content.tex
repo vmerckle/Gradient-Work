@@ -1,3 +1,41 @@
+\section{2 pts example}
+
+On étudie un problème en une dimension, avec analogie possible entre l'évolution de deux neurones dans $\R^d$ et l'évolution de $x$ et $y$.
+
+$(x^{(0)}, y^{(0)}) = 0, 1$
+
+\begin{equation}
+	\min_{x,y \in \R} \underbrace{\frac{1}{2}(x - 4)^2}_{f(x, y)}
+\end{equation}
+
+En étudiant en détail une étape de prox, càd:
+
+\begin{equation}
+	(x^{(t+1)}, y^{(t+1)}) = \argmin_{(x, y)} f(x, y) + \frac{1}{2 \gamma} d((x,y),(x^{(t)}, y^{(t)}))
+\end{equation}
+
+On trouve que: avec d = frob/eucli ($(x-x^{(t)})^2 + (y-y^{(t)})^2$), avec plusieurs étapes on converge toujours vers $(x=4, y=1)$ : $y$ est constant.
+
+Avec d = wasser($W^2_2$) (le plus petit entre frob et $(x-y^{(t)})^2 + (y-x^{(t)})^2$), en un étape et la limite pour un pas infini est $(x=4, y=0)$. On déplace donc le point $y$ qui a une dérivée nule pour la fonctioner $f$ à minimiser.
+
+\subsection{détails}
+
+Pour $\gamma < 1/3$, la première étape de prox sera identique qu'importe la distance utilisé, car cela garantie que $x^{(1)} \leq y^{(0)}$. \sout{De même pour $\gamma \leq \sqrt{\frac{13}{12}} - 1 = 0.041 \dots $ et deux étapes.}(pas le bon calcul) On a :
+
+\begin{equation}
+	(x^{(1)}, y^{(1)}) = (\frac{1}{\gamma + 1} \left( 4 \gamma + x^{(0)} \right), \ 1)
+\end{equation}
+
+Dès que $\gamma > 1/3$ (et qu'on utilise wasserstein), on a $x^{(1)} > y^{(0)}$ et le coût de la distance wasserstein(qui associe $x$ à $y^{(0)}$ et $y$ à $x^{(0)}$ est plus faible) et le gradient pour $y$ est de fait non nul.
+
+\begin{align}
+	(x^{(1)}, y^{(1)}) = (1 + \frac{3}{1+\frac{1}{\gamma}}, \ 0)
+\end{align}
+
+\subsection{Plusieurs étapes}
+
+Après une étape de prox, on reset les "positions initiales". Une fois que $x^{(t)}>y^{(t)}$, le mapping sera l'identité (les deux distances produiront les mêmes itérés).
+
 \section{Prox point: Comparing the objective value and distance between iterates}
 Which are the two items to minimize in proximal point.
 \subsection{Early experiments}
