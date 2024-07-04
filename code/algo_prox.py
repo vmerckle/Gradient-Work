@@ -41,7 +41,7 @@ class proxpoint: #just for grid stuff
             #print("warning, used all", self.inneriter, "iterations in prox")
         with torch.no_grad():
             nrm = torch.norm(self.ly1.grad).item()
-            print(nrm)
+            print("norm", nrm)
 
 
     def weirdstep(self):

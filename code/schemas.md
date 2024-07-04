@@ -12,6 +12,9 @@ setup:
 - m
 - d
 - n
+- X
+- Y
+- Xb
 
 descent
 - lly1 list of (d, m)

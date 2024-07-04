@@ -4,6 +4,9 @@ import numpy as np
 
 def wasserstein(x, x_prev): # x has grad=true
     M = ot.dist(x.T, x_prev.T, metric='sqeuclidean', p=2)
+    #with torch.no_grad():
+        #opti = ot.emd(torch.Tensor([]), torch.Tensor([]), M)
+        #print(torch.sum(torch.abs(torch.eye(len(opti)) - opti*len(opti))).item())
     return ot.emd2(torch.Tensor([]), torch.Tensor([]), M)
 
 def wasserstein_np(x, x_prev): # x has grad=true

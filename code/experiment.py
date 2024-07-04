@@ -15,7 +15,7 @@ import configs
 from lightmain import *
 
 def shouldstop(X1, opti, num, start):
-    step = num > 10
+    step = num > 1
     timec =  time.time() - start > 1
     loss = opti.loss() < 0.4
 
@@ -49,6 +49,19 @@ def expe2():
                       "proxdist": dist}
             runexperiment(config, folder, update, shouldstop)
 
+def expe3(dist):
+    config = "Normal"
+    folder = "datatest"
+    dists = ["frobenius", "wasser"]
+    i = 100000
+    update = {"inneriter":i,
+              "gamma":1.,
+              "proxdist": dists[dist]}
+    runexperiment(config, folder, update, shouldstop)
+
 
 if __name__ == '__main__':
-    expe2()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dist", type=int)
+    args = parser.parse_args()
+    expe3(args.dist)

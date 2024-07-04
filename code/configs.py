@@ -30,10 +30,10 @@ def applyconfig(X1):
     else:
         raise Exception("wrong typefloat", x.typefloat)
 
-    ly1, ly2 = grid2dneuron(rng, x.m, x.scale)
-    ly1, ly2 = normalneuron(rng, x.m, x.d, x.scale)
+    ly1, ly2 = grid2dneuron(rng, x.m, x.scale, x.onlypositives)
+    ly1, ly2 = normalneuron(rng, x.m, x.d, x.scale, x.onlypositives)
 
-    torch.set_num_threads(1) # 10% perf loss but only use one core.
+    torch.set_num_threads(x.threadcount) # 10% perf loss for wasser but only use one core.
 
     algo = x.algo
     if algo == "GD":
@@ -70,7 +70,7 @@ def applyconfig(X1):
         raise Exception("config bad algo choice")
 
     opti.load(X, Y, ly1, ly2, x.beta)
-    return {"opti": opti, "ly1":ly1, "X":X, "Y":Y, "ly2":ly2}
+    return {"opti": opti, "ly1":ly1, "X":X, "Y":Y, "Xb":Xb, "ly2":ly2}
 
 def sinus2d(n):
     Xb = np.linspace(-0.5, 0.5, n)[:, None]
@@ -104,47 +104,59 @@ def rngrng(rng, n, d, sampling):
         Y = rng.uniform(-0.5, 0.5, (n, 1))
 
     return add_bias(Xb), Y, Xb
-def grid2dneuron(rng, m, s):
+def grid2dneuron(rng, m, s, onlypositives):
     t = np.linspace(-s, s, m)
     Xm, Ym = np.meshgrid(t, t)
     # Transform X and Y into 2x(m^2) matrices
     ly1 = np.vstack((Xm.flatten(), Ym.flatten()))
     m = ly1.shape[1]
-    ly2 = np.ones((m, 1)) * np.sign(1-2*rng.random((m, 1)))
+    if onlypositives:
+        ly2 = np.ones((m, 1))
+    else:
+        ly2 = np.ones((m, 1)) * np.sign(1-2*rng.random((m, 1)))
     return ly1, ly2
 
-def normalneuron(rng, m, d, s):
+def normalneuron(rng, m, d, s, onlypositives):
     ly1 = rng.standard_normal((d, m))*s
-    ly2 = np.ones((m, 1)) * np.sign(1-2*rng.random((m, 1)))
+    if onlypositives:
+        ly2 = np.ones((m, 1))
+    else:
+        ly2 = np.ones((m, 1)) * np.sign(1-2*rng.random((m, 1)))
     return ly1, ly2
 
 def ConfigNormal():
     seed = 4
     typefloat = "float32"
-    device = "cpu"
+    threadcount = 1
     device = "cuda"
+    device = "cpu"
 
     algo = "proxpoint"
-    proxdist = "sliced"
     proxdist = "wasser"
+    proxdist = "sliced"
     proxdist = "frobenius"
     gamma = 1e2
     inneriter = 1000
-    datatype = "sinus"
     datatype = "rnglinear"
+    datatype = "sinus"
     datatype = "random"
+
+    Xsampling = "grid"
     Xsampling = "uniform"
+    onlypositives = True
     Ynoise = 1e-1
 
     if proxdist == "wasser":
         device = "cpu"
+        threadcount = 1
 
     #algo = "GD"
     lr= 1e-3*2
 
     beta = 0
-    scale = 1e-8
-    m, d, n = 100, 100, 1000
+    scale = 1e-2
+    m, d, n = 1000, 1000, 1000
+    m, d, n = 50, 2, 5
     #m, d, n = 100, 100, 10000
 
     X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])

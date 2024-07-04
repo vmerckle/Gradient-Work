@@ -38,13 +38,14 @@ def loadts(timestamps, folder):
         x = datalist[ts]
         with open(f"{folder}/{x['setup']}", "rb") as f:
             X1 = pickle.load(f)
+        Xbis = configs.applyconfig(X1)
         with open(f"{folder}/{x['descent']}", "rb") as f:
             X2 = pickle.load(f)
         with open(f"{folder}/{x['postprocess']}", "rb") as f:
             X3 = pickle.load(f)
         with open(f"{folder}/{x['meta']}", "rb") as f:
             X4 = pickle.load(f)
-        Xs.append(X1|X2|X3|X4)
+        Xs.append(X1|Xbis|X2|X3|X4)
     return Xs
 
     #print(f"{x['config']} {ts} ({timestring(ts)} ago) {X4['steps']} steps, m={X1['m']}, n={X1['n']}, {X1['algo']}-{X1['proxdist']}, g={X1['gamma']}, inner={X1['inneriter']}")
@@ -95,7 +96,6 @@ def comparetwo(ts1, ts2, folder):
     #ax2.legend(lines + lines2, labels + labels2, loc=0)
     #plt.legend()
     #plt.savefig(f"{codemov}_plot.png", dpi=400)
-    plt.show()
 
 def comparetwoscatt(ts1, ts2, folder):
     rg = range(2)
@@ -117,8 +117,8 @@ def comparetwoscatt(ts1, ts2, folder):
     ax.axvline(x=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
     ax.grid(True, alpha=0.2)
     i = 0
-    linestyle = ["solid", "dashed"]
     for i in rg:
+        linestyle = "solid" if dists[i] == "frobenius" else "dashed"
         nstep = len(lys[i])
         m = len(lys[i][0][0])
         trajsx = np.array([lys[i][k][0] for k in range(nstep)]).T
@@ -126,8 +126,35 @@ def comparetwoscatt(ts1, ts2, folder):
         colors = ["C1" if ly2s[i][0][u]>0 else "C0" for u in range(m)]
         colorsc = ["red" if ly2s[i][0][u]>0 else "blue" for u in range(m)]
         ax.scatter(x=lys[i][0][0], y=lys[i][0][1], color=colorsc)
+        ax.scatter(x=lys[i][1][0], y=lys[i][1][1], color="violet", marker="+")
         for (trajx, trajy, color) in zip(trajsx, trajsy, colors):
-            ax.plot(trajx, trajy, color=color, linestyle=linestyle[i], alpha=0.5)
+            ax.plot(trajx, trajy, color=color, linestyle=linestyle, alpha=0.5)
+
+def compareoutputs(ts1, ts2, folder, it):
+    rg = range(2)
+    Xs = loadts([ts1, ts2], folder)
+    lys = [Xs[i]["lly1"] for i in rg]
+    ly2s = [Xs[i]["lly2"] for i in rg]
+    dists = [Xs[i]["proxdist"] for i in rg]
+    iters = np.array([Xs[i]["iterdata"] for i in rg])
+    objs = [[x["loss"] for x in iters[i]] for i in rg] # iterdata is a list of {}
+    gammas = [Xs[i]["gamma"] for i in rg]
+
+    fig = plt.figure(figsize=(8,4))
+    ax = fig.add_subplot(frameon=False)
+
+    ax.xaxis.set_major_locator(plt.MaxNLocator(3))
+    ax.yaxis.set_major_locator(plt.MaxNLocator(3))
+    #ax.set_ylabel('values', loc='center')
+    ax.axhline(y=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
+    ax.axvline(x=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
+    ax.grid(True, alpha=0.2)
+    ax.scatter(Xs[0]["Xb"], Xs[0]["Y"])
+    for i in rg:
+        linestyle = "solid" if dists[i] == "frobenius" else "dashed"
+        nstep = len(lys[i])
+        m = len(lys[i][0][0])
+        ax.plot(Xs[i]["Xout"], iters[i][it]["Yout"], linestyle=linestyle)
 
 if __name__ == '__main__':
     
@@ -137,6 +164,8 @@ if __name__ == '__main__':
     parser.add_argument("-f", "--folder", help="folder name", default="data")
     args = parser.parse_args()
 
+    compareoutputs(args.ts1, args.ts2, args.folder, it=0)
+    compareoutputs(args.ts1, args.ts2, args.folder, it=1)
     comparetwoscatt(args.ts1, args.ts2, args.folder)
-    #plt.show()
-    #comparetwo(args.ts1, args.ts2, args.folder)
+    comparetwo(args.ts1, args.ts2, args.folder)
+    plt.show()
