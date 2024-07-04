@@ -32,6 +32,9 @@
 %\usepackage[bb=dsserif]{mathalpha}
 \usepackage{booktabs} % bettertables
 
+\usepackage{cancel} % oblique bar with \cancel{text}
+\usepackage[normalem]{ulem} % barrer un texte \sout{text}
+
 \usepackage{enumitem} % allows easy modification to enumerate
 \setitemize{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt} % for example, make it more compact
 \usepackage[hypertexnames=false]{hyperref}
@@ -71,12 +74,17 @@
 %don't ever mention those lines to me
 \expandafter\def\csname ver@etex.sty\endcsname{3000/12/31}
 \let\globcount\newcount
-\usepackage{autonum} %amsmath -> hyperref->cleverref -> autonum
 
+%autonum is broken with cleverref....
+%\usepackage{autonum} %amsmath -> hyperref->cleverref -> autonum
 % https://tex.stackexchange.com/questions/471651/cref-not-working-with-autonum-but-cref-without-the-capital-letter-works
-\makeatletter
-\autonum@generatePatchedReferenceCSL{Cref}
-\makeatother
+%\makeatletter
+%\autonum@generatePatchedReferenceCSL{Cref}
+%\makeatother
+
+%autonum is broken with cleverref....
+
+
 \input{math_commands.tex} % Optional math commands from https://github.com/goodfeli/dlbook_notation.
 %\usepackage{bbold}
 %\usepackage{unicode-math}
@@ -101,6 +109,7 @@
 \newcommand{\paramS}{\Theta}
 \newcommand{\param}{\theta}
 \newcommand{\dirac}{\delta}
+\newcommand{\one}{\mathbf{1}}
 
 \DeclareMathOperator*{\diver}{div}
 \DeclareMathOperator{\prox}{Prox}
