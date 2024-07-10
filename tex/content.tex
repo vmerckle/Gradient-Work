@@ -99,16 +99,40 @@ L'objectif étant convexe, l'optimal est toujours à droite de $x^{(1)}$, donc o
 
 $y$ est identique, $x$ se déplace vers 4. A un moment $t$, on aura $x^{t+1} > y^{0}$ ($\forall t' < t, \ y^t = y^0$) et on peut refaire les calculs de la première étape dans le cas $\gamma > 1/3$(on a juste $x$ différent).
 
+\subsection{Extensions}
+
+We can project the whole example into the first dimension of $\R^2$ and rotate it and we would find the same behavior.
+
+Taking a ReLU network loss and weights, it seems unlikely that a problem with two neurons will have a different output at convergence with the wasserstein distance.
+
+However we can still observe on the graph below, that in a single step of prox there are many exchanges being made.
+
+\includegraphics[width=0.7\textwidth]{imgs/graph_onlypositives.png}
+
+This simulation is simply some random data that has two obvious directions:
+
+\includegraphics[width=0.7\textwidth]{imgs/graph_onlypositives_data.png}
+
+To remove any suspicion we only considered positives neurons here. Indeed all previous simulations have allowed exchanges between positives neurons (that have +1 for the second layer and thus positive outputs) and negative neurons.
+
+It is unclear if I should spend more time formalizing an example where we have an exchange.
+
+\subsection{Next steps}
+
+A 'large' stepsize for the proximal point using wasserstein might always happen in some scenarios with many neurons and a few obvious directions.
+
+In practice it is not easy to see the difference in the converged network, in large neurons scenarios where the loss usually reach zero for both distances.
+
+A large scale scenario will be ran (maybe many neurons in a grid again), with pos and neg distances computed differently (requires some code change).
+
 \section{Prox point: Comparing the objective value and distance between iterates}
 Which are the two items to minimize in proximal point.
 \subsection{Early experiments}
 \subsubsection{proximal point}
 
-
 We run proximal point which optimize the objective $F(W^{t+1})$ and the distance between two iterates $d(W^{t+1)}, W^{(t)})$. We plot those two values for $\gamma=10$, and for Frobenius distance and Wasserstein distance as defined later.
 
 \includegraphics[width=0.7\textwidth]{imgs/tau10_graph_full.png}
-
 
 It looks like they are exactly the same. We also plot the difference between the two distances to confirm.
 
