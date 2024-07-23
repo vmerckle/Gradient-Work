@@ -15,13 +15,14 @@ import configs
 from lightmain import *
 
 def shouldstop(X1, opti, num, start):
-    step = num > 1
+    step = num > 0
     timec =  time.time() - start > 1
-    loss = opti.loss() < 0.4
+    loss = opti.loss() < 1e-4
 
     return step 
-    return timec or step 
+    return loss
     return timec or loss
+    return timec or step 
 
 def expe1():
     config = "Normal"
@@ -59,9 +60,56 @@ def expe3(dist):
               "proxdist": dists[dist]}
     runexperiment(config, folder, update, shouldstop)
 
+def expe4(dist):
+    config = "Normal"
+    folder = "datatest"
+    dists = ["frobenius", "wasser"]
+    i = 100
+    update = {"inneriter":i,
+              "gamma":10.,
+              "proxdist": dists[dist]}
+    runexperiment(config, folder, update, shouldstop)
+
+def expe5(dist):
+    config = "Normal"
+    folder = "datatest"
+    dists = ["frobenius", "wasser"]
+    i = 3000
+    seed = int(time.time())
+    device = "cuda"
+    print(f"seed used: {seed}")
+    update = {"inneriter":i,
+              "gamma":1.,
+              "datatype":"random",
+              "device":device,
+              "threadcount":threadcount,
+              "d":10,
+              "m":100,
+              "n":1000,
+              "proxdist": dists[dist]}
+    runexperiment(config, folder, update, shouldstop)
+
+def debug(dist):
+    config = "Normal"
+    folder = "datatest"
+    dists = ["frobenius", "wasser"]
+    i = 1000
+    seed = int(time.time())
+    seed = 1721715896
+    print(f"seed used: {seed}")
+    update = {"inneriter":i,
+              "gamma":10.,
+              "datatype":"random",
+              "seed":seed,
+              "d":7,
+              "m":20,
+              "n":10,
+              "proxdist": dists[dist]}
+    runexperiment(config, folder, update, shouldstop)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("dist", type=int)
     args = parser.parse_args()
-    expe3(args.dist)
+    expe5(args.dist)
+    #debug(1)

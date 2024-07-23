@@ -2,26 +2,36 @@ import torch
 import ot
 import numpy as np
 
-def wasserstein(x, x_prev): # x has grad=true
-    M = ot.dist(x.T, x_prev.T, metric='sqeuclidean', p=2)
-    #with torch.no_grad():
-        #opti = ot.emd(torch.Tensor([]), torch.Tensor([]), M)
-        #print(torch.sum(torch.abs(torch.eye(len(opti)) - opti*len(opti))).item())
-    return ot.emd2(torch.Tensor([]), torch.Tensor([]), M)
+def wasserstein(x, x_prev, ly2): # x has grad=true
+    #M = ot.dist(x.T, x_prev.T, metric='sqeuclidean', p=2)
+    #emp = torch.Tensor([])
+    #return ot.emd2(emp, emp, M)
 
-def wasserstein_np(x, x_prev): # x has grad=true
-    M = ot.dist(x.T, x_prev.T, metric='sqeuclidean', p=2)
-    return ot.emd2(np.array([]), np.array([]), M)
+    nbpos = torch.sum((ly2 > 0)).item()
+    Mpos = ot.dist(x.T[:nbpos], x_prev.T[:nbpos], metric='sqeuclidean', p=2)
+    Mneg = ot.dist(x.T[nbpos:], x_prev.T[nbpos:], metric='sqeuclidean', p=2)
+    emp = torch.Tensor([])
+    return ot.emd2(emp, emp, Mpos) +ot.emd2(emp, emp, Mneg)
 
-def wasserstein_num(x, x_prev): # x has grad=true
-    M = ot.dist(x.T, x_prev.T, metric='sqeuclidean', p=2)
+def wasserstein_np(x, x_prev):
+    nbpos = np.sum((ly2 > 0)).item()
+    Mpos = ot.dist(x.T[:nbpos], x_prev.T[:nbpos], metric='sqeuclidean', p=2)
+    Mneg = ot.dist(x.T[m-nbpos:], x_prev.T[m-nbpos:], metric='sqeuclidean', p=2)
+    emp = np.array([])
+    return ot.emd2(emp, emp, Mpos) + ot.emd2(emp, emp, Mneg)
+
+# return the % of particle exchanged
+def wasserstein_num(x, x_prev):
     m = len(x[0])
-    M = ot.emd(np.array([]), np.array([]), M)*m
-    u = np.sum(np.abs(np.eye(m) - M))/2/m
-    print(u)
-    return u
+    nbpos = np.sum((ly2 > 0)).item()
+    Mpos = ot.dist(x.T[:nbpos], x_prev.T[:nbpos], metric='sqeuclidean', p=2)
+    Mneg = ot.dist(x.T[m-nbpos:], x_prev.T[m-nbpos:], metric='sqeuclidean', p=2)
+    emp = np.array([])
+    upos = np.sum(np.abs(ot.emd(emp, emp, Mpos) - np.eye(len(Mpos))/m))
+    uneg = np.sum(np.abs(ot.emd(emp, emp, Mneg) - np.eye(len(Mneg))/m))
+    return (uneg+upos)/2/m # every permut counts for 2, return a percentage
 
-def frobenius(x, x_prev):
+def frobenius(x, x_prev, ly2):
     d, m = x.shape
     return torch.sum((x - x_prev)**2)/(d*m)
 

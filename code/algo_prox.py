@@ -8,7 +8,7 @@ import ot
 
 from utils import *
 
-class proxpoint: #just for grid stuff
+class proxpoint:
     def __init__(self, rng, proxdist, inneriter=100, gamma=1, dtype=torch.float32, device="cpu"):
         self.rng = rng
         self.proxdist = proxdist
@@ -31,7 +31,7 @@ class proxpoint: #just for grid stuff
             itero = tqdm(itero, desc="prox loop")
         for i in itero:
             self.optimizer.zero_grad()
-            loss = self.obj(self.ly1) + 1/self.gamma*self.proxdist(self.ly1, x_prev)
+            loss = self.obj(self.ly1) + 1/self.gamma*self.proxdist(self.ly1, x_prev, self.ly2)
             #assert self.ly1.requires_grad
             loss.backward()
             self.optimizer.step()
@@ -43,7 +43,7 @@ class proxpoint: #just for grid stuff
             nrm = torch.norm(self.ly1.grad).item()
             print("norm", nrm)
 
-
+    # sample code to do custom grad 
     def weirdstep(self):
         x_prev = self.ly1.clone().detach()
         for i in range(self.inneriter):
