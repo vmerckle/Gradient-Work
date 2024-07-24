@@ -41,19 +41,18 @@ def NNtoIter(Xt, Yt, allX, ly1, ly2, run=False):
         loss = MSEloss(Yhat, Yt)
         return {"ly1": ly1, "ly2": ly2, "lact": lact, "lnorm": lnorm, "loss": loss, "Yout": Yout, "lsize": lsize}
     else:
-        raise Exception("d>3 has no animation yet")
+        Yhat = np_2layers(Xt, ly1, ly2)
+        loss = MSEloss(Yhat, Yt)
+        return {"ly1": ly1, "ly2": ly2, "loss": loss}
 
 def simplecalcs(X):
     X, Y, lly1, lly2 = [X[x] for x in ["X", "Y", "lly1", "lly2"]]
     d = X.shape[1]
     allXb = np.linspace(-4,4, 1000)
-    if d == 2:
+    if d >= 2:
         allX = add_bias(allXb)
     elif d == 1:
         allX = allXb[:, None]
-    else:
-        return {"Xout": allXb}
-
     iterdata = [NNtoIter(X, Y, allX, lly1[i], lly2[i]) for i in range(len(lly1))]
     #normData(iterdata, "lnorm", 0, 1) 
     #normData(iterdata, "lsize", 1, 100)

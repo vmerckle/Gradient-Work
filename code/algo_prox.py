@@ -27,6 +27,7 @@ class proxpoint:
         x_prev = self.ly1.clone().detach()
         assert self.ly1.requires_grad
         itero = range(self.inneriter)
+        firstloss = None
         if self.inneriter > 100:
             itero = tqdm(itero, desc="prox loop")
         for i in itero:
@@ -34,14 +35,39 @@ class proxpoint:
             loss = self.obj(self.ly1) + 1/self.gamma*self.proxdist(self.ly1, x_prev, self.ly2)
             #assert self.ly1.requires_grad
             loss.backward()
+            if firstloss is None:
+                firstloss = loss.item()
             self.optimizer.step()
-        #    obji, disti = self.obj(self.ly1).item(), 1/self.gamma*self.proxdist(self.ly1, x_prev).item()
-        #print(f"{obji:.1E}, {disti:.1E} so {obji/disti*100:.1f}%")
-        #if i == self.inneriter-1:
-            #print("warning, used all", self.inneriter, "iterations in prox")
-        with torch.no_grad():
-            nrm = torch.norm(self.ly1.grad).item()
-            print("norm", nrm)
+            #self.scheduler.step()
+        if loss.item() > firstloss:
+            itero = tqdm(desc="over prox")
+            while True:
+                self.optimizer.zero_grad()
+                loss = self.obj(self.ly1) + 1/self.gamma*self.proxdist(self.ly1, x_prev, self.ly2)
+                #assert self.ly1.requires_grad
+                loss.backward()
+                self.optimizer.step()
+                itero.update()
+                if loss.item() < firstloss:
+                    break
+            itero.close()
+
+    def step(self):
+        x_prev = self.ly1.clone().detach()
+        assert self.ly1.requires_grad
+        itero = range(self.inneriter)
+        bestloss = None
+        bestx = None
+        itero = tqdm(itero, desc="prox loop")
+        for i in itero:
+            self.optimizer.zero_grad()
+            loss = self.obj(self.ly1) + 1/self.gamma*self.proxdist(self.ly1, x_prev, self.ly2)
+            #assert self.ly1.requires_grad
+            loss.backward()
+            if bestloss is None or loss.item()<bestloss:
+                bestloss = loss.item()
+                print(bestloss)
+            self.optimizer.step()
 
     # sample code to do custom grad 
     def weirdstep(self):
@@ -73,16 +99,20 @@ class proxpoint:
         self.Y = torch.tensor(Y, dtype=self.dtype, device=self.device)
 
         from mechanic_pytorch import mechanize # lr magic (rollbacks)
-        self.optimizer = mechanize(torch.optim.SGD)([self.ly1], lr=1)
-        #self.optimizer = mechanize(torch.optim.AdamW)([self.ly1], lr=1, weight_decay=0)
-        #self.optimizer = torch.optim.SGD([self.ly1], lr=self.gamma)
+        from prodigyopt import Prodigy
+        self.optimizer = Prodigy([self.ly1],lr=1e0, weight_decay=0.)
+        #self.optimizer = mechanize(torch.optim.AdamW)([self.ly1], lr=1e-3, weight_decay=0)
+        #self.optimizer = mechanize(torch.optim.SGD)([self.ly1], lr=1)
+        #self.optimizer = torch.optim.SGD([self.ly1], lr=1e-2)
+        #self.optimizer = torch.optim.AdamW([self.ly1], lr=1e-3)
+        #self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
 
     def loss(self):
         with torch.no_grad():
             out = torch.relu(self.X @ self.ly1)@self.ly2
             yhat = torch.sum(out, axis=1)
-            print(yhat.flatten().detach().cpu().numpy()[:10])
-            print(self.Y.flatten().detach().cpu().numpy()[:10])
+            #print(yhat.flatten().detach().cpu().numpy()[:10])
+            #print(self.Y.flatten().detach().cpu().numpy()[:10])
             return self.obj(self.ly1).item()
 
     def params(self):

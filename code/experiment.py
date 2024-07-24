@@ -19,8 +19,8 @@ def shouldstop(X1, opti, num, start):
     timec =  time.time() - start > 1
     loss = opti.loss() < 1e-4
 
-    return step 
     return loss
+    return step 
     return timec or loss
     return timec or step 
 
@@ -72,21 +72,38 @@ def expe4(dist):
 
 def expe5(dist):
     config = "Normal"
+    folder = "23julyc"
     folder = "datatest"
     dists = ["frobenius", "wasser"]
-    i = 3000
-    seed = int(time.time())
+    i = 100000
+    NNseed = int(time.time())
+    NNseed = 1339
+    dataseed = 1339
     device = "cuda"
-    print(f"seed used: {seed}")
+    device = "cpu"
+    
+    lr = 1e-3
+    if dist == 2:
+        algo = "GD"
+        proxdist="no"
+    else:
+        algo = "proxpoint"
+        proxdist = dists[dist]
+    threadcount = 1
+    print(f"seed used: NNseed:{NNseed} data:{dataseed}")
     update = {"inneriter":i,
               "gamma":1.,
               "datatype":"random",
               "device":device,
               "threadcount":threadcount,
+              "algo": algo,
+              "dataseed": dataseed,
+              "NNseed": NNseed,
+              "lr": lr,
               "d":10,
               "m":100,
               "n":1000,
-              "proxdist": dists[dist]}
+              "proxdist": proxdist}
     runexperiment(config, folder, update, shouldstop)
 
 def debug(dist):

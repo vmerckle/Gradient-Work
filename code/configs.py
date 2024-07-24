@@ -9,18 +9,18 @@ from types import SimpleNamespace
 import torch
 
 def applyconfig(X1):
-
     x = SimpleNamespace(**X1)
-    rng = np.random.default_rng(x.seed)
+    datarng = np.random.default_rng(x.dataseed)
+    rng = np.random.default_rng(x.NNseed)
     
     if x.datatype == "linear2d":
         X, Y, Xb = linear2d(x.n, 0.1, 0.1)
     elif x.datatype == "rnglinear":
-        X, Y, Xb = rnglinear(rng, x.n, x.d, x.Xsampling, eps=x.Ynoise)
+        X, Y, Xb = rnglinear(datarng, x.n, x.d, x.Xsampling, eps=x.Ynoise)
     elif x.datatype == "sinus":
         X, Y, Xb = sinus2d(x.n)
     elif x.datatype == "random":
-        X, Y, Xb = rngrng(rng, x.n, x.d, x.Xsampling)
+        X, Y, Xb = rngrng(datarng, x.n, x.d, x.Xsampling)
     else:
         raise Exception("wrong datatype", x.datatype)
 
@@ -155,7 +155,6 @@ def ConfigNormal():
     device = "cuda"
 
     #algo = "GD"
-    lr= 1e-3*2
 
     beta = 0
     scale = 1e-3

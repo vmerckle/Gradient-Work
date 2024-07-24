@@ -35,8 +35,12 @@ class torch_descent:
             #self.optimizer = torch.optim.SGD([self.ly1], lr=self.lr, momentum=self.momentum, weight_decay=self.beta)
             # really slower(for large neurons, for some reason) or very far from GD
             #from mechanic_pytorch import mechanize # lr magic (rollbacks)
-            #self.optimizer = mechanize(torch.optim.SGD)([self.ly1], lr=10.0)#, momentum=0, weight_decay=self.beta)
-            self.optimizer = torch.optim.AdamW([self.ly1], lr=0.01, weight_decay=0.0)
+            #self.optimizer = mechanize(torch.optim.AdamW)([self.ly1], lr=1e-2)#, momentum=0, weight_decay=self.beta)
+
+            from prodigyopt import Prodigy
+            self.optimizer = Prodigy([self.ly1],lr=1e-2, weight_decay=0.)
+            #self.optimizer = torch.optim.AdamW([self.ly1], lr=self.lr, weight_decay=0.)
+            #self.optimizer = torch.optim.SGD([self.ly1], lr=self.lr, momentum=0.90)
         elif self.algo == "adam":
             self.optimizer = torch.optim.AdamW([self.ly1, self.ly2], lr=self.lr, weight_decay=self.beta)
         else:
