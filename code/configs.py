@@ -8,6 +8,26 @@ from utils import *
 from types import SimpleNamespace
 import torch
 
+default = {
+        "seed": 4,
+        "typefloat": "float32",
+        "threadcount": 1,
+        "algo": "proxpoint",
+        "proxdist": "frobenius",  # the last assigned value
+        "gamma": 1e-2,
+        "inneriter": 100,
+        "datatype": "random",  # the last assigned value
+        "Xsampling": "uniform",  # the last assigned value
+        "onlypositives": False,
+        "Ynoise": 1e-1,
+        "device": "cpu",  # the last assigned value
+        "beta": 0,
+        "scale": 1e-3,
+        "m": 10,
+        "d": 10,
+        "n": 10,
+    }
+
 def applyconfig(X1):
     x = SimpleNamespace(**X1)
     datarng = np.random.default_rng(x.dataseed)
@@ -75,7 +95,8 @@ def applyconfig(X1):
         raise Exception("config bad algo choice")
 
     opti.load(X, Y, ly1, ly2, x.beta)
-    return {"opti": opti, "ly1":ly1, "X":X, "Y":Y, "Xb":Xb, "ly2":ly2}
+    X1.update({"X":X, "Y":Y, "Xb":Xb, "lly1":[ly1], "lly2":[ly2]})
+    return opti, ly1, ly2
 
 def sinus2d(n):
     Xb = np.linspace(-0.5, 0.5, n)[:, None]
@@ -130,38 +151,4 @@ def normalneuron(rng, m, d, s, onlypositives, sortpos):
         pos = min(m-1, max(1, int(rng.binomial(m, 0.5)))) # number of positive neurons
         ly2 = np.vstack((np.ones((pos, 1)), -1*np.ones((m-pos, 1))))
         return ly1, ly2
-
-def ConfigNormal():
-    seed = 4
-    typefloat = "float32"
-    threadcount = 1
-
-    algo = "proxpoint"
-    proxdist = "wasser"
-    proxdist = "sliced"
-    proxdist = "frobenius"
-    gamma = 1e-2
-    inneriter = 100
-    datatype = "rnglinear"
-    datatype = "sinus"
-    datatype = "random"
-
-    Xsampling = "grid"
-    Xsampling = "uniform"
-    onlypositives = False
-    Ynoise = 1e-1
-
-    device = "cpu"
-    device = "cuda"
-
-    #algo = "GD"
-
-    beta = 0
-    scale = 1e-3
-    m, d, n = 1000, 1000, 1000
-    #m, d, n = 50, 2, 5
-    #m, d, n = 100, 100, 10000
-
-    X1 = dict([(k,v) for k,v in locals().items() if k[:2] != '__'])
-    return X1
 

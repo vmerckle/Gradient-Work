@@ -22,16 +22,10 @@ configD = {n[6:]:f for n,f in getmembers(configs, isfunction) if len(n) > 6 and 
 def dontstop(X1, opti, num, start):
     return False
 
-def runexperiment(config, folder, update={}, shouldstop=dontstop):
-    file = f"{config}-{int(datetime.datetime.now().timestamp())}"
-
-    X1 = configD[config]()
-    X1.update(update)
-    save(f"data/{folder}/{file}-setup.pkl", X1)
-    X1.update(configs.applyconfig(X1))
-
-    lly1, lly2 = [X1["ly1"]], [X1["ly2"]]
-    opti = X1["opti"]
+def runexperiment(config, folder, shouldstop=dontstop):
+    file = f"{int(datetime.datetime.now().timestamp())}"
+    X = config
+    opti, ly1, ly2 = configs.applyconfig(X)
     num = 0
     lastsave = time.time()
     lastprint = 0
@@ -42,41 +36,31 @@ def runexperiment(config, folder, update={}, shouldstop=dontstop):
             if shouldstop(X1, opti, num, start):
                 break
             num += 1
+
             try:
                 opti.step()
             except KeyboardInterrupt:
                 print("Inside step: Normal interrupt at num=", num)
                 break
+
             nly1, nly2 = opti.params()
-            lly1.append(nly1)
-            lly2.append(nly2)
+            X["lly1"].append(nly1)
+            X["lly2"].append(nly2)
 
             if time.time() - lastprint > 0.1:
                 print("it=", num, "loss=", opti.loss())
                 lastprint = time.time()
-            if time.time() - lastsave > 60*10: # save every 10minutes
-                X2 = {"lly1":lly1, "lly2":lly2}
-                save(f"data/{folder}/{file}-descent.pkl", X2)
+
+            # save every 10 minutes
+            if time.time() - lastsave > 60*10:
                 lastsave = time.time()
+                X.update({"lly1":lly1, "lly2":lly2,"steps":len(X2["lly1"]), "timetaken":time.time()-start})
+                save(f"data/{folder}/{file}.pkl", X1)
 
     except KeyboardInterrupt:
         print("Normal interrupt at num=", num)
     #except Exception as e:
         #print("big error:", e)
 
-    X2 = {"lly1":lly1, "lly2":lly2}
-    save(f"data/{folder}/{file}-descent.pkl", X2)
-    X3 = postprocess.simplecalcs(X2|X1)
-    save(f"data/{folder}/{file}-postprocess.pkl", X3)
-    save(f"data/{folder}/{file}-meta.pkl", {"config": config, "steps":len(X2["lly1"]), "timetaken":time.time()-start})
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--config", help="config name", default='Normal', choices=configD.keys())
-    #parser.add_argument("--folder", help="folder name", default="data")
-    folder = "data"
-    args = parser.parse_args()
-    #if args.name is None:
-        #args.name = f"{args.config}-{int(datetime.datetime.now().timestamp())}"
-    
-    runexperiment(args.config, folder)
+    X1.update({"lly1":lly1, "lly2":lly2,"steps":len(X2["lly1"]), "timetaken":time.time()-start})
+    save(f"data/{folder}/{file}.pkl", X1)

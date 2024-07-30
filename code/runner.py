@@ -11,7 +11,6 @@ import animations
 
 from utils import *
 
-
 # run without animation
 def run(setupDict):
     setup = SimpleNamespace(**setupDict)
