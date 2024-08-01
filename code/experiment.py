@@ -1,6 +1,7 @@
 import argparse
 import time
 import os.path
+import os
 import pickle
 from rich import print
 from inspect import getmembers, isfunction, isclass
@@ -127,7 +128,11 @@ def debug(dist):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("dist", type=int)
+    #parser.add_argument("dist", type=int)
     args = parser.parse_args()
+    folder = "datatestnew"
+    if not os.path.exists(folder):
+        os.mkdir(f"data/{folder}")
+    
     runner(configs.default, "datatestnew", stopper=shouldstop)
     #debug(1)
