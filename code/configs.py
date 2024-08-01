@@ -9,7 +9,8 @@ from types import SimpleNamespace
 import torch
 
 default = {
-        "seed": 4,
+        "NNseed": 4,
+        "dataseed": 4,
         "typefloat": "float32",
         "threadcount": 1,
         "algo": "proxpoint",

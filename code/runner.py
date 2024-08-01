@@ -1,178 +1,87 @@
-import numpy as np
+import argparse
 import time
-import sys
-from types import SimpleNamespace
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-
-# for real time anim
-import postprocess
-import animations
-
+import os.path
+import pickle
+from rich import print
+from inspect import getmembers, isfunction, isclass
+import datetime
+# mylibs
 from utils import *
+import runner
+import postprocess
+import configs
 
-# run without animation
-def run(setupDict):
-    setup = SimpleNamespace(**setupDict)
-    lly1, lly2 = [setup.ly1], [setup.ly2]
-    opti = setup.opti
+
+def save(fname, res):
+    with open(fname, "wb") as f:
+        pickle.dump(res, f)
+    print("Saved", fname)
+
+def dontstop(X1, opti, num, start): # never stops
+    return False
+
+def default_logger(X1, opti, num): # logs layers for every iterations
+    if "iter" not in X1:
+        X1["iter"] = {}
+
+    nly1, nly2 = opti.params()
+    X1["iter"][num] = { "ly1": nly1,
+                       "ly2": nly2
+                       }
+
+def default_printer(X1, opti, num): # print every 0.1secs
+    if "_lastprint" not in X1:
+        lastprint = 0
+    else:
+        lastprint = X1["_lastprint"]
+
+    if time.time() - lastprint > 0.1:
+        print("it=", num, "loss=", opti.loss())
+        X1["_lastprint"] = time.time()
+
+
+def default_saver(X1, num, folder): # saves after 10 minutes
+    if "lastsave" not in X1:
+        X1["_lastsave"] = time.time()
+    lastsave = X1["_lastsave"]
+
+    if time.time() - lastsave > 60*10:
+        X1["_lastsave"] = time.time()
+        return True
+    return False
+
+
+# loop of log, print, save, opti.step()
+def runner(config, folder, stopper=dontstop, logger=default_logger, printer=default_printer, saver=default_saver):
+    file = f"{int(datetime.datetime.now().timestamp())}"
+    filename = f"data/{folder}/{file}.pkl"
     num = 0
-    print("it=", num, "loss=", opti.loss())
+
+    X = config
+    opti, ly1, ly2 = configs.applyconfig(X) # update X
+    X["timestart"] = time.time()
+    printer(X, opti, num)
+
     try:
         while True:
-            if setup.steps != -1 and num >= setup.steps:
+            if stopper(X, opti, num):
                 break
             num += 1
-            opti.step()
-            nly1, nly2 = opti.params()
-            lly1.append(nly1)
-            lly2.append(nly2)
-            l = opti.loss()
-            print("it=", num, "loss=", l)
+
+            try:
+                opti.step()
+            except KeyboardInterrupt:
+                print("Inside step: Normal interrupt at num=", num)
+                break
+
+            logger(X, opti, num)
+            printer(X, opti, num)
+            if saver(X, num, folder):
+                save(filename, X)
+
     except KeyboardInterrupt:
         print("Normal interrupt at num=", num)
 
-    return {"lly1":lly1, "lly2":lly2}
+    X["timetaken"]= time.time() - X["timestart"]
+    save(filename, X)
 
-# run without animation
-def simpleRun(setupDict):
-    setup = SimpleNamespace(**setupDict)
-    lly1, lly2 = [setup.ly1], [setup.ly2]
-    opti = setup.opti
-    X, Y = setup.X, setup.Y
-    d, m = setup.ly1.shape
-
-    num = 0
-    bestloss = opti.loss()
-    print("it=", num, "loss=", opti.loss())
-    #print("layer1", ",".join([f"{x:.2f}" for x in lly1[-1].flatten()]))
-    #print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]))
-    try:
-        while True:
-            num += 1
-            if setup.steps != -1 and num >= setup.steps:
-                break
-            opti.step()
-            nly1, nly2 = opti.params()
-            lly1.append(nly1)
-            lly2.append(nly2)
-            l = opti.loss()
-            print("it=", num, "loss=", l)
-            if m <= 20 and 1:
-                #print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]))
-                # print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]), f"loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
-                pass
-            else:
-                # print("layer2", ",".join([f"{x:.2f}" for x in lly2[-1].flatten()]), f"loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
-                #print(f"{num}: loss: {l:.4f}, sum {np.sum(lly2[-1]):.4f}")
-                pass
-            #print(f"loss: {l}")
-            if l < bestloss:
-                bestloss = l
-            if l/bestloss > 10:
-                pass
-                #print(".. completely diverged.")
-                #assert False
-    except KeyboardInterrupt:
-        print("Normal interrupt at num=", num)
-    #except Exception as e:
-    #   print("Something went really wrong at num=", num)
-    #   print(e)
-
-    return {"lly1":lly1, "lly2":lly2}
-
-# plot live animation
-def animationRun(setupDict, myanim):
-    setup = SimpleNamespace(**setupDict)
-    lly1, lly2 = [setup.ly1], [setup.ly2]
-    opti = setup.opti
-    X, Y = setup.X, setup.Y
-    d, m = setup.ly1.shape
-    n, d = X.shape
-
-    print("Animation setup..")
-    fig = plt.figure(figsize=(10,4))
-    Xoutb = np.linspace(-4,4, 1000)
-    if d == 2:
-        Xout = add_bias(Xoutb)
-    elif d == 1:
-        Xout = Xoutb[:, None]
-    animobj = myanim(fig, setupDict|{"Xout":Xoutb}, runanim=True)
-    already = [False] # see comment about i=0
-    bestloss = [opti.loss()]
-    def update_ok(i):
-        if i == 0: # for some reason, this function is called 4 times with i=0
-            nly1, nly2 = opti.params()
-            di = postprocess.NNtoIter(X, Y, Xout, nly1, nly2, run=True)
-            p = opti.p
-            di["p"] = p
-            return animobj.update_aux(di, i) # so we simply don't do the step
-        opti.step()
-        nly1, nly2 = opti.params()
-        #print(nly1, nly2)
-        di = postprocess.NNtoIter(X, Y, Xout, nly1, nly2, run=True)
-
-        p = opti.p
-        di["p"] = p
-
-        lly1.append(nly1)
-        lly2.append(nly2)
-        print("it=", i, "loss=", opti.loss())
-        l = opti.loss()
-        if l < bestloss[0]:
-            bestloss[0] = l
-        if abs(np.sum(p) - 1) > 1e-1 and False:
-            print("we probably diverged here.")
-            print("psum:", np.sum(p))
-        #if l/bestloss[0] > 10: # jko we don't care
-            #print(".. completely diverged.")
-             #assert False
-        return animobj.update_aux(di, i)
-
-    try:
-        ani = animation.FuncAnimation(fig, update_ok, frames=list(range(100000)), blit=True, interval=1)
-        plt.show()
-    except KeyboardInterrupt:
-        print("Keyboard interrupt")
-
-    return {"lly1":lly1, "lly2":lly2}
-
-# plot live animation
-def simpleAnim(setupDict, myanim):
-    setup = SimpleNamespace(**setupDict)
-    lly1, lly2 = [setup.ly1], [setup.ly2]
-    opti = setup.opti
-    X, Y = setup.X, setup.Y
-    d, m = setup.ly1.shape
-    n, d = X.shape
-
-    fig = plt.figure(figsize=(10,4))
-    Xoutb = np.linspace(-4,4, 1000)
-    Xout = add_bias(Xoutb)
-    animobj = myanim(fig, setupDict|{"Xout":Xoutb}, runanim=True)
-    #wasserstats = {"obj":[], "wasser":[], "ldeuxdist":[]}
-    def update_ok(i):
-        if i == 0: # for some reason, this function is called 4 times with i=0
-            nly1, nly2 = opti.params()
-            di = postprocess.NNtoIter(X, Y, Xout, nly1, nly2, run=True)
-            return animobj.update_aux(di, i) # so we simply don't do the step
-        opti.step()
-        nly1, nly2 = opti.params()
-        #wasserstats["obj"].append(opti.objectif)
-        #wasserstats["wasser"].append(opti.wasserdist)
-        #wasserstats["ldeuxdist"].append(opti.ldeuxdist)
-        di = postprocess.NNtoIter(X, Y, Xout, nly1, nly2, run=True)
-
-        lly1.append(nly1)
-        lly2.append(nly2)
-        print("it=", i, "loss=", opti.loss())
-        return animobj.update_aux(di, i)
-
-    try:
-        ani = animation.FuncAnimation(fig, update_ok, frames=list(range(100000)), blit=True, interval=1)
-        plt.show()
-    except KeyboardInterrupt:
-        print("Keyboard interrupt")
-
-    return {"lly1":lly1, "lly2":lly2}
-    #return {"lly1":lly1, "lly2":lly2, "wasserstats":wasserstats}

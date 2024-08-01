@@ -66,7 +66,7 @@ class proxpoint:
             loss.backward()
             if bestloss is None or loss.item()<bestloss:
                 bestloss = loss.item()
-                print(bestloss)
+                #print(bestloss)
             self.optimizer.step()
 
     # sample code to do custom grad 

@@ -8,19 +8,19 @@ import datetime
 
 # my libraries
 from utils import *
-import runner
+from runner import runner
 import postprocess
 import configs
 
-from lightmain import *
 
-def shouldstop(X1, opti, num, start):
-    step = num > 0
+def shouldstop(X1, opti, num):
+    start = X1["timestart"]
+    step = num > 7
     timec =  time.time() - start > 1
     loss = opti.loss() < 1e-4
 
-    return loss
     return step 
+    return loss
     return timec or loss
     return timec or step 
 
@@ -124,9 +124,10 @@ def debug(dist):
               "proxdist": dists[dist]}
     runexperiment(config, folder, update, shouldstop)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("dist", type=int)
     args = parser.parse_args()
-    expe5(args.dist)
+    runner(configs.default, "datatestnew", stopper=shouldstop)
     #debug(1)
