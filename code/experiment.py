@@ -130,9 +130,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     #parser.add_argument("dist", type=int)
     args = parser.parse_args()
-    folder = "datatestnew"
+    expname = "datatestnew"
+    folder = f"data/{expname}"
+    if not os.path.exists("data"):
+        os.mkdir(f"data")
     if not os.path.exists(folder):
-        os.mkdir(f"data/{folder}")
+        os.mkdir(folder)
     
     runner(configs.default, "datatestnew", stopper=shouldstop)
     #debug(1)
