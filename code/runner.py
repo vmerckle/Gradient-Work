@@ -53,13 +53,13 @@ def default_saver(X1, num, folder): # saves after 10 minutes
 
 # loop of log, print, save, opti.step()
 def runner(config, folder, stopper=dontstop, logger=default_logger, printer=default_printer, saver=default_saver):
-    file = f"{int(datetime.datetime.now().timestamp())}"
-    filename = f"data/{folder}/{file}.pkl"
+    X = config
+    X["timestamp"] = int(datetime.datetime.now().timestamp()*1000)
+    X["timestart"] = time.time() # easier to use
+    filename = f"data/{folder}/{X['timestamp']}.pkl"
     num = 0
 
-    X = config
     opti, ly1, ly2 = configs.applyconfig(X) # update X
-    X["timestart"] = time.time()
     printer(X, opti, num)
 
     try:
