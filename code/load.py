@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 import os.path
 import os
@@ -12,7 +14,7 @@ import runner
 import postprocess
 import configs
 
-# os.rename(f"data/{args.folder}/{fname}", f".trash/{fname}")
+# os.rename(f"{args.folder}/{fname}", f".trash/{fname}")
 
 def listfiles(folder):
     # get all timestamps used
@@ -32,20 +34,23 @@ def listTS(folder):
     l.sort()
     return l
 
-def listX(folder):
+def listD(folder):
     for fname in listfiles(folder):
         with open(fname, "rb") as f:
             yield pickle.load(f)
+
+def printD(D):
+    spent = f"{deltatimestring(D['timetaken'])}"
+    ts = D["timestamp"]
+    print(f"{ts} ({hoursago(ts)} ago) {D['numsteps']} steps({spent})")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("folder", help="folder name")
     args = parser.parse_args()
-    folder = f"data/{args.folder}"
+    folder = f"{args.folder}"
 
-    for X in listX(folder):
-        spent = f"{deltatimestring(X['timetaken'])}"
-        ts = X["timestamp"]
-        print(f"{ts} ({hoursago(ts)} ago) {len(X['lly1'])} steps({spent})")
+    for D in listD(folder):
+        printD(D)
 
-    #print(f"{ts} ({hoursago(ts)} ago) {len(X['lly1'])} steps({deltatimestring(X['timetaken'])}) endloss={finalloss:.1E}, m={X['m']}, n={X['n']}, {X['algo']}-{X['proxdist']}, g={X['gamma']}, inner={X['inneriter']}")
+    #print(f"{ts} ({hoursago(ts)} ago) {len(D['lly1'])} steps({deltatimestring(D['timetaken'])}) endloss={finalloss:.1E}, m={D['m']}, n={D['n']}, {D['algo']}-{D['proxdist']}, g={D['gamma']}, inner={D['inneriter']}")

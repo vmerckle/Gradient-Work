@@ -13,27 +13,28 @@ default = {
         "dataseed": 4,
         "typefloat": "float32",
         "threadcount": 1,
+        "device": "cpu",
         "algo": "proxpoint",
-        "proxdist": "frobenius",  # the last assigned value
-        "gamma": 1e-2,
-        "inneriter": 100,
-        "datatype": "random",  # the last assigned value
-        "Xsampling": "uniform",  # the last assigned value
+        "proxD": {"dist": "frobenius",
+                  "opti": "prodigy",
+                  "innerlr": 1e0,
+                  "gamma": 1e-2,
+                  "inneriter": 100},
+        "beta": 0,
+        "datatype": "random",
+        "Xsampling": "uniform",
         "onlypositives": False,
         "Ynoise": 1e-1,
-        "device": "cpu",  # the last assigned value
-        "beta": 0,
         "scale": 1e-3,
         "m": 10,
         "d": 10,
         "n": 10,
     }
 
-def applyconfig(X1):
-    x = SimpleNamespace(**X1)
+def genData(D):
+    x = SimpleNamespace(**D)
     datarng = np.random.default_rng(x.dataseed)
-    rng = np.random.default_rng(x.NNseed)
-    
+
     if x.datatype == "linear2d":
         X, Y, Xb = linear2d(x.n, 0.1, 0.1)
     elif x.datatype == "rnglinear":
@@ -45,6 +46,23 @@ def applyconfig(X1):
     else:
         raise Exception("wrong datatype", x.datatype)
 
+    
+    return X, Y, Xb
+
+def genModel(D):
+    x = SimpleNamespace(**D)
+    rng = np.random.default_rng(x.NNseed)
+    ly1, ly2 = grid2dneuron(rng, x.m, x.scale, x.onlypositives)
+    ly1, ly2 = normalneuron(rng, x.m, x.d, x.scale, x.onlypositives, sortpos=True)
+    return ly1, ly2
+
+def loadOpti(D):
+    x = SimpleNamespace(**D)
+    #if x.proxdist == "wasser":
+    #    x.device = "cpu"
+    #    x.threadcount = 1
+    torch.set_num_threads(x.threadcount) # 10% perf loss for wasser but only use one core.
+
     if x.typefloat == "float32":
         dtype = torch.float32
     elif x.typefloat == "float64":
@@ -52,51 +70,36 @@ def applyconfig(X1):
     else:
         raise Exception("wrong typefloat", x.typefloat)
 
-    ly1, ly2 = grid2dneuron(rng, x.m, x.scale, x.onlypositives)
-    ly1, ly2 = normalneuron(rng, x.m, x.d, x.scale, x.onlypositives, sortpos=True)
-
-    if x.proxdist == "wasser":
-        x.device = "cpu"
-        x.threadcount = 1
-
-    torch.set_num_threads(x.threadcount) # 10% perf loss for wasser but only use one core.
-
     algo = x.algo
     if algo == "GD":
         from algo_GD_torch import torch_descent
         opti = torch_descent("gd", x.lr, device=x.device)
     elif algo == "JKO":
-        proxf = x.proxf
-        if proxf == "cvxpy":
+        if x.proxf == "cvxpy":
             from jko_proxf_cvxpy import jko_cvxpy
             opti = jko_cvxpy(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol)
-        elif proxf == "scipy":
+        elif x.proxf == "scipy":
             from jko_proxf_scipy import jko_scipy
             opti = jko_scipy(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol)
-        elif proxf == "pytorch":
+        elif x.proxf == "pytorch":
             from jko_proxf_pytorch import jko_pytorch
             opti = jko_pytorch(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol)
         else:
-            raise Exception("config bad proxf choice")
+            raise Exception(f"config bad proxf='{x.proxf}' choice")
     elif algo == "proxpoint":
         from algo_prox import proxpoint
-        if x.proxdist == "wasser":
-            from proxdistance import wasserstein
-            proxdist = wasserstein
-        elif x.proxdist == "frobenius":
-            from proxdistance import frobenius 
-            proxdist = frobenius
-        elif x.proxdist == "sliced":
-            from proxdistance import slicedwasserstein
-            proxdist = slicedwasserstein
-        else:
-            raise Exception("config bad proxdist choice")
-        opti = proxpoint(rng=rng, proxdist=proxdist, inneriter=x.inneriter, gamma=x.gamma, dtype=dtype, device=x.device)
+        opti = proxpoint(x.proxD, dtype=dtype, device=x.device)
     else:
         raise Exception("config bad algo choice")
 
-    opti.load(X, Y, ly1, ly2, x.beta)
-    X1.update({"X":X, "Y":Y, "Xb":Xb, "lly1":[ly1], "lly2":[ly2]})
+    return opti
+
+def applyconfig(D):
+    X, Y, Xb = genData(D)
+    ly1, ly2 = genModel(D)
+    opti = loadOpti(D)
+    D.update({"X":X, "Y":Y, "Xb":Xb})
+    opti.load(X, Y, ly1, ly2)
     return opti, ly1, ly2
 
 def sinus2d(n):
@@ -131,6 +134,7 @@ def rngrng(rng, n, d, sampling):
         Y = rng.uniform(-0.5, 0.5, (n, 1))
 
     return add_bias(Xb), Y, Xb
+
 def grid2dneuron(rng, m, s, onlypositives):
     t = np.linspace(-s, s, m)
     Xm, Ym = np.meshgrid(t, t)

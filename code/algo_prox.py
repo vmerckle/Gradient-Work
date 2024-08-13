@@ -9,13 +9,26 @@ import ot
 from utils import *
 
 class proxpoint:
-    def __init__(self, rng, proxdist, inneriter=100, gamma=1, dtype=torch.float32, device="cpu"):
-        self.rng = rng
-        self.proxdist = proxdist
-        self.inneriter = inneriter
-        self.gamma = gamma
+    def __init__(self, D, dtype=torch.float32, device="cpu"):
         self.dtype = dtype
         self.device = device
+        dist = D["dist"]
+        if dist == "wasser":
+            from proxdistance import wasserstein
+            self.proxdist = wasserstein
+        elif dist == "frobenius":
+            from proxdistance import frobenius 
+            self.proxdist = frobenius
+        elif dist == "sliced":
+            from proxdistance import slicedwasserstein
+            self.proxdist = slicedwasserstein
+        else:
+            raise Exception("config bad proxdist choice")
+
+        self.opti = D["opti"]
+        self.innerlr = D["innerlr"]
+        self.inneriter = D["inneriter"]
+        self.gamma = D["gamma"]
 
     def obj(self, Wn):
         out = torch.relu(self.X @ Wn)@self.ly2
@@ -56,38 +69,12 @@ class proxpoint:
         x_prev = self.ly1.clone().detach()
         assert self.ly1.requires_grad
         itero = range(self.inneriter)
-        bestloss = None
-        bestx = None
         itero = tqdm(itero, desc="prox loop")
         for i in itero:
             self.optimizer.zero_grad()
             loss = self.obj(self.ly1) + 1/self.gamma*self.proxdist(self.ly1, x_prev, self.ly2)
-            #assert self.ly1.requires_grad
             loss.backward()
-            if bestloss is None or loss.item()<bestloss:
-                bestloss = loss.item()
-                #print(bestloss)
             self.optimizer.step()
-
-    # sample code to do custom grad 
-    def weirdstep(self):
-        x_prev = self.ly1.clone().detach()
-        for i in range(self.inneriter):
-            loss = self.obj(self.ly1)
-            loss.backward()
-            with torch.no_grad():
-                #self.ly1 = x_prev - self.ly1.grad
-                self.ly1.zero_()
-                self.ly1.add_(x_prev, alpha=1)
-                self.ly1.add_(self.ly1.grad, alpha=-self.gamma)
-            #self.optimizer.step()
-            self.optimizer.zero_grad()
-
-        #with torch.no_grad():
-            #M = ot.emd(torch.Tensor([]), torch.Tensor([]), ot.dist(self.ly1.T, x_prev.T)).detach().numpy()
-            #b = np.sum(np.abs(np.eye(self.m)/self.m - M))
-            #print(f"sum(I/m - M)= {b:.3f}, wasser-L2Q = {a:.3E}")
-        #print("")
 
     def load(self, X, Y, ly1, ly2, beta=0):
         torch.set_grad_enabled(True) # keyboard interrupt in the middle of a torch.no_grad...
@@ -98,13 +85,19 @@ class proxpoint:
         self.X = torch.tensor(X, dtype=self.dtype, device=self.device)
         self.Y = torch.tensor(Y, dtype=self.dtype, device=self.device)
 
-        from mechanic_pytorch import mechanize # lr magic (rollbacks)
-        from prodigyopt import Prodigy
-        self.optimizer = Prodigy([self.ly1],lr=1e0, weight_decay=0.)
-        #self.optimizer = mechanize(torch.optim.AdamW)([self.ly1], lr=1e-3, weight_decay=0)
-        #self.optimizer = mechanize(torch.optim.SGD)([self.ly1], lr=1)
-        #self.optimizer = torch.optim.SGD([self.ly1], lr=1e-2)
-        #self.optimizer = torch.optim.AdamW([self.ly1], lr=1e-3)
+        if self.opti == "prodigy":
+            from prodigyopt import Prodigy
+            self.optimizer = Prodigy([self.ly1],lr=self.innerlr, weight_decay=self.beta)
+        elif self.opti == "mechanize":
+            from mechanic_pytorch import mechanize # lr magic (rollbacks)
+            self.optimizer = mechanize(torch.optim.SGD)([self.ly1], lr=self.innerlr)
+        elif self.opti == "mechanizeadam":
+            from mechanic_pytorch import mechanize # lr magic (rollbacks)
+            self.optimizer = mechanize(torch.optim.AdamW)([self.ly1], lr=self.innerlr)
+        elif self.opti == "SGD":
+            self.optimizer = torch.optim.SGD([self.ly1], lr=self.innerlr, weight_decay=self.beta)
+        elif self.opti == "AdamW":
+            self.optimizer = torch.optim.AdamW([self.ly1], lr=self.innerlr, weight_decay=self.beta)
         #self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
 
     def loss(self):

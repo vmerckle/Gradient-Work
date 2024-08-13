@@ -25,117 +25,19 @@ def shouldstop(X1, opti, num):
     return timec or loss
     return timec or step 
 
-def expe1():
-    config = "Normal"
-    folder = "datatut"
-    dists = ["frobenius", "wasser"]
-    i = 100
-    for dist in dists:
-        #for i in [10,100, 1000, 10000, 50000]:
-        for g in [1, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5]:
-            update = {"inneriter":i,
-                      "gamma":g,
-                      "proxdist": dist}
-            runexperiment(config, folder, update, shouldstop)
-
-def expe2():
-    config = "Normal"
-    folder = "dataot"
-    dists = ["frobenius", "wasser"]
-    i = 100
-    for dist in dists:
-        #for i in [10,100, 1000, 10000, 50000]:
-        for g in [1, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5]:
-            update = {"inneriter":i,
-                      "gamma":g,
-                      "proxdist": dist}
-            runexperiment(config, folder, update, shouldstop)
-
-def expe3(dist):
-    config = "Normal"
-    folder = "datatest"
-    dists = ["frobenius", "wasser"]
-    i = 100000
-    update = {"inneriter":i,
-              "gamma":1.,
-              "proxdist": dists[dist]}
-    runexperiment(config, folder, update, shouldstop)
-
-def expe4(dist):
-    config = "Normal"
-    folder = "datatest"
-    dists = ["frobenius", "wasser"]
-    i = 100
-    update = {"inneriter":i,
-              "gamma":10.,
-              "proxdist": dists[dist]}
-    runexperiment(config, folder, update, shouldstop)
-
-def expe5(dist):
-    config = "Normal"
-    folder = "23julyc"
-    folder = "datatest"
-    dists = ["frobenius", "wasser"]
-    i = 100000
-    NNseed = int(time.time())
-    NNseed = 1339
-    dataseed = 1339
-    device = "cuda"
-    device = "cpu"
-    
-    lr = 1e-3
-    if dist == 2:
-        algo = "GD"
-        proxdist="no"
-    else:
-        algo = "proxpoint"
-        proxdist = dists[dist]
-    threadcount = 1
-    print(f"seed used: NNseed:{NNseed} data:{dataseed}")
-    update = {"inneriter":i,
-              "gamma":1.,
-              "datatype":"random",
-              "device":device,
-              "threadcount":threadcount,
-              "algo": algo,
-              "dataseed": dataseed,
-              "NNseed": NNseed,
-              "lr": lr,
-              "d":10,
-              "m":100,
-              "n":1000,
-              "proxdist": proxdist}
-    runexperiment(config, folder, update, shouldstop)
-
-def debug(dist):
-    config = "Normal"
-    folder = "datatest"
-    dists = ["frobenius", "wasser"]
-    i = 1000
-    seed = int(time.time())
-    seed = 1721715896
-    print(f"seed used: {seed}")
-    update = {"inneriter":i,
-              "gamma":10.,
-              "datatype":"random",
-              "seed":seed,
-              "d":7,
-              "m":20,
-              "n":10,
-              "proxdist": dists[dist]}
-    runexperiment(config, folder, update, shouldstop)
-
+def debug():
+    expname = "debug"
+    folder = f"data/{expname}"
+    config = configs.default
+    debugstop = lambda D, opti, num : num > 10
+    runner(config, expname, stopper=debugstop)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     #parser.add_argument("dist", type=int)
+    parser.add_argument( "--debug", action="store_true")
     args = parser.parse_args()
-    expname = "datatestnew"
-    folder = f"data/{expname}"
-    if not os.path.exists("data"):
-        os.mkdir(f"data")
-    if not os.path.exists(folder):
-        os.mkdir(folder)
-    
-    runner(configs.default, "datatestnew", stopper=shouldstop)
-    #debug(1)
+    if args.debug:
+        debug()
+    else:
+        pass
