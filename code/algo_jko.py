@@ -100,15 +100,16 @@ class JKO:
         if regopti:
             ly1 = self.grid.T/self.normori # some attempt at not modifying the scale
             ly2 = self.p*self.normori * self.psigns
-            return ly1, ly2
         elif oneway:
             ly1 = self.grid.T*self.p.flatten()
             ly2 = np.ones_like(self.p)
-            return ly1, ly2
         else:
-            ly1 = self.grid.T
             #print(self.p*self.psigns)
-            return ly1, self.p * self.psigns
+            ly1 = self.grid.T
+            ly2 = self.p * self.psigns
+        
+        return {"ly1": ly1,
+                "ly2": ly2} # otherwise it's just a pointer...
 
     def gridout(self):
         return self.grid, self.p, self.psigns

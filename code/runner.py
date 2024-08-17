@@ -15,7 +15,6 @@ import configs
 def save(fname, res):
     with open(fname, "wb") as f:
         pickle.dump(res, f)
-    print("Saved", fname)
 
 def dontstop(D, opti, num, start): # never stops
     return False
@@ -24,10 +23,7 @@ def default_logger(D, opti, num): # logs layers for every iterations
     if "iter" not in D:
         D["iter"] = {}
 
-    nly1, nly2 = opti.params()
-    D["iter"][num] = { "ly1": nly1,
-                       "ly2": nly2
-                       }
+    D["iter"][num] = opti.params()
 
 def default_printer(D, opti, num): # print every 0.1secs
     if "_lastprint" not in D:
@@ -80,7 +76,10 @@ def runner(D, folder, stopper=dontstop, logger=default_logger, printer=default_p
             logger(D, opti, num)
             printer(D, opti, num)
             if saver(D, num, folder):
+                D["numsteps"] = num
+                D["timetaken"]= time.time() - D["timestart"]
                 save(filename, D)
+                print("Saved", "TS=", D["timestamp"], filename, )
 
     except KeyboardInterrupt:
         print("Normal interrupt at num=", num)
@@ -88,3 +87,4 @@ def runner(D, folder, stopper=dontstop, logger=default_logger, printer=default_p
     D["numsteps"] = num
     D["timetaken"]= time.time() - D["timestart"]
     save(filename, D)
+    print("Saved", "TS=", D["timestamp"], filename, )

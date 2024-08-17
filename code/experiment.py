@@ -29,6 +29,7 @@ def debug():
     expname = "debug"
     folder = f"data/{expname}"
     config = configs.default
+    config["proxD"]["recordinnerlayers"] = True
     debugstop = lambda D, opti, num : num > 10
     runner(config, expname, stopper=debugstop)
 

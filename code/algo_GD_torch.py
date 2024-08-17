@@ -55,7 +55,8 @@ class torch_descent:
     def params(self):
         ly1 = self.ly1.cpu().detach().numpy()
         ly2 = self.ly2.cpu().detach().numpy()
-        return np.array(ly1), np.array(ly2) # otherwise it's just a pointer...
+        return {"ly1": np.array(ly1),
+                "ly2": np.array(ly2)} # otherwise it's just a pointer...
 
     def grads(self):
         ly1g = self.ly1.grad.cpu().detach().numpy()

@@ -3,17 +3,21 @@ import ot
 import numpy as np
 
 def wasserstein(x, x_prev, ly2): # x has grad=true
+    # old stuff, does WS on whole x
     #M = ot.dist(x.T, x_prev.T, metric='sqeuclidean', p=2)
     #emp = torch.Tensor([])
     #return ot.emd2(emp, emp, M)
 
-    nbpos = torch.sum((ly2 > 0)).item()
+    # ASSUMES ly2 is SORTED
+    # do a negative and positive neuron split.
+    with torch.no_grad():
+        nbpos = torch.sum((ly2 > 0)).item()
     Mpos = ot.dist(x.T[:nbpos], x_prev.T[:nbpos], metric='sqeuclidean', p=2)
     Mneg = ot.dist(x.T[nbpos:], x_prev.T[nbpos:], metric='sqeuclidean', p=2)
     emp = torch.Tensor([])
     return ot.emd2(emp, emp, Mpos) +ot.emd2(emp, emp, Mneg)
 
-def wasserstein_np(x, x_prev):
+def wasserstein_np(x, x_prev): # same remarks as torch wasser
     nbpos = np.sum((ly2 > 0)).item()
     Mpos = ot.dist(x.T[:nbpos], x_prev.T[:nbpos], metric='sqeuclidean', p=2)
     Mneg = ot.dist(x.T[m-nbpos:], x_prev.T[m-nbpos:], metric='sqeuclidean', p=2)

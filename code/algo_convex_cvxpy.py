@@ -48,7 +48,8 @@ class cvx_solve:
         self.ly1, self.ly2 = wly1/norm, wly2[:, None]
 
     def params(self):
-        return self.ly1, self.ly2
+        return {"ly1": self.ly1,
+                "ly2": self.ly2} # otherwise it's just a pointer...
 
     def grads(self):
         return np.zeros(self.ly1.shape), np.zeros(self.ly2.shape)

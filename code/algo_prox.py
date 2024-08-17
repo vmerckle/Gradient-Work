@@ -29,6 +29,10 @@ class proxpoint:
         self.innerlr = D["innerlr"]
         self.inneriter = D["inneriter"]
         self.gamma = D["gamma"]
+        self.recordinner = D["recordinner"]
+        self.recordinnerlayers = D["recordinnerlayers"]
+        if self.recordinner:
+            self.innerD = {}
 
     def obj(self, Wn):
         out = torch.relu(self.X @ Wn)@self.ly2
@@ -65,16 +69,34 @@ class proxpoint:
                     break
             itero.close()
 
+    def updateInner(self, D=None, num=None):
+        if not self.recordinner:
+            return
+        if D is None:
+            self.innerD = {}
+            return
+
+        if self.recordinnerlayers:
+            params = self.params()
+            D["ly1"] = params["ly1"]
+        self.innerD[num] = D
+
     def step(self):
         x_prev = self.ly1.clone().detach()
         assert self.ly1.requires_grad
+        
         itero = range(self.inneriter)
         itero = tqdm(itero, desc="prox loop")
+        self.updateInner()
         for i in itero:
             self.optimizer.zero_grad()
-            loss = self.obj(self.ly1) + 1/self.gamma*self.proxdist(self.ly1, x_prev, self.ly2)
+            obj = self.obj(self.ly1)
+            dis = 1/self.gamma*self.proxdist(self.ly1, x_prev, self.ly2)
+            loss = obj + dis
+            self.updateInner(num=i, D={"obj":obj.item(), "dist":dis.item(), "loss":loss.item()})
             loss.backward()
             self.optimizer.step()
+        self.lastloss = obj.item()
 
     def load(self, X, Y, ly1, ly2, beta=0):
         torch.set_grad_enabled(True) # keyboard interrupt in the middle of a torch.no_grad...
@@ -100,16 +122,17 @@ class proxpoint:
             self.optimizer = torch.optim.AdamW([self.ly1], lr=self.innerlr, weight_decay=self.beta)
         #self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
 
+        self.lastloss = self.loss()
+
     def loss(self):
         with torch.no_grad():
-            out = torch.relu(self.X @ self.ly1)@self.ly2
-            yhat = torch.sum(out, axis=1)
-            #print(yhat.flatten().detach().cpu().numpy()[:10])
-            #print(self.Y.flatten().detach().cpu().numpy()[:10])
             return self.obj(self.ly1).item()
 
     def params(self):
         ly1 = self.ly1.cpu().detach().numpy()
         ly2 = self.ly2.cpu().detach().numpy()
-        return np.array(ly1), np.array(ly2) # otherwise it's just a pointer...
+        return {"ly1": np.array(ly1), # otherwise it's just a pointer...
+                "ly2": np.array(ly2),
+                "innerD": self.innerD,
+                "loss": self.lastloss}
 

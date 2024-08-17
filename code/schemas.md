@@ -1,4 +1,4 @@
-default config
+config
 ---
 - NNseed: int
 - dataseed: int
@@ -6,13 +6,15 @@ default config
 - threadcount: int
 - device: cpu, cuda
 - algo: GD, JKO, proxpoint
-- proxf (for JKO): cvxpy, scipy, pytorch
-- proxD (for proxpoint)
+- proxf (for algo=JKO): cvxpy, scipy, pytorch
+- proxD (for algo=proxpoint)
     - dist: "frobenius", "wasser" ot.emd2, "sliced" ot.sliced...
     - opti: "prodigy", "mechanize", "mechanizeadam", "SGD", "AdamW"
-    - innerlr
-    - inneriter
-    - gamma
+    - innerlr: float
+    - inneriter: int
+    - gamma: float
+    - recordinner: bool
+    - recordinnerlayers: bool
 - datatype: linear2d, rnglinear, sinus, random
 - Xsampling: uniform, normal
 - onlypositives: bool
@@ -31,16 +33,24 @@ apply config
 
 default logger
 ---
-- iter LIST of {}, 0 is initialization, last item is numsteps 
-    - ly1
-    - ly2
+- iter DICT-LIST of {}, 0 is initialization, last item is numsteps 
+    (opti.params() for every iteraitons)
+    - ly1: (d, m)
+    - ly2: (m, 1)
+    - loss: float
+    - innerD (for Prox, if recordinner): DICT-LIST of {}
+        (empty for iter=0)
+        - obj: float
+        - dist (1/gamma dist): float
+        - loss (obj+dis): float
+        - ly1 (if recordinnerlayers): (d, m)
 
 postprocess
 ---
 - Xout: (1000,)
 - iterdata LIST of {}
-    - ly1
-    - ly2
+    - ly1: (d, m)
+    - ly2: (m, 1)
     - lact
     - lnorm
     - loss

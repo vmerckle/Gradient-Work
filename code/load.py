@@ -34,6 +34,18 @@ def listTS(folder):
     l.sort()
     return l
 
+def getfilenameFromTS(timestamp):
+    for path, _, l in os.walk("data"):
+        for f in l:
+            ts, ext = f.split(".")
+            if int(ts) == timestamp:
+                return f"{path}/{f}" # os.join is for losers
+
+def getTS(timestamp):
+    with open(getfilenameFromTS(timestamp), "rb") as f:
+        return pickle.load(f)
+
+
 def listD(folder):
     for fname in listfiles(folder):
         with open(fname, "rb") as f:
@@ -42,7 +54,7 @@ def listD(folder):
 def printD(D):
     spent = f"{deltatimestring(D['timetaken'])}"
     ts = D["timestamp"]
-    print(f"{ts} ({hoursago(ts)} ago) {D['numsteps']} steps({spent})")
+    print(f"{ts} ({hoursago(ts)} ago) {D['numsteps']} steps({spent}) {len(D)} items")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
