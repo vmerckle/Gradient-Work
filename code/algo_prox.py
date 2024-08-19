@@ -122,11 +122,11 @@ class proxpoint:
             self.optimizer = torch.optim.AdamW([self.ly1], lr=self.innerlr, weight_decay=self.beta)
         #self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
 
-        self.lastloss = self.loss()
+        with torch.no_grad():
+            self.lastloss = self.obj(self.ly1).item()
 
     def loss(self):
-        with torch.no_grad():
-            return self.obj(self.ly1).item()
+        return self.lastloss
 
     def params(self):
         ly1 = self.ly1.cpu().detach().numpy()

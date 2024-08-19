@@ -1,10 +1,13 @@
 import argparse
 import time
 import os.path
-import pickle
-from rich import print
 from inspect import getmembers, isfunction, isclass
 import datetime
+import pickle
+import copy
+
+from rich import print
+
 # mylibs
 from utils import *
 import runner
@@ -49,6 +52,7 @@ def default_saver(D, num, folder): # saves after 10 minutes
 
 # loop of log, print, save, opti.step()
 def runner(D, folder, stopper=dontstop, logger=default_logger, printer=default_printer, saver=default_saver):
+    D = copy.deepcopy(D)
     if not os.path.exists("data"):
         os.mkdir(f"data")
     if not os.path.exists(f"data/{folder}"):

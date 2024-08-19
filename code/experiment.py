@@ -33,6 +33,14 @@ def debug():
     debugstop = lambda D, opti, num : num > 10
     runner(config, expname, stopper=debugstop)
 
+def debug():
+    expname = "debug"
+    folder = f"data/{expname}"
+    config = configs.default
+    config["proxD"]["recordinnerlayers"] = True
+    debugstop = lambda D, opti, num : num > 10
+    runner(config, expname, stopper=debugstop)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     #parser.add_argument("dist", type=int)
