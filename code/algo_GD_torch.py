@@ -11,43 +11,58 @@ def torch_2layers(X, ly1, ly2):
     return torch.relu(X@ly1)@ly2
 
 class torch_descent:
-    def __init__(self, algo, lr, momentum=0, dtype=torch.float32, device="cpu"):
-        self.algo = algo
-        self.momentum = momentum
-        self.dtype = dtype  # float16 does a runtime error in pred
+    def __init__(self, D, dtype=torch.float32, device="cpu"):
+        self.opti = D["opti"]
+        self.momentum = D["momentum"]
+        self.dtype = dtype
         self.device = device
         self.loss_fn = torch.nn.MSELoss()
         # self.loss_fn = torch.nn.SoftMarginLoss() # loss for 2-class classif
         self.pred_fn = torch_2layers
         self.optimizer = None
-        self.lr = lr
+        self.lr = D["lr"]
+        self.beta = D["beta"]
+        self.onlyTrainFirstLayer = D["onlyTrainFirstLayer"]
 
-    def load(self, X, Y, ly1, ly2, beta):
-        self.beta = beta
+
+    def load(self, X, Y, ly1, ly2, beta=0):
         self.n, self.d = X.shape
         self.m = ly1.shape[1]
+
+        self.ly1 = torch.tensor(ly1, dtype=self.dtype, device=self.device, requires_grad=True)
         self.X = torch.tensor(X, dtype=self.dtype, device=self.device)
         self.Y = torch.tensor(Y, dtype=self.dtype, device=self.device)
-        self.ly1 = torch.tensor(ly1, dtype=self.dtype, device=self.device, requires_grad=True)
-        self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=False) # we only train First layer allo
 
-        if self.algo == "gd":
-            #self.optimizer = torch.optim.SGD([self.ly1], lr=self.lr, momentum=self.momentum, weight_decay=self.beta)
-            # really slower(for large neurons, for some reason) or very far from GD
-            #from mechanic_pytorch import mechanize # lr magic (rollbacks)
-            #self.optimizer = mechanize(torch.optim.AdamW)([self.ly1], lr=1e-2)#, momentum=0, weight_decay=self.beta)
-
-            from prodigyopt import Prodigy
-            self.optimizer = Prodigy([self.ly1],lr=1e-2, weight_decay=0.)
-            #self.optimizer = torch.optim.AdamW([self.ly1], lr=self.lr, weight_decay=0.)
-            #self.optimizer = torch.optim.SGD([self.ly1], lr=self.lr, momentum=0.90)
-        elif self.algo == "adam":
-            self.optimizer = torch.optim.AdamW([self.ly1, self.ly2], lr=self.lr, weight_decay=self.beta)
+        if self.onlyTrainFirstLayer:
+            params = [self.ly1]
+            self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=False)
         else:
-            raise Exception
+            params = [self.ly1, self.ly2]
+            self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=True)
+
+        if self.opti == "prodigy":
+            from prodigyopt import Prodigy
+            self.optimizer = Prodigy(params,lr=self.lr, weight_decay=self.beta)
+        elif self.opti == "mechanize":
+            from mechanic_pytorch import mechanize # lr magic (rollbacks)
+            self.optimizer = mechanize(torch.optim.SGD)(params, lr=self.lr)
+        elif self.opti == "mechanizeadam":
+            from mechanic_pytorch import mechanize # lr magic (rollbacks)
+            self.optimizer = mechanize(torch.optim.AdamW)(params, lr=self.lr)
+        elif self.opti == "SGD":
+            self.optimizer = torch.optim.SGD(params, lr=self.lr, weight_decay=self.beta)
+        elif self.opti == "AdamW":
+            self.optimizer = torch.optim.AdamW(params, lr=self.lr, weight_decay=self.beta)
+        elif self.opti == "Adadelta":
+            self.optimizer = torch.optim.AdamW(params, lr=self.lr, weight_decay=self.beta)
+        #self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
+
+        with torch.no_grad():
+            self.lastloss = self.loss_fn(self.pred_fn(self.X, self.ly1, self.ly2), self.Y).item()
 
     def step(self):
         loss = self.loss_fn(self.pred_fn(self.X, self.ly1, self.ly2), self.Y)
+        self.lastloss = loss.item()
         loss.backward()
         self.optimizer.step()
         self.optimizer.zero_grad()
@@ -69,9 +84,7 @@ class torch_descent:
             return self.pred_fn(X, self.ly1, self.ly2).cpu().detach().numpy()
 
     def loss(self):
-        with torch.no_grad():
-            loss = self.loss_fn(self.pred_fn(self.X, self.ly1, self.ly2), self.Y)
-            return loss.item()
+        return self.lastloss
 
             #ly1gg, ly2gg = dir_grad(X, Y, ly1, ly2)
             #ly1g = ly1gg.add(ly1, alpha=beta)

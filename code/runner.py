@@ -40,6 +40,10 @@ def default_printer(D, opti, num): # print every 0.1secs
 
 
 def default_saver(D, num, folder): # saves after 10 minutes
+    if D["datatype"] == "mnist":
+        D["X"] = "mnist"
+        D["Xb"] =  "mnist"
+        D["Y"] =  "mnist"
     if "lastsave" not in D:
         D["_lastsave"] = time.time()
     lastsave = D["_lastsave"]

@@ -6,13 +6,23 @@ config
 - threadcount: int
 - device: cpu, cuda
 - algo: GD, JKO, proxpoint
-- proxf (for algo=JKO): cvxpy, scipy, pytorch
-- proxD (for algo=proxpoint)
-    - dist: "frobenius", "wasser" ot.emd2, "sliced" ot.sliced...
+- algoD (all parameters for algo)
+(all)
     - opti: "prodigy", "mechanize", "mechanizeadam", "SGD", "AdamW"
+    - momentum: float
+(GD)
+    - lr: float
+    - onlyTrainFirstLayer: bool
+(JKO)
+    - proxf: "cvxpy", "scipy", "pytorch"
+    - tol: float
+    - tau: float
+    - gamma: float
+(proxpoint)
+    - dist: "frobenius", "wasser" ot.emd2, "sliced" ot.sliced...
+    - gamma: float
     - innerlr: float
     - inneriter: int
-    - gamma: float
     - recordinner: bool
     - recordinnerlayers: bool
 - datatype: linear2d, rnglinear, sinus, random, mnist

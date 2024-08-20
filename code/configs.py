@@ -19,13 +19,16 @@ default = {
         "device": "cpu",
         "algo": "proxpoint",
         "proxF": "scipy",
-        "proxD": {"dist": "frobenius",
-                  "opti": "prodigy",
-                  "innerlr": 1e0,
+        "algoD": {"dist": "frobenius",
                   "inneriter": 100,
                   "gamma": 1e-2,
                   "recordinner": True,
-                  "recordinnerlayers": False
+                  "recordinnerlayers": False,
+                  "momentum":0.95,
+                  "opti": "prodigy",
+                  "beta": 0,
+                  "lr": 1e0,
+                  "onlyTrainFirstLayer": True,
                   },
         "datatype": "random",
         "Xsampling": "uniform",
@@ -115,22 +118,22 @@ def loadOpti(D):
     algo = x.algo
     if algo == "GD":
         from algo_GD_torch import torch_descent
-        opti = torch_descent("gd", x.lr, device=x.device)
+        opti = torch_descent(x.algoD, device=x.device)
     elif algo == "JKO":
         if x.proxf == "cvxpy":
             from jko_proxf_cvxpy import jko_cvxpy
-            opti = jko_cvxpy(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol)
+            opti = jko_cvxpy(x.algoD)
         elif x.proxf == "scipy":
             from jko_proxf_scipy import jko_scipy
-            opti = jko_scipy(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol)
+            opti = jko_scipy(x.algoD)
         elif x.proxf == "pytorch":
             from jko_proxf_pytorch import jko_pytorch
-            opti = jko_pytorch(interiter=x.jko_inter_maxstep, gamma=x.gamma, tau=x.tau, tol=x.jko_tol)
+            opti = jko_pytorch(x.algoD)
         else:
             raise Exception(f"config bad proxf='{x.proxf}' choice")
     elif algo == "proxpoint":
         from algo_prox import proxpoint
-        opti = proxpoint(x.proxD, dtype=dtype, device=x.device)
+        opti = proxpoint(x.algoD, dtype=dtype, device=x.device)
     else:
         raise Exception("config bad algo choice")
 

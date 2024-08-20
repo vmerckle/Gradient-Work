@@ -25,30 +25,44 @@ def shouldstop(X1, opti, num):
     return timec or loss
     return timec or step 
 
-def debug():
+def debug(args):
     expname = "debug"
     folder = f"data/{expname}"
     config = configs.default
+    config["expdesc"] = args.d
     config["proxD"]["recordinnerlayers"] = True
     debugstop = lambda D, opti, num : num > 10
     runner(config, expname, stopper=debugstop)
 
-def debug():
-    expname = "debug"
+def mnist(args):
+    expname = "mnist_regression_fit"
     folder = f"data/{expname}"
     config = configs.default
-    config["proxD"]["recordinnerlayers"] = True
+    config["expdesc"] = args.d
+    #config["proxD"]["recordinnerlayers"] = True
+    config["algo"] = "GD"
+    config["algoD"] = { 
+                        "momentum":0.95,
+                        "opti": "Adadelta",
+                        "beta": 0,
+                        "lr": 1e-3,
+                        "onlyTrainFirstLayer": True,
+                        }
+    config["m"] = 100
     config["datatype"] = "mnist"
     config["device"] = "cuda"
-    debugstop = lambda D, opti, num : num > 10
-    runner(config, expname, stopper=debugstop)
+    config["device"] = "cpu"
+    debugstop = lambda D, opti, num : False
+    logger = lambda D, opti, num : None
+    runner(config, expname, stopper=debugstop, logger=logger)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     #parser.add_argument("dist", type=int)
     parser.add_argument( "--debug", action="store_true")
+    parser.add_argument( "-d")
     args = parser.parse_args()
     if args.debug:
-        debug()
+        debug(args)
     else:
-        pass
+        mnist(args)

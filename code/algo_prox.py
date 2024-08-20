@@ -31,6 +31,8 @@ class proxpoint:
         self.gamma = D["gamma"]
         self.recordinner = D["recordinner"]
         self.recordinnerlayers = D["recordinnerlayers"]
+        self.onlyTrainFirstLayer = D["onlyTrainFirstLayer"]
+        self.beta = D["beta"]
         if self.recordinner:
             self.innerD = {}
 
@@ -103,23 +105,29 @@ class proxpoint:
         self.beta = beta
         self.d, self.m = ly1.shape
         self.ly1 = torch.tensor(ly1, dtype=self.dtype, device=self.device, requires_grad=True)
-        self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device)
         self.X = torch.tensor(X, dtype=self.dtype, device=self.device)
         self.Y = torch.tensor(Y, dtype=self.dtype, device=self.device)
 
+        if self.onlyTrainFirstLayer:
+            params = [self.ly1]
+            self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=False)
+        else:
+            params = [self.ly1, self.ly2]
+            self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=True)
+
         if self.opti == "prodigy":
             from prodigyopt import Prodigy
-            self.optimizer = Prodigy([self.ly1],lr=self.innerlr, weight_decay=self.beta)
+            self.optimizer = Prodigy(params,lr=self.innerlr, weight_decay=self.beta)
         elif self.opti == "mechanize":
             from mechanic_pytorch import mechanize # lr magic (rollbacks)
-            self.optimizer = mechanize(torch.optim.SGD)([self.ly1], lr=self.innerlr)
+            self.optimizer = mechanize(torch.optim.SGD)(params, lr=self.innerlr)
         elif self.opti == "mechanizeadam":
             from mechanic_pytorch import mechanize # lr magic (rollbacks)
-            self.optimizer = mechanize(torch.optim.AdamW)([self.ly1], lr=self.innerlr)
+            self.optimizer = mechanize(torch.optim.AdamW)(params, lr=self.innerlr)
         elif self.opti == "SGD":
-            self.optimizer = torch.optim.SGD([self.ly1], lr=self.innerlr, weight_decay=self.beta)
+            self.optimizer = torch.optim.SGD(params, lr=self.innerlr, weight_decay=self.beta)
         elif self.opti == "AdamW":
-            self.optimizer = torch.optim.AdamW([self.ly1], lr=self.innerlr, weight_decay=self.beta)
+            self.optimizer = torch.optim.AdamW(params, lr=self.innerlr, weight_decay=self.beta)
         #self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
 
         with torch.no_grad():
