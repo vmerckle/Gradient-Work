@@ -1,12 +1,15 @@
-import numpy as np
+import os
+from types import SimpleNamespace
+import pickle
 
-#import torch
+import numpy as np
+import torch
+import torchvision
+
 #torch.use_deterministic_algorithms(True)
 #gpudevice = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
 from utils import *
-from types import SimpleNamespace
-import torch
 
 default = {
         "NNseed": 4,
@@ -35,6 +38,39 @@ default = {
         "n": 10,
     }
 
+def mnist():
+    pth = "dataset/mnist.pkl"
+    if os.path.exists(pth):
+        with open(pth, "rb") as f:
+            return pickle.load(f)
+    print("load mnist for the first time")
+    if not os.path.exists("dataset"):
+        os.mkdir(f"dataset")
+    
+    image_transform = torchvision.transforms.Compose([
+        torchvision.transforms.ToTensor(),
+        #torchvision.transforms.Normalize((0.1307,), (0.3081,))
+    ])
+    # laziest way
+    train_dataset = torchvision.datasets.MNIST('dataset/', train=True, download=True, transform=image_transform)
+    test_dataset = torchvision.datasets.MNIST('dataset/', train=False, download=True, transform=image_transform)
+    train_loader = torch.utils.data.DataLoader(train_dataset,
+                                               batch_size=60000, 
+                                               shuffle=False)
+    test_loader = torch.utils.data.DataLoader(test_dataset,
+                                              batch_size=10000, 
+                                              shuffle=False)
+    for d,t in train_loader:
+        Xb, Y = d, t
+    Xb = Xb.view(-1, 784)
+    Y = Y.to(torch.float32)[:, None]
+    Xb, Y = Xb.numpy(), Y.numpy()
+    X = add_bias(Xb)
+
+    with open(pth, "wb") as f:
+        pickle.dump((X, Y, Xb), f)
+    return X, Y, Xb
+
 def genData(D):
     x = SimpleNamespace(**D)
     datarng = np.random.default_rng(x.dataseed)
@@ -47,9 +83,11 @@ def genData(D):
         X, Y, Xb = sinus2d(x.n)
     elif x.datatype == "random":
         X, Y, Xb = rngrng(datarng, x.n, x.d, x.Xsampling)
+    elif x.datatype == "mnist":
+        X, Y, Xb = mnist()
+        D["n"], D["d"] = X.shape
     else:
         raise Exception("wrong datatype", x.datatype)
-
     
     return X, Y, Xb
 

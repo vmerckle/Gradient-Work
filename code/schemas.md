@@ -15,7 +15,7 @@ config
     - gamma: float
     - recordinner: bool
     - recordinnerlayers: bool
-- datatype: linear2d, rnglinear, sinus, random
+- datatype: linear2d, rnglinear, sinus, random, mnist
 - Xsampling: uniform, normal
 - onlypositives: bool
 - Ynoise: float

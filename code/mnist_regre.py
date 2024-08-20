@@ -7,25 +7,35 @@ from mnist_utils import *
 import torchvision
 import torch
 
-image_transform = torchvision.transforms.Compose([
-    torchvision.transforms.ToTensor(),
-    #torchvision.transforms.Normalize((0.1307,), (0.3081,))
-])
-hiddenlayer_neurons = 8000
+hiddenlayer_neurons = 10
 batch_size_train = 32*4*2*2*2*2*2*2*2*2 # We use a small batch size here for training
 batch_size_train = 60000  # We use a small batch size here for training
 batch_size_test = 10000 #
 print(batch_size_train)
 device="cuda"
 
-train_dataset = torchvision.datasets.MNIST('dataset/', train=True, download=True, transform=image_transform)
-test_dataset = torchvision.datasets.MNIST('dataset/', train=False, download=True, transform=image_transform)
+image_transform = torchvision.transforms.Compose([
+    torchvision.transforms.ToTensor(),
+    #torchvision.transforms.Normalize((0.1307,), (0.3081,))
+])
+train_dataset = torchvision.datasets.CIFAR10('dataset/', train=True, download=True, transform=image_transform)
+test_dataset = torchvision.datasets.CIFAR10('dataset/', train=False, download=True, transform=image_transform)
 train_loader = torch.utils.data.DataLoader(train_dataset,
                                            batch_size=batch_size_train, 
                                            shuffle=True)
 test_loader = torch.utils.data.DataLoader(test_dataset,
                                           batch_size=batch_size_test, 
                                           shuffle=True)
+for d,t in train_loader:
+    print(d.shape)
+    print(t.shape)
+
+for d,t in test_loader:
+    print(d.shape)
+    print(t.shape)
+
+import sys
+sys.exit(0)
 import torch.nn.functional as F
 
 m = hiddenlayer_neurons
@@ -43,6 +53,7 @@ class CNN(nn.Module):
         x = x.view(-1, 784)
         x = self.fc_layers(x)
         return x 
+
 
 cnn_model = CNN() # using cpu here
 cnn_model = cnn_model.to(device)
@@ -131,7 +142,7 @@ def train3(model, seconds=2, fromwhere=0):
     print(f" trained on {i} samples, loss = {loss.item()}")
     return timestamp, trainlosslist, testlosslist, time.time() - start
 
-a,b,c, e = train3(cnn_model, seconds=60*10, fromwhere=elapsed) # train for 20 seconds
+a,b,c, e = train3(cnn_model, seconds=10, fromwhere=elapsed) # train for 20 seconds
 timestamp.extend(a)
 trainlosslist.extend(b)
 testlosslist.extend(c)

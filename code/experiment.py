@@ -38,6 +38,8 @@ def debug():
     folder = f"data/{expname}"
     config = configs.default
     config["proxD"]["recordinnerlayers"] = True
+    config["datatype"] = "mnist"
+    config["device"] = "cuda"
     debugstop = lambda D, opti, num : num > 10
     runner(config, expname, stopper=debugstop)
 
