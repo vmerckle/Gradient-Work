@@ -43,15 +43,15 @@ def mnist(args):
     config["algo"] = "GD"
     config["algoD"] = { 
                         "momentum":0.95,
-                        "opti": "Adadelta",
+                        "opti": "AdamW",
                         "beta": 0,
                         "lr": 1e-3,
                         "onlyTrainFirstLayer": True,
                         }
     config["m"] = 100
     config["datatype"] = "mnist"
+    #config["device"] = "cpu"
     config["device"] = "cuda"
-    config["device"] = "cpu"
     debugstop = lambda D, opti, num : False
     logger = lambda D, opti, num : None
     runner(config, expname, stopper=debugstop, logger=logger)

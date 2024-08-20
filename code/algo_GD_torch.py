@@ -54,7 +54,7 @@ class torch_descent:
         elif self.opti == "AdamW":
             self.optimizer = torch.optim.AdamW(params, lr=self.lr, weight_decay=self.beta)
         elif self.opti == "Adadelta":
-            self.optimizer = torch.optim.AdamW(params, lr=self.lr, weight_decay=self.beta)
+            self.optimizer = torch.optim.Adadelta(params, lr=self.lr, weight_decay=self.beta)
         #self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
 
         with torch.no_grad():

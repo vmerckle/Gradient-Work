@@ -102,7 +102,6 @@ def test(model, loss_fn, loader,device="cpu", load=1, noprint=False):
 
 
 def equals(output, target):
-
     o = output.cpu().detach().numpy()
     # 1.3 becomes 1, 1.7 becomes 2.. -10 becomes 0
     o = np.digitize(o, np.array([-100, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 100])/9 - 0.5)-1
@@ -127,7 +126,7 @@ def test2(model, loss_fn, loader,device="cpu", load=1, noprint=False):
         for data, target in loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            test_loss += torch.sum((output.flatten()-target.to(torch.float32).flatten())**2)
+            test_loss += torch.sum((output.flatten()-(target.to(torch.float32).flatten()/9-0.5))**2)
             correct += equals(output.flatten(), target.flatten())
             i += batch_size
             if i/n >= load:
