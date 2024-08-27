@@ -9,17 +9,8 @@
 \documentclass{article} % For LaTeX2e
 \usepackage[dvipsnames]{xcolor} % conflict with.. ICLR? %.. actually no, just need to call it first otherwise other packages import it..
 \usepackage{iclr2023_conference,times}
-
-
 \usepackage[utf8]{inputenc}
-
 \usepackage{kpfonts} %http://distrib-coffee.ipsl.jussieu.fr/pub/mirrors/ctan/fonts/kpfonts/doc/kpfonts.pdf
-
-
-\usepackage{comment}
-%\excludecomment{comment} % this is already the default
-\includecomment{slow}
-%\excludecomment{slow} % comment this to slow the  compile time
 
 \usepackage{algorithm}
 \usepackage{algpseudocode}
@@ -27,9 +18,8 @@
 \usepackage{graphicx} % includegraphics...
 \graphicspath{ {./imgs/} } %relative to main tex file
 \usepackage{amsmath, amsfonts, amsthm, amssymb}
-\usepackage{dsfont}
+\usepackage{dsfont} % for \mathbf{1} : Indicator function.
 %\usepackage{bm} % make any math symbol bold
-%\usepackage[bb=dsserif]{mathalpha}
 \usepackage{booktabs} % bettertables
 
 \usepackage{cancel} % oblique bar with \cancel{text}
@@ -86,12 +76,13 @@
 
 
 \input{math_commands.tex} % Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\usepackage{mathtools} % needed for \shortvdot and \vdotwithin
+\usepackage[capitalize]{cleveref} % should be put near the bottom for reasons
 %\usepackage{bbold}
 %\usepackage{unicode-math}
 
 \newcommand*{\iset}[2]{\{#1, \number\numexpr#1+1\relax \dots, #2 \}}
 
-\usepackage{mathtools} % needed for \shortvdot and \vdotwithin
 \DeclarePairedDelimiter\norm{\lVert}{\rVert} % good. norm* will fit the size
 \DeclarePairedDelimiterX{\inp}[2]{\langle}{\rangle}{#1, #2}
 \DeclareMathDelimiter{\given}{\mathbin}{symbols}{"6A}{largesymbols}{"0C}
@@ -104,18 +95,12 @@
 \newcommand{\red}[1]{\textcolor{red}{#1}}
 
 \newcommand{\dd}{\mathrm{d}}
-\newcommand{\step}{\gamma}
-\newcommand{\reg}{\beta}
-\newcommand{\paramS}{\Theta}
-\newcommand{\param}{\theta}
-\newcommand{\dirac}{\delta}
 \newcommand{\one}{\mathbf{1}}
 
 \DeclareMathOperator*{\diver}{div}
 \DeclareMathOperator{\prox}{Prox}
 
 
-\usepackage[capitalize]{cleveref} % should be put near the bottom for reasons
 \def\valpha{{\bm{\alpha}}} %not in math commands, don't really want to edit math coms
 %\DeclareMathOperator*{\min}{min}
 

@@ -1,35 +1,55 @@
 \section{Two-layers ReLU}
+\subsection{The model}
 
-Data $x_j \in \R^d$ and labels $y_j \in \R$, $j=1,..,n$
+Data $x_j \in \R^d$ and labels $y_j \in \R$, $j=1,..,n$ (The network has a scalar output).
 
-First layer $w_i \in \R^d$, second layer $\alpha_i \in \R$, $i=1,..,m$
+First ReLU layer parameters: $w_i \in \R^d$, second linear layer parameters: $\alpha_i \in \R$ for $i=1,..,m$. The bias is implemented by adding a dimension to the data full of ones, which is strictly equivalent for a two-layers network.
 
-$\step>0$ step-size, $\reg$ regularization
+$\beta > 0$ regularization constant.
 
 \begin{equation}
-	 \mathcal{L}(W, \alpha) = \sum_{j=1}^n \bigg( \underbrace{\sum_{i=1}^m \max(0, w_i^\top x_j) \alpha_i}_{\text{Network's Output}} - y_j \bigg)^2 + \underbrace{\lambda \sum_{i=1}^m \| w_i \|^2_2 + \alpha_i^2}_{\text{Weight Decay}}
+	 \mathcal{L}(W, \alpha) = \sum_{j=1}^n \bigg( \underbrace{\sum_{i=1}^m \max(0, w_i^\top x_j) \alpha_i}_{\text{Network's Output}} - y_j \bigg)^2 + \underbrace{\beta \sum_{i=1}^m \| w_i \|^2_2 + \alpha_i^2}_{\text{Weight Decay}}
 \end{equation}
 
+This is an explicit form of using the mean squared error (MSE) loss along with $L_2$ regularization.
+
+\subsection{Training}
 
 \textbf{Discret time.}
 
-Full-batch gradient descent
+Full-batch gradient descent with $\gamma>0$ the step-size (or learning rate).
 
 \begin{equation}
-	(W, \alpha)_{t+1} = (W, \alpha)_t - \step \nabla \mathcal{L}((W, \alpha)_t)
+	(W, \alpha)_{t+1} = (W, \alpha)_t - \gamma \nabla \mathcal{L}((W, \alpha)_t)
 \end{equation}
 
-Implicit
+Implicit ($\theta = (W, \alpha) \in (\R^{m \times d}, \R^m$))
 
 \begin{equation}
-	\param_{t+1} = \argmin_{\param} \mathcal{L}(\param) +\frac{1}{2\step} \norm{\param - \param_t}
+	\theta_{t+1} = \argmin_{\theta} \mathcal{L}(\theta) +\frac{1}{2\gamma} \norm{\theta - \theta_t}_2^2
 \end{equation}
 
 \textbf{Continuous time.}
 
-Taking $\step \to 0$, we get the gradient flow: $\frac{\dd \param_t}{\dd t} = - \nabla \mathcal{L}(\param_t)$. We make ReLU differentiable with $\sigma'(0)=0$ as justified in \citep{boursierGradientFlowDynamics2022}.
+Taking $\gamma \to 0$, we get the gradient flow: $\frac{\dd \theta_t}{\dd t} = - \nabla \mathcal{L}(\theta_t)$. We can make ReLU differentiable with $\sigma'(0)=0$ as justified in \citep{boursierGradientFlowDynamics2022}.
 
-\subsection{Explicit gradient}
+Given a smooth function $a \rightarrow F(a)$, the gradient flow is gradient descent algorithm
+
+$a^{l+1} = a^l - \gamma \nabla F(a^l)$
+
+with a small enough $\gamma$. If $F$ is not smooth, the gradient flow is the proximal-point algorithm
+
+$a^{l+1} = \prox^{||\cdot ||}_{\gamma F}(a^{(l)} = \argmin_a \frac{1}{2} \norm{ a - a^{(l)}}^2 + \gamma F(a)$
+
+with a small enough $\gamma$.
+
+If $F$ is defined on histograms, it makes sense to use the wasserstein distance $W^p$
+
+\subsection{Explicit gradient computations}
+
+
+Here we will fix the second layer to be in ${-1, 1}$ as is done in mean-field and JKO and to focus on the most important part of the dynamic. Explicit gradient of the second layer is given later.
+
 
 Take a two layer ReLU network with $m$ neurons. Each neuron has a trainable parameter $w_i \in \R^d$ and and a fixed output sign $\alpha_i \in \{-1, 1\}$. Each of the $n$ data points of dimension $d-1$ are augmented with a $1$, so each sample is of dimension $n$. Each sample $x_j$ is stored as a row $X \in \R^{n \times d}$  and is associated with a scalar label $y_j \in \R$.
 
@@ -61,8 +81,14 @@ With real $e^t_j = f(W^t) - y_j$ the "signed error on input $j$"
 
 With boolean $s^t_{i, j} = \mathds{1}_{\inp{\vw^t_i}{\vx_j} > 0}$ the "is neuron $i$ activating on datapoint $j$. The vector $\vs^t_{i} \in \{0, 1\}^n$ would be the activation pattern of neuron $i$ at time $t$.
 
+
 Remark: the gradient of a neuron is a linear combination of the data points it activates.
 
+Below is the explicit gradient for the second layer (if we trained it as well).
+
+\begin{equation}
+	\frac{\partial F}{\partial \alpha^t_i} =  \frac{1}{n} \sum_{j=1}^{n} e^t_j s^t_{i, j} \inp{\vw^t_i}{\vx_j}
+\end{equation}
 
 \section{Convergence of mean-field networks}
 
@@ -75,7 +101,7 @@ If [...] converges, with $m \rightarrow \infty$ (many-particle limit), our parti
 \end{equation}
 
 \begin{equation}
-	\int_\paramS m(\param; x) \dd \mu(\param) = \frac{1}{m} \sum_{i=1}^{m} \inp{\vw_i}{\vx_j}_+ \alpha_i
+	\int_\Theta m(\theta; x) \dd \mu(\theta) = \frac{1}{m} \sum_{i=1}^{m} \inp{\vw_i}{\vx_j}_+ \alpha_i
 \end{equation}
 
 Remark: le 1/m c'est principalement pour être ok à l'infini. Dans le papier JKO \citep{carlierConvergenceEntropicSchemes2017} ils utilisent un vecteur de proba
@@ -83,28 +109,28 @@ Remark: le 1/m c'est principalement pour être ok à l'infini. Dans le papier JK
 Different ways to use a measure to represent the neurons of a two layer network:
 
 \begin{itemize}
-	\item $\paramS = \R^d \times \R$, measure $\mu = \frac{1}{m} \sum_{i=1}^{m} \dirac_{\param_i = (\vw_i, \alpha_i)}$, output of one neuron $m(\param=(\vw,\alpha); \vx) = \inp{\vx}{\vw}_+ \alpha$: (works, output matches discrete)
-	\item $\paramS = \R^d$, measure $\mu = \frac{1}{m} \sum_{i=1}^{m} \alpha_i \dirac_{\param_i = \vw_i}$ output of one neuron $m(\param=\vw; \vx) = \inp{\vx}{\vw}_+$ (works)
-	\item $\paramS = \R^d \times \R^d$, output of one neuron $m(\tilde{\vw}_+, \tilde{\vw}_-, \vx) = \inp{\tilde{\vw}_+}{\vx} - \inp{\tilde{\vw}_-}{\vx}$ (works, separate neg and positive)
-	\item $\paramS = (S^{d-1} \times \R)$, output of one neuron $m((\vd, \tilde{\alpha}); \vx) = \tilde{\alpha} \inp{\vd}{\vx} = \tilde{\alpha}\  \mathds{1}_{\inp{\vd}{\vx}>0} $ (works), mapping: $\vd = \frac{\vw}{\norm{\vw}}$ and $\tilde{\alpha}=\norm{\vw} \alpha$. Gradient are not equal to discrete.
+	\item $\Theta = \R^d \times \R$, measure $\mu = \frac{1}{m} \sum_{i=1}^{m} \delta_{\theta_i = (\vw_i, \alpha_i)}$, output of one neuron $m(\theta=(\vw,\alpha); \vx) = \inp{\vx}{\vw}_+ \alpha$: (works, output matches discrete)
+	\item $\Theta = \R^d$, measure $\mu = \frac{1}{m} \sum_{i=1}^{m} \alpha_i \delta_{\theta_i = \vw_i}$ output of one neuron $m(\theta=\vw; \vx) = \inp{\vx}{\vw}_+$ (works)
+	\item $\Theta = \R^d \times \R^d$, output of one neuron $m(\tilde{\vw}_+, \tilde{\vw}_-, \vx) = \inp{\tilde{\vw}_+}{\vx} - \inp{\tilde{\vw}_-}{\vx}$ (works, separate neg and positive)
+	\item $\Theta = (S^{d-1} \times \R)$, output of one neuron $m((\vd, \tilde{\alpha}); \vx) = \tilde{\alpha} \inp{\vd}{\vx} = \tilde{\alpha}\  \mathds{1}_{\inp{\vd}{\vx}>0} $ (works), mapping: $\vd = \frac{\vw}{\norm{\vw}}$ and $\tilde{\alpha}=\norm{\vw} \alpha$. Gradient are not equal to discrete.
 \end{itemize}
 
 \subsection{Algorithm, discretize the measure's space}
 
-Take a grid of $N$ points in $\paramS$, we can match the notation above by taking a neuron for each point of the grid $m=N$.
+Take a grid of $N$ points in $\Theta$, we can match the notation above by taking a neuron for each point of the grid $m=N$.
 
 The grid currently dictate the neuron's scale, giving multiple choices.
 
 \begin{equation}
-	\mu(t+1) = \argmin_{\mu \in \mathcal{M}(\paramS)} F(\mu) + \frac{1}{2 \step} W_2(\mu; \mu(t))
+	\mu(t+1) = \argmin_{\mu \in \mathcal{M}(\Theta)} F(\mu) + \frac{1}{2 \gamma} W_2(\mu; \mu(t))
 \end{equation}
 
 
 
-Take $\step \to 0$, get gradient flow. Take $m \to \infty$, get wasserstein gradient flow \citep{bachGradientDescentInfinitely2021}, and if it converges, it goes to the global optimal.
+Take $\gamma \to 0$, get gradient flow. Take $m \to \infty$, get wasserstein gradient flow \citep{bachGradientDescentInfinitely2021}, and if it converges, it goes to the global optimal.
 
-\section{Mean field rewritten results}
-\subsection{direct result}
+\subsection{Mean field rewritten results}
+\subsubsection{direct result}
 
 Minimization of a linear combination of ('neurons' $\{\phi(\theta)\}_{\theta \in \Theta}$) through an unknown measure $\mu$: $J^* = \min_{\mu \in \mathcal{M}(\Theta)} J(\mu) = R(\int \phi \dd \mu) + G(\mu)$
 
@@ -116,7 +142,7 @@ Proved: if WGF cvg, it cvg to global minimizer. If $(w^{(m)}(t), \theta^{(m)}(t)
 
 p-Wasserstein distance between two measures $\mu, \nu \in \mathcal{P}(\R^d)$: $W_p(\mu, \nu)^p = \min_{\gamma \in \Pi(\mu, \nu)} \int |y - x|^p \dd \gamma(x, y)$
 
-\subsection{simple result}
+\subsubsection{simple result}
 
 Cast the parameters $w \in \mathcal{W}^{d+1}$ into $r \in \R, \eta \in \mathcal{S}^d = {w \in \R^{d+1}, \norm{w}_2 = 1}$ with $w = r ~ \eta$. The two flows will have exactly the same dynamics.
 
@@ -127,7 +153,6 @@ Prediction functions : $h = \frac{1}{m} \sum_{j=1}^{m} \psi(w_j) = \frac{1}{m}\s
 Theorem 1: if by taking $m \leftarrow \inf$ at $t=0$, $\nu$ converges to $\nu_0$, then for any $t$, $\nu_{m, t}$ cvg to the unique WGF $\nu_t$.
 
 Theorem 2: Take a $\nu_0$ with a support that includes all directions at initialization, if WGF $\nu_t$ cvg, it's to a global optimum.
-
 
 \section{Simple example 2D setting, grid jko}
 
@@ -159,7 +184,7 @@ Our network with restricted $\alpha_i$ would describe this neuron using only two
 
 The measure is on the parameter space. In order to do simulations we discretize the parameter space, by taking a uniform grid in $\R^2$ centered on $(0, 0)$: $(w_i, b_i)_{i=1, \dots m}$
 
-We can see that we have the same output and expressivity as the regular ReLU network by taking a measure $\mu = \sum_{i=1}^{m} p_i \dirac_{\param_i = \vw_i}$ with ($\sum_i p_i=1$) and $m((w_i, b_i); x) = \max(0, w_i x + b_i) \alpha_i$, we have this equality:
+We can see that we have the same output and expressivity as the regular ReLU network by taking a measure $\mu = \sum_{i=1}^{m} p_i \delta_{\theta_i = \vw_i}$ with ($\sum_i p_i=1$) and $m((w_i, b_i); x) = \max(0, w_i x + b_i) \alpha_i$, we have this equality:
 
 \begin{equation}
 	\int_{\R^2} m((w, b); x) \dd \mu((w, b)) = \sum_{i=1}^{m} \max(0, w_i x_j + b_i) \alpha_i p_i
@@ -172,7 +197,7 @@ The movemement is described by a PDE and simulated on a grid. Each point $i$ of 
 The same wasserstein gradient flow can be computed by this step:
 
 \begin{equation}
-	\mu(t+1) = \argmin_{\mu \in \mathcal{M}(\paramS)} F(\mu) + \frac{1}{2 \step} W_2(\mu; \mu(t))
+	\mu(t+1) = \argmin_{\mu \in \mathcal{M}(\Theta)} F(\mu) + \frac{1}{2 \gamma} W_2(\mu; \mu(t))
 \end{equation}
 
 We tried different ways of computing the Wasserstein Gradient Flow. 
@@ -185,8 +210,213 @@ We tried different ways of computing the Wasserstein Gradient Flow.
 
 Preliminary results using the EMD distance indicate no particular differences between the gradient flow and the wasserstein gradient flow.
 
+\section{Proximal point - direct WasserImplemented descents}
 
-\section{2 pts example}
+Discretized wasserstein prox step:
+
+\begin{equation}
+	W^{t+1} = \argmin_{W \in \R^{d \times m}} F(W) + \frac{1}{2 \gamma} W_p(W; W^t))
+\end{equation}
+
+
+EMD(POT library), d=squareeuclidian
+
+\begin{align}
+	W_2^2(W; W^t) &= \min_{\gamma} \inp{\gamma}{M}_F \\
+	\text{s.t.  } \gamma ~ \mathbf{1} &= W \\
+	\gamma^\top ~ \mathbf{1} &= W^t \\
+	\gamma &\geq 0 \\
+	M_{i, j} &= \lVert w_i - w_j \rVert^2_2
+\end{align}
+
+We only update the first layer $W^{(0)} \in \Theta = \R^{d \times m}$ for simplicity. $F : \Theta \rightarrow \R^+$ is the objective to minimize.
+
+\begin{equation}
+	\min_{W \in \Theta} \ F(W)
+\end{equation}
+
+\subsection{Gradient descent}
+
+\begin{equation}
+	W^{(t+1)} = W^{(t)} - \gamma \nabla F(W^{(t)}
+\end{equation}
+
+\subsection{Proximal point}
+
+$d: \Theta \times \Theta \rightarrow \R^+$ a distance between two parameters
+
+\begin{equation}
+	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma} ~ d(V, W^{(t)})
+\end{equation}
+
+To solve each $\argmin$, we use a gradient descent on $V$. $V^{(0)} = W^{(t)}$
+
+\begin{equation}
+	V^{(k+1)} = V^{(k)} - \beta \left(\nabla F(V^{(k)}) - \frac{1}{\gamma} \nabla d(V^{(k)}, W^{(t)})\right)
+\end{equation}
+
+\subsubsection{dist = L2 sq, frobenius}
+
+Frobenius norm ($L_{2,2}$): $\norm{W}_{2,2}^2 = \norm{W}_F^2 = \sum_{i=1}^{m} \sum_{j=1}^{d} W_{i, j}^2 = \sum_{i=1}^{m} \norm{W_i}_2^2$
+
+\begin{equation}
+	d : (V, W) \in \Theta \times \Theta \rightarrow \frac{1}{m} \sum_{i=1}^{m} \norm{V_i - W_i}^2_2
+\end{equation}
+
+To sum up, we're solving this 
+
+\begin{equation}
+	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma} ~ \frac{1}{m} \sum_{i=1}^{m} \norm{V_i - W_i}^2_2
+\end{equation}
+
+Using gradient descent for $\argmin$, one inner step (with inner step size $\beta$) on $V$ with $V^{(0)} = W^{(t)}$ is
+
+\begin{equation}
+	V^{(k+1)} = V^{(k)} - \beta \left(\nabla F(V^{(k)}) + \frac{1}{m ~ \gamma} (V^{k} - W^{(t)}) \right) 
+\end{equation}
+
+\begin{equation}
+	V^{(k+1)} = V^{(k)}\left(1 - \frac{\beta}{m ~ \gamma}\right) + \frac{\beta}{m ~ \gamma} W^{(t)}   - \beta \nabla F(V^{(k)})
+\end{equation}
+
+which is kinda the same thing as this(only for $\gamma \rightarrow 0$) (trust region problem equivalence with proximal problem) $V^{(0)} = W^{(t)}$
+
+\begin{equation}
+	V^{(k+1)} = W^{(t)} - \gamma \nabla F(V^{(k)})
+\end{equation}
+
+\subsubsection{dist = wasserstein2 sq}
+
+\textbf{distance definition.}
+\begin{equation}
+	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma} ~ d(V, W^{(t)})
+\end{equation}
+
+
+With $V, W \in \R^d$ parameters.
+
+p-Wasserstein distance between two measures $\mu, \nu \in \mathcal{P}(\R^d)$: 
+
+\begin{equation}
+	W_p(\mu, \nu)^p = \inf_{\gamma \in \Pi(\mu, \nu)} \int |y - x|^p \dd \gamma(x, y)
+\end{equation}
+
+$\Pi$ set of probability measures on $\R^d$ with marginals $\mu$ and $\nu$.
+
+We take two sum of diracs measures $\mu = \frac{1}{m} \sum_{i=1}^{m} \delta_{V_i}$ and $\nu = \frac{1}{m} \sum_{i=1}^{m} \delta_{W_i}$. Then in that case $W_2$ is
+
+\begin{equation}
+	W_2(V, W)^2 = \min_{\sigma \in S_n} \frac{1}{m} \sum_{i=1}^{m} \norm{V_i - W_{\sigma(i)}}^2_2
+\end{equation}
+
+With $\sigma$ a permutation. This is the linear assignment problem which can be solved by the hungarian algorithm. It always has a solution so inf=min
+
+This is equivalent to what \texttt{OT.emd(d=squareeuclidian)} solves:
+
+\begin{align}
+	W_2^2(W; W^t) &= \min_{\gamma} \inp{\gamma}{M}_F \\
+	\text{s.t.  } \gamma ~ \mathbf{1} &= W \\
+	\gamma^\top ~ \mathbf{1} &= W^t \\
+	\gamma &\geq 0 \\
+	M_{i, j} &= \lVert w_i - w_j \rVert^2_2
+\end{align}
+
+However, we only need the gradient of the distance. I haven't yet read what it is exactly.
+
+\textbf{Small stepsize.}
+
+To sum up, for wasserstein descent we have this step
+
+\begin{equation}
+	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma ~ m} ~ \min_{\sigma \in S_n} \sum_{i=1}^{m} \norm{V_i - W_{\sigma(i)}}^2_2
+\end{equation}
+
+If $\gamma$ is small, the candidate $V$ will be close to $W^{(t)}$, and each $V_i$ will be close to $W^{(t)}_i$. Therefore the optimal assignment is the identity.
+
+\begin{equation}
+	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma ~ m} ~ \sum_{i=1}^{m} \norm{V_i - W_i}^2_2
+\end{equation}
+
+Which is exactly the proximal point. Additionnaly, as the step size gets smaller, proximal point converges to the gradient flow (just like gradient descent).
+
+\section{Prox point: Comparing the objective value and distance between iterates}
+Which are the two items to minimize in proximal point.
+\subsection{Early experiments}
+\subsubsection{proximal point}
+
+We run proximal point which optimize the objective $F(W^{t+1})$ and the distance between two iterates $d(W^{t+1)}, W^{(t)})$. We plot those two values for $\gamma=10$, and for Frobenius distance and Wasserstein distance as defined later.
+
+\includegraphics[width=0.7\textwidth]{imgs/tau10_graph_full.png}
+
+It looks like they are exactly the same. We also plot the difference between the two distances to confirm.
+
+\includegraphics[width=0.7\textwidth]{imgs/tau10_graph.png}
+
+Start and 'end' of convergence for proximal point:
+
+\includegraphics[width=0.7\textwidth]{imgs/tau10_plot_start.png}
+\includegraphics[width=0.7\textwidth]{imgs/tau10_plot_end.png}
+
+It's a relatively large stepsize but not an easy problem. The triangle of neurons that do not move are simply neurons that do not activate any data. Initialization is a random grid, with an output norm close to zero.
+
+\subsubsection{wasserstein descent}
+
+\includegraphics[width=0.7\textwidth]{imgs/tau10_plot_wasser_end.png}
+
+\includegraphics[width=0.7\textwidth]{imgs/tau10_graph_wasser.png}
+
+The early trajectory is very similar, but then it looks stuck for a while.
+
+Caveat: prox solution is not accurate due to small number of inner iterations.
+
+\section{Larger simulations on Prox point}
+
+$m = 50$(scale $10^{-2}$), $n = 5$(some usual $[-1, 1]$ sinus data), we compute $10^6$ prox inner iterations (the bigger the stepsize the larger the step size might need to be) for both the frobenius and the wasserstein distance. 
+
+In blue/green filled lines we plot the normal MSE loss of the network (for frobenius proxpoint and wasserstein proxpoint)
+
+In dotted/dashed lines we compute $d(W^{t)}, W^{(t+1)})$ (distance between iterates, which is one of the two objectives minimized at each step) for $d=$wasserstein and $d=$frobenius.
+
+Because the only difference between wasserstein and frobenius is the assignement (which neuron/particle is assigned which particle to compute the distance), we also plot in thick green and red lines the number of permutations of the optimal mapping between two iterates. (1 = every particles has been permuted, 0 = each particle is associated to itself)
+
+For $\gamma = 10^{-3}$ (small stepsize):
+
+\includegraphics[width=1.0\textwidth]{imgs/petit_pas_10steps.png}
+
+The 3 lines associated with wasserstein descent are very close to the 3 lines of frobenius descent, as expected.
+
+For $\gamma = 10^0$ (big stepsize). This is one example where the convergence is very different. Wasserstein descent converges to 0 while Frobenius descent gets stuck on a bad local minima. We do the same plot as before.
+
+\includegraphics[width=1.0\textwidth]{imgs/grand_pas_10steps.png}
+
+We can see the loss is completely different after 10 steps (it's normal to converge very quickly as the stepsize of the prox is large).
+
+One thing to note, if we focus on wasserstein descent lines (dashed green and dotted red), the distance between iterates in frobenius or wasserstein is very close. However we can see in filled red that the number of permutations is close to 100\% at some steps.
+
+This indicates that the actual distance value is not as important as the actual trajectories of the neurones which are decided by the gradient of the wasserstein distance used in the prox.
+
+We plot the trajectories of each neuron (dashed lines for wasserstein descent and filled lines for frobenius descent) for the 10 prox steps. Circles denotes the initial positions of the neurons, blue for negative neurons and red for positives neurons.
+
+\includegraphics[width=1.0\textwidth]{imgs/grand_pas_10steps_trajs.png}
+
+The trajectories are indeed different between the two descents. One major difference: neurons in the bottom quadrants are not moved at all by the frobenius descent, but in the wasserstein descent they are moved, they exchange positions (we can see two (dashed) trajectories very close going to and from the same initial neuron).
+
+Those neurons (bottom/center quadrants) do not activate any datapoint and as such their differential is 0, so they cannot possibly move under prox descent. If weight decay is used, they will converge to 0. This completely differ from wasserstein descent, so the differential of the wasserstein distance must be different.
+
+We'll focus on one proximal step by showing the first few \emph{inner} iterations for the two descents. We take two particles with different gradients. (this could happen near a non-differentiability, or as we see in the simulations if we can switch positive and negative neurons)
+
+The inner iterations are dictated by the gradient of the objective $\frac{\partial F}{\partial w_i}$ to minimize the loss, and by gradient of the distance to the first iterate ($W^{(0)}$). The frobenius proximal point goes as usual, the distance gradient pulling the particle back to its initial position. However the wasserstein distance ends up pulling the particles to the other neuron's initial positions.
+
+\includegraphics[width=0.7\textwidth]{imgs/schema_one_prox_step.png}
+
+\emph{This explains a scenario where the prox will converge to something different. However it doesn't explain directly why the wasserstein prox can move neurons that have 0 gradient.}
+
+Remark(not 100\% sure): in the mean field paper, the only results on ReLU are obtained by computing the wasserstein distance on two separate sets (i.e. you cannot assign a positive neuron to a negative neuron)
+
+
+Implementations details: Frobenius is ran on one GPU(15min per run) while wasserstein is ran on a single CPU core (30min per run) as that was found to be the most efficient to run multiple experiments. Results for $\gamma=10^{a}$, $a=[0, -1, -2, -3, -4, -5]$ are available but do not differ much.
+
+\section{What's the difference between wasser and frobenius prox: 2 pts example}
 
 On étudie un problème en une dimension, avec analogie possible entre l'évolution de deux neurones ReLU(à activation fixe) dans $\R^d$ et l'évolution de $x$(qui active une donnée et estime un label '$4$' et $y$ qui n'active aucune donnée.
 
@@ -313,211 +543,7 @@ In practice it is not easy to see the difference in the converged network, in la
 
 A large scale scenario will be ran (maybe many neurons in a grid again), with pos and neg distances computed differently (requires some code change).
 
-\section{Prox point: Comparing the objective value and distance between iterates}
-Which are the two items to minimize in proximal point.
-\subsection{Early experiments}
-\subsubsection{proximal point}
 
-We run proximal point which optimize the objective $F(W^{t+1})$ and the distance between two iterates $d(W^{t+1)}, W^{(t)})$. We plot those two values for $\gamma=10$, and for Frobenius distance and Wasserstein distance as defined later.
-
-\includegraphics[width=0.7\textwidth]{imgs/tau10_graph_full.png}
-
-It looks like they are exactly the same. We also plot the difference between the two distances to confirm.
-
-\includegraphics[width=0.7\textwidth]{imgs/tau10_graph.png}
-
-Start and 'end' of convergence for proximal point:
-
-\includegraphics[width=0.7\textwidth]{imgs/tau10_plot_start.png}
-\includegraphics[width=0.7\textwidth]{imgs/tau10_plot_end.png}
-
-It's a relatively large stepsize but not an easy problem. The triangle of neurons that do not move are simply neurons that do not activate any data. Initialization is a random grid, with an output norm close to zero.
-
-\subsubsection{wasserstein descent}
-
-\includegraphics[width=0.7\textwidth]{imgs/tau10_plot_wasser_end.png}
-
-\includegraphics[width=0.7\textwidth]{imgs/tau10_graph_wasser.png}
-
-The early trajectory is very similar, but then it looks stuck for a while.
-
-Caveat: prox solution is not accurate due to small number of inner iterations.
-
-\section{Larger simulations on Prox point}
-
-$m = 50$(scale $10^{-2}$), $n = 5$(some usual $[-1, 1]$ sinus data), we compute $10^6$ prox inner iterations (the bigger the stepsize the larger the step size might need to be) for both the frobenius and the wasserstein distance. 
-
-In blue/green filled lines we plot the normal MSE loss of the network (for frobenius proxpoint and wasserstein proxpoint)
-
-In dotted/dashed lines we compute $d(W^{t)}, W^{(t+1)})$ (distance between iterates, which is one of the two objectives minimized at each step) for $d=$wasserstein and $d=$frobenius.
-
-Because the only difference between wasserstein and frobenius is the assignement (which neuron/particle is assigned which particle to compute the distance), we also plot in thick green and red lines the number of permutations of the optimal mapping between two iterates. (1 = every particles has been permuted, 0 = each particle is associated to itself)
-
-For $\gamma = 10^{-3}$ (small stepsize):
-
-\includegraphics[width=1.0\textwidth]{imgs/petit_pas_10steps.png}
-
-The 3 lines associated with wasserstein descent are very close to the 3 lines of frobenius descent, as expected.
-
-For $\gamma = 10^0$ (big stepsize). This is one example where the convergence is very different. Wasserstein descent converges to 0 while Frobenius descent gets stuck on a bad local minima. We do the same plot as before.
-
-\includegraphics[width=1.0\textwidth]{imgs/grand_pas_10steps.png}
-
-We can see the loss is completely different after 10 steps (it's normal to converge very quickly as the stepsize of the prox is large).
-
-One thing to note, if we focus on wasserstein descent lines (dashed green and dotted red), the distance between iterates in frobenius or wasserstein is very close. However we can see in filled red that the number of permutations is close to 100\% at some steps.
-
-This indicates that the actual distance value is not as important as the actual trajectories of the neurones which are decided by the gradient of the wasserstein distance used in the prox.
-
-We plot the trajectories of each neuron (dashed lines for wasserstein descent and filled lines for frobenius descent) for the 10 prox steps. Circles denotes the initial positions of the neurons, blue for negative neurons and red for positives neurons.
-
-\includegraphics[width=1.0\textwidth]{imgs/grand_pas_10steps_trajs.png}
-
-The trajectories are indeed different between the two descents. One major difference: neurons in the bottom quadrants are not moved at all by the frobenius descent, but in the wasserstein descent they are moved, they exchange positions (we can see two (dashed) trajectories very close going to and from the same initial neuron).
-
-Those neurons (bottom/center quadrants) do not activate any datapoint and as such their differential is 0, so they cannot possibly move under prox descent. If weight decay is used, they will converge to 0. This completely differ from wasserstein descent, so the differential of the wasserstein distance must be different.
-
-We'll focus on one proximal step by showing the first few \emph{inner} iterations for the two descents. We take two particles with different gradients. (this could happen near a non-differentiability, or as we see in the simulations if we can switch positive and negative neurons)
-
-The inner iterations are dictated by the gradient of the objective $\frac{\partial F}{\partial w_i}$ to minimize the loss, and by gradient of the distance to the first iterate ($W^{(0)}$). The frobenius proximal point goes as usual, the distance gradient pulling the particle back to its initial position. However the wasserstein distance ends up pulling the particles to the other neuron's initial positions.
-
-\includegraphics[width=0.7\textwidth]{imgs/schema_one_prox_step.png}
-
-\emph{This explains a scenario where the prox will converge to something different. However it doesn't explain directly why the wasserstein prox can move neurons that have 0 gradient.}
-
-Remark(not 100\% sure): in the mean field paper, the only results on ReLU are obtained by computing the wasserstein distance on two separate sets (i.e. you cannot assign a positive neuron to a negative neuron)
-
-
-Implementations details: Frobenius is ran on one GPU(15min per run) while wasserstein is ran on a single CPU core (30min per run) as that was found to be the most efficient to run multiple experiments. Results for $\gamma=10^{a}$, $a=[0, -1, -2, -3, -4, -5]$ are available but do not differ much.
-
-\section{Proximal point - direct WasserImplemented descents}
-
-Discretized wasserstein prox step:
-
-\begin{equation}
-	W^{t+1} = \argmin_{W \in \R^{d \times m}} F(W) + \frac{1}{2 \step} W_p(W; W^t))
-\end{equation}
-
-
-EMD(POT library), d=squareeuclidian
-
-\begin{align}
-	W_2^2(W; W^t) &= \min_{\gamma} \inp{\gamma}{M}_F \\
-	\text{s.t.  } \gamma ~ \mathbf{1} &= W \\
-	\gamma^\top ~ \mathbf{1} &= W^t \\
-	\gamma &\geq 0 \\
-	M_{i, j} &= \lVert w_i - w_j \rVert^2_2
-\end{align}
-
-We only update the first layer $W^{(0)} \in \Theta = \R^{d \times m}$ for simplicity. $F : \Theta \rightarrow \R^+$ is the objective to minimize.
-
-\begin{equation}
-	\min_{W \in \Theta} \ F(W)
-\end{equation}
-
-\subsection{Gradient descent}
-
-\begin{equation}
-	W^{(t+1)} = W^{(t)} - \gamma \nabla F(W^{(t)}
-\end{equation}
-
-\subsection{Proximal point}
-
-$d: \Theta \times \Theta \rightarrow \R^+$ a distance between two parameters
-
-\begin{equation}
-	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma} ~ d(V, W^{(t)})
-\end{equation}
-
-To solve each $\argmin$, we use a gradient descent on $V$. $V^{(0)} = W^{(t)}$
-
-\begin{equation}
-	V^{(k+1)} = V^{(k)} - \beta \left(\nabla F(V^{(k)}) - \frac{1}{\gamma} \nabla d(V^{(k)}, W^{(t)})\right)
-\end{equation}
-
-\subsubsection{dist = L2 sq, frobenius}
-
-Frobenius norm ($L_{2,2}$): $\norm{W}_{2,2}^2 = \norm{W}_F^2 = \sum_{i=1}^{m} \sum_{j=1}^{d} W_{i, j}^2 = \sum_{i=1}^{m} \norm{W_i}_2^2$
-
-\begin{equation}
-	d : (V, W) \in \Theta \times \Theta \rightarrow \frac{1}{m} \sum_{i=1}^{m} \norm{V_i - W_i}^2_2
-\end{equation}
-
-To sum up, we're solving this 
-
-\begin{equation}
-	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma} ~ \frac{1}{m} \sum_{i=1}^{m} \norm{V_i - W_i}^2_2
-\end{equation}
-
-Using gradient descent for $\argmin$, one inner step (with inner step size $\beta$) on $V$ with $V^{(0)} = W^{(t)}$ is
-
-\begin{equation}
-	V^{(k+1)} = V^{(k)} - \beta \left(\nabla F(V^{(k)}) + \frac{1}{m ~ \gamma} (V^{k} - W^{(t)}) \right) 
-\end{equation}
-
-\begin{equation}
-	V^{(k+1)} = V^{(k)}\left(1 - \frac{\beta}{m ~ \gamma}\right) + \frac{\beta}{m ~ \gamma} W^{(t)}   - \beta \nabla F(V^{(k)})
-\end{equation}
-
-which is kinda the same thing as this(only for $\gamma \rightarrow 0$) (trust region problem equivalence with proximal problem) $V^{(0)} = W^{(t)}$
-
-\begin{equation}
-	V^{(k+1)} = W^{(t)} - \gamma \nabla F(V^{(k)})
-\end{equation}
-
-\subsubsection{dist = wasserstein2 sq}
-
-\textbf{distance definition.}
-\begin{equation}
-	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma} ~ d(V, W^{(t)})
-\end{equation}
-
-
-With $V, W \in \R^d$ parameters.
-
-p-Wasserstein distance between two measures $\mu, \nu \in \mathcal{P}(\R^d)$: 
-
-\begin{equation}
-	W_p(\mu, \nu)^p = \inf_{\gamma \in \Pi(\mu, \nu)} \int |y - x|^p \dd \gamma(x, y)
-\end{equation}
-
-$\Pi$ set of probability measures on $\R^d$ with marginals $\mu$ and $\nu$.
-
-We take two sum of diracs measures $\mu = \frac{1}{m} \sum_{i=1}^{m} \delta_{V_i}$ and $\nu = \frac{1}{m} \sum_{i=1}^{m} \delta_{W_i}$. Then in that case $W_2$ is
-
-\begin{equation}
-	W_2(V, W)^2 = \min_{\sigma \in S_n} \frac{1}{m} \sum_{i=1}^{m} \norm{V_i - W_{\sigma(i)}}^2_2
-\end{equation}
-
-With $\sigma$ a permutation. This is the linear assignment problem which can be solved by the hungarian algorithm. It always has a solution so inf=min
-
-This is equivalent to what \texttt{OT.emd(d=squareeuclidian)} solves:
-
-\begin{align}
-	W_2^2(W; W^t) &= \min_{\gamma} \inp{\gamma}{M}_F \\
-	\text{s.t.  } \gamma ~ \mathbf{1} &= W \\
-	\gamma^\top ~ \mathbf{1} &= W^t \\
-	\gamma &\geq 0 \\
-	M_{i, j} &= \lVert w_i - w_j \rVert^2_2
-\end{align}
-
-However, we only need the gradient of the distance. I haven't yet read what it is exactly.
-
-\textbf{Small stepsize.}
-
-To sum up, for wasserstein descent we have this step
-
-\begin{equation}
-	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma ~ m} ~ \min_{\sigma \in S_n} \sum_{i=1}^{m} \norm{V_i - W_{\sigma(i)}}^2_2
-\end{equation}
-
-If $\gamma$ is small, the candidate $V$ will be close to $W^{(t)}$, and each $V_i$ will be close to $W^{(t)}_i$. Therefore the optimal assignment is the identity.
-
-\begin{equation}
-	W^{(t+1)} = \argmin_{V \in \Theta} \ \  F(V) + \frac{1}{2 ~ \gamma ~ m} ~ \sum_{i=1}^{m} \norm{V_i - W_i}^2_2
-\end{equation}
-
-Which is exactly the proximal point. Additionnaly, as the step size gets smaller, proximal point converges to the gradient flow (just like gradient descent).
 
 \section{intuition on Small vs Big initialization in ReLU}
 
@@ -534,23 +560,6 @@ If $\norm{w^{(0)}}$ is large, $w^{(1)}$ will be close to $w^{(0)} + \gamma ~ \ma
 If $\norm{w^{(0)}}$ is close to 0, $w^{(1)}$ will be close to equal to $\gamma ~ \mathbf{v}$ as every coefficient of $w$ is negligible compared to the update. Therefore, its direction will (after some updates) be dominated by $\mathbf{v}$. The same for every neuron that activate the same data points. (Since activation pattern is entirely decided by direction, activation pattern will all converge to extremal vectors..)
 
 Refs: (expés, some results) \citep{maennel2018gradient}, (the orthogonal paper) \citep{boursierGradientFlowDynamics2022}. (incremental learning) \citep{berthierIncrementalLearningDiagonal}, (scaling path) \citep{neumayerEffectInitializationScaling2023}.
-
-
-\section{Math introduction}
-
-\subsection{Gradient Flow}
-
-Given a smooth function $a \rightarrow F(a)$, the gradient flow is gradient descent algorithm
-
-$a^{l+1} = a^l - \gamma \nabla F(a^l)$
-
-with a small enough $\gamma$. If $F$ is not smooth, the gradient flow is the proximal-point algorithm
-
-$a^{l+1} = \prox^{||\cdot ||}_{\gamma F}(a^{(l)} = \argmin_a \frac{1}{2} \norm{ a - a^{(l)}}^2 + \gamma F(a)$
-
-with a small enough $\gamma$.
-
-If $F$ is defined on histograms, it makes sense to use the wasserstein distance $W^p$
 
 
 %\section{3 points example}
