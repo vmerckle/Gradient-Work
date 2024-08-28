@@ -136,27 +136,3 @@ def test2(model, loss_fn, loader,device="cpu", load=1, noprint=False):
     if not noprint:
         print(f'Average loss: {test_loss:.4f}, Correct/Tested: {correct}/{i} ({100. * correct / i:.0f}%)')
     return test_loss.item()/26/10
-
-
-##define test function
-def test3(model, loss_fn, loader,device="cpu", load=1, noprint=False):
-    batch_size = loader.batch_size
-    model.eval()
-    test_loss = 0
-    correct = 0
-    i = 0
-    n = len(loader.dataset)
-    with torch.no_grad():
-        for data, target in loader:
-            data, target = data.to(device), target.to(device)
-            output = model(data)
-            test_loss += torch.sum((output.flatten()-target.to(torch.float32).flatten())**2)
-            correct += equals(output.flatten(), target.flatten())
-            i += batch_size
-            if i/n >= load:
-                break
-
-    test_loss /= i
-    if not noprint:
-        print(f'Average loss: {test_loss:.4f}, Correct/Tested: {correct}/{i} ({100. * correct / i:.0f}%)')
-    return test_loss.item()/260

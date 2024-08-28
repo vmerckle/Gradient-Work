@@ -8,7 +8,7 @@ import torchvision
 import torch
 
 hiddenlayer_neurons = 10
-batch_size_train = 32*4*2*2*2*2*2*2*2*2 # We use a small batch size here for training
+batch_size_train = 32
 batch_size_train = 60000  # We use a small batch size here for training
 batch_size_test = 10000 #
 print(batch_size_train)

@@ -66,7 +66,7 @@ def runner(D, folder, stopper=dontstop, logger=default_logger, printer=default_p
     filename = f"data/{folder}/{D['timestamp']}.pkl"
     num = 0
 
-    opti, ly1, ly2 = configs.applyconfig(D) # updates D
+    opti = configs.applyconfig(D) # updates D
     printer(D, opti, num)
     logger(D, opti, num) # print and log first step to file
 

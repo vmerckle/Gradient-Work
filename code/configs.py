@@ -145,7 +145,7 @@ def applyconfig(D):
     opti = loadOpti(D)
     D.update({"X":X, "Y":Y, "Xb":Xb})
     opti.load(X, Y, ly1, ly2)
-    return opti, ly1, ly2
+    return opti
 
 def sinus2d(n):
     Xb = np.linspace(-0.5, 0.5, n)[:, None]

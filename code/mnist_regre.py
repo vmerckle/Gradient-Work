@@ -6,14 +6,15 @@ from mnist_utils import *
 
 import torchvision
 import torch
+import torch.nn.functional as F
 
-hiddenlayer_neurons = 1000
+hiddenlayer_neurons = 2
 batch_size_train = 60000
 batch_size_train = 20# We use a small batch size here for training
 batch_size_test = 10000
 learning_rate = 1e-3
-device="cpu"
 device="cuda"
+device="cpu"
 
 image_transform = torchvision.transforms.Compose([
     torchvision.transforms.ToTensor(),
@@ -27,7 +28,6 @@ train_loader = torch.utils.data.DataLoader(train_dataset,
 test_loader = torch.utils.data.DataLoader(test_dataset,
                                           batch_size=batch_size_test, 
                                           shuffle=True)
-import torch.nn.functional as F
 
 m = hiddenlayer_neurons
 
@@ -101,7 +101,6 @@ trainlosslist.extend(b)
 testlosslist.extend(c)
 elapsed += e
 test2(cnn_model, device=device, loss_fn=loss_fn, loader=test_loader, load=0.1) # test 100% of the test data set
-
 
 tt = 0
 with torch.no_grad():
