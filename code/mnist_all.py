@@ -9,8 +9,6 @@ import torch.nn.functional as F
 
 from mnist_utils import *
 
-
-
 image_transform = torchvision.transforms.ToTensor()
 
 train_dataset = torchvision.datasets.MNIST('dataset/', train=True, download=True, transform=image_transform)
@@ -150,10 +148,10 @@ if __name__ == '__main__':
 
     ts = time.time() - np.array(timestamp)
     plt.plot(timestamp, trainlosslist, label='Train Loss', color='blue')
-    #plt.plot(timestamp, testlosslist, label='Test Loss(every 5 second)', color='red')
+    plt.plot(timestamp, testlosslist, label='Test Loss(every 5 second)', color='red')
     plt.xlabel('seconds')
     plt.ylabel('Loss')
     plt.title('Train and Test Loss Over Time')
     plt.legend()
     plt.grid(True)
-    plt.savefig("data.png", dpi=100)
+    plt.savefig(f"output/{args.model}_{args.seconds}s_{args.m}.png", dpi=100)
