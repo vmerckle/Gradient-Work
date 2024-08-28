@@ -62,6 +62,7 @@ def classif_stats(model, loader, device, noprint=True):
     i = 0
     with torch.no_grad():
         for data, target in loader:
+            data, target = data.to(device), target.to(device)
             output = model(data)
             loss += torch.nn.NLLLoss(reduction='sum')(output, target).item() # sum up batch loss
             pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
@@ -83,6 +84,7 @@ def classif_stats_cross(model, loader, device, noprint=True):
     i = 0
     with torch.no_grad():
         for data, target in loader:
+            data, target = data.to(device), target.to(device)
             output = model(data)
             loss += torch.nn.CrossEntropyLoss(reduction='sum')(output, target).item() # sum up batch loss
             output = F.log_softmax(output, dim=0)
@@ -104,6 +106,7 @@ def classif_stats_cross_scalar(model, loader, device, noprint=True):
     i = 0
     with torch.no_grad():
         for data, target in loader:
+            data, target = data.to(device), target.to(device)
             output = model(data)
             loss += torch.nn.MSELoss(reduction="sum")(output.flatten(),target.to(torch.float32).flatten()/9-0.5).item()
             correct += equals(output.flatten(), target.flatten())
