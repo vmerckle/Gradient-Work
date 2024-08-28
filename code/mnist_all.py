@@ -89,10 +89,10 @@ class NNC(nn.Module):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     #parser.add_argument("dist", type=int)
-    parser.add_argument( "-s", "--seconds", type=int, default=1)
+    parser.add_argument( "-s", "--seconds", type=int, default=3)
     parser.add_argument( "-d", "--device", default="cpu", choices=["cpu", "cuda"])
-    parser.add_argument( "--batch_test", type=int, default=32)
-    parser.add_argument( "--batch_train", type=int, default=10000)
+    parser.add_argument( "--batch_test", type=int, default=1000)
+    parser.add_argument( "--batch_train", type=int, default=32)
     parser.add_argument( "-m", type=int, default=3)
     parser.add_argument( "-lr", type=float, default=1e-3)
     parser.add_argument( "--optimizer", default="adam", choices=["prod", "adam"])
@@ -143,8 +143,8 @@ if __name__ == '__main__':
     test_loss, test_acc = statsf(model, device=device, loader=test_loader)
     print(f'TEST loss: {test_loss:.4f}, TEST acc: {test_acc*100:.3f}%)')
     # 100% of the train data set
-    train_loss, train_acc = statsf(model, device=device, loader=train_loader)
-    print(f'TRAIN loss: {train_loss:.4f}, TRAIN acc: {train_acc*100:.3f}%)')
+    #train_loss, train_acc = statsf(model, device=device, loader=train_loader)
+    #print(f'TRAIN loss: {train_loss:.4f}, TRAIN acc: {train_acc*100:.3f}%)')
 
     ts = time.time() - np.array(timestamp)
 
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     ax.axhline(y=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
     ax.axvline(x=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
     ax.grid(True, alpha=0.2)
-    ax.scatter(timestamp, trainlosslist, label='Train Loss', color='blue', marker='+')
+    ax.scatter(timestamp, trainlosslist, label='Train Loss', color='blue', marker='+', alpha=0.1)
     ax.plot(timestamp, testlosslist, label='Test Loss(every 5 second)', color='red')
     plt.xlabel('seconds')
     plt.ylabel('Loss')
@@ -161,4 +161,4 @@ if __name__ == '__main__':
     plt.legend()
     ax.set_yscale('log')
     ax.grid(True)
-    plt.savefig(f"output/{args.model}_{args.seconds}s_{args.m}.png", dpi=100)
+    plt.savefig(f"output/{args.model}_{args.seconds}s_{args.m}.png", dpi=300)
