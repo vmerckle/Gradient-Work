@@ -20,7 +20,7 @@ def train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, devic
     while True:
         try:
             for data, target in tqdm(train_loader, total=int(len(train_loader))):
-                data, target = data.to(device), target.to(device)
+                #data, target = data.to(device), target.to(device)
                 optimizer.zero_grad()
                 output = model(data)
                 if regression:
@@ -62,7 +62,7 @@ def classif_stats(model, loader, device, noprint=True):
     i = 0
     with torch.no_grad():
         for data, target in loader:
-            data, target = data.to(device), target.to(device)
+            #data, target = data.to(device), target.to(device)
             output = model(data)
             loss += torch.nn.NLLLoss(reduction='sum')(output, target).item() # sum up batch loss
             pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
@@ -84,7 +84,7 @@ def classif_stats_cross(model, loader, device, noprint=True):
     i = 0
     with torch.no_grad():
         for data, target in loader:
-            data, target = data.to(device), target.to(device)
+            #data, target = data.to(device), target.to(device)
             output = model(data)
             loss += torch.nn.CrossEntropyLoss(reduction='sum')(output, target).item() # sum up batch loss
             output = F.log_softmax(output, dim=0)
@@ -106,7 +106,7 @@ def classif_stats_cross_scalar(model, loader, device, noprint=True):
     i = 0
     with torch.no_grad():
         for data, target in loader:
-            data, target = data.to(device), target.to(device)
+            #data, target = data.to(device), target.to(device)
             output = model(data)
             loss += torch.nn.MSELoss(reduction="sum")(output.flatten(),target.to(torch.float32).flatten()/9-0.5).item()
             correct += equals(output.flatten(), target.flatten())
@@ -142,7 +142,7 @@ def test2(model, loss_fn, loader,device="cpu", load=1, noprint=False):
     n = len(loader.dataset)
     with torch.no_grad():
         for data, target in loader:
-            data, target = data.to(device), target.to(device)
+            # data, target = data.to(device), target.to(device)
             output = model(data)
             test_loss += torch.sum((output.flatten()-(target.to(torch.float32).flatten()/9-0.5))**2)
             correct += equals(output.flatten(), target.flatten())

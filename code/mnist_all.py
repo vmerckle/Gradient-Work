@@ -126,8 +126,9 @@ if __name__ == '__main__':
         statsf = classif_stats_cross_scalar
         model = NNRS(args.m) # using cpu here
         loss_fn = torch.nn.MSELoss
-
     model = model.to(device)
+    train_dataset.train_data.to(device)  # put data into GPU entirely
+    train_dataset.train_labels.to(device)
     timestamp, trainlosslist, testlosslist = [], [], []
 
     if args.optimizer == "prod":
