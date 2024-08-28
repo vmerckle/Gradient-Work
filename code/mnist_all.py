@@ -145,8 +145,8 @@ if __name__ == '__main__':
     test_loss, test_acc = statsf(model, device=device, loader=test_loader)
     print(f'TEST loss: {test_loss:.4f}, TEST acc: {test_acc*100:.3f}%)')
     # 100% of the train data set
-    #train_loss, train_acc = statsf(model, device=device, loader=train_loader)
-    #print(f'TRAIN loss: {train_loss:.4f}, TRAIN acc: {train_acc*100:.3f}%)')
+    train_loss, train_acc = statsf(model, device=device, loader=train_loader)
+    print(f'TRAIN loss: {train_loss:.4f}, TRAIN acc: {train_acc*100:.3f}%)')
 
     ts = time.time() - np.array(timestamp)
     plt.plot(timestamp, trainlosslist, label='Train Loss', color='blue')
