@@ -17,40 +17,72 @@ def train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, devic
     samplerate, lastsample = 5, 0
     start = time.time()
     lastloss=1
-    while True:
-        try:
-            for data, target in tqdm(train_loader, total=int(len(train_loader))):
-                data, target = data.to(device), target.to(device)
-                optimizer.zero_grad()
-                output = model(data)
-                if regression:
-                    loss = loss_fn()(output.flatten(),target.to(torch.float32).flatten()/9.-0.5)
-                else:
-                    loss = loss_fn()(output,target)
-                loss.backward()
-                optimizer.step()
-                timestamp.append(time.time()-start)
-                trainlosslist.append(loss.item())
-                if time.time() - lastsample > samplerate:
-                    print(f"{i+batch_size} samples.. {loss.item()}")
-                    with torch.no_grad():
-                        test_loss, test_acc = statsf(model, device=device, loader=test_loader)
-                    testlosslist.append(test_loss)
-                    lastsample = time.time()
-                    lastloss=testlosslist[-1]
-                else:
-                    testlosslist.append(lastloss)
-                i += batch_size
-                    
+    try:
+        while True:
+            if batch_size == 60000 and device=="cuda":
+                for data, target in train_loader:
+                    pass
+                data, target = data.to("cuda"), target.to("cuda")
+                while True:
+                    optimizer.zero_grad()
+                    output = model(data)
+                    if regression:
+                        loss = loss_fn()(output.flatten(),target.to(torch.float32).flatten()/9.-0.5)
+                    else:
+                        loss = loss_fn()(output,target)
+                    loss.backward()
+                    optimizer.step()
+                    timestamp.append(time.time()-start)
+                    trainlosslist.append(loss.item())
+                    if time.time() - lastsample > samplerate:
+                        print(f"{i+batch_size} samples.. {loss.item()}")
+                        with torch.no_grad():
+                            test_loss, test_acc = statsf(model, device=device, loader=test_loader)
+                        testlosslist.append(test_loss)
+                        lastsample = time.time()
+                        lastloss=testlosslist[-1]
+                    else:
+                        testlosslist.append(lastloss)
+                    i += batch_size
+                        
+                    if time.time() - start > seconds:
+                        break
+                    scheduler.step()
                 if time.time() - start > seconds:
                     break
-            if time.time() - start > seconds:
-                break
-            print("full")
-            scheduler.step()
-        except KeyboardInterrupt:
-            print("Normal interrupt")
-            break
+            else:
+                for data, target in tqdm(train_loader, total=int(len(train_loader))):
+                    data, target = data.to(device), target.to(device)
+                    optimizer.zero_grad()
+                    output = model(data)
+                    if regression:
+                        loss = loss_fn()(output.flatten(),target.to(torch.float32).flatten()/9.-0.5)
+                    else:
+                        loss = loss_fn()(output,target)
+                    loss.backward()
+                    optimizer.step()
+                    timestamp.append(time.time()-start)
+                    trainlosslist.append(loss.item())
+                    if time.time() - lastsample > samplerate:
+                        print(f"{i+batch_size} samples.. {loss.item()}")
+                        with torch.no_grad():
+                            test_loss, test_acc = statsf(model, device=device, loader=test_loader)
+                        testlosslist.append(test_loss)
+                        lastsample = time.time()
+                        lastloss=testlosslist[-1]
+                    else:
+                        testlosslist.append(lastloss)
+                    i += batch_size
+                        
+                    if time.time() - start > seconds:
+                        break
+                if time.time() - start > seconds:
+                    break
+                print("full")
+                scheduler.step()
+    except KeyboardInterrupt:
+        print("Normal interrupt")
+        break
     print(f" trained on {i} samples, loss = {loss.item()}, took {(time.time()-start)/60:.2f} minutes")
     return timestamp, trainlosslist, testlosslist
 
