@@ -127,8 +127,8 @@ if __name__ == '__main__':
         model = NNRS(args.m) # using cpu here
         loss_fn = torch.nn.MSELoss
     model = model.to(device)
-    train_dataset.train_data.to(device)  # put data into GPU entirely
-    train_dataset.train_labels.to(device)
+    train_dataset.data.to(device)  # put data into GPU entirely
+    train_dataset.targets.to(device)
     timestamp, trainlosslist, testlosslist = [], [], []
 
     if args.optimizer == "prod":
