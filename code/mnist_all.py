@@ -137,6 +137,7 @@ if __name__ == '__main__':
     elif args.optimizer == "adam":
         optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate) # example optimiser, feel free to change
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=400)
+    scheduler = None
 
     timestamp, trainlosslist, testlosslist = train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, device, seconds=args.seconds, regression=regression, statsf=statsf)
 

@@ -47,7 +47,8 @@ def train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, devic
                         
                     if time.time() - start > seconds:
                         break
-                    scheduler.step()
+                    if scheduler is not None:
+                        scheduler.step()
                 if time.time() - start > seconds:
                     break
             else:
@@ -79,7 +80,8 @@ def train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, devic
                 if time.time() - start > seconds:
                     break
                 print("full")
-                scheduler.step()
+                if scheduler is not None:
+                    scheduler.step()
     except KeyboardInterrupt:
         print("Normal interrupt")
     print(f" trained on {i} samples, loss = {loss.item()}, took {(time.time()-start)/60:.2f} minutes")
