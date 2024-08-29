@@ -1,5 +1,6 @@
 import time
 import argparse
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -87,7 +88,7 @@ class NNC(nn.Module):
         return F.log_softmax(x, dim=1)
 
 if __name__ == '__main__':
-    #torch.set_num_threads(1) # 10% perf loss for wasser but only use one core.
+    torch.set_num_threads(1) # 10% perf loss for wasser but only use one core.
     parser = argparse.ArgumentParser()
     #parser.add_argument("dist", type=int)
     parser.add_argument( "-s", "--seconds", type=int, default=3)
@@ -137,10 +138,12 @@ if __name__ == '__main__':
         optimizer = Prodigy(model.parameters(), lr=1.)
     elif args.optimizer == "adam":
         optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate) # example optimiser, feel free to change
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=400)
+    #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=400)
     scheduler = None
 
     timestamp, trainlosslist, testlosslist = train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, device, seconds=args.seconds, regression=regression, statsf=statsf)
+
+    sys.exit(0)
 
     # test 100% of the test data set
     test_loss, test_acc = statsf(model, device=device, loader=test_loader)
