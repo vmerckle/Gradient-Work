@@ -84,7 +84,9 @@ def train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, devic
                     scheduler.step()
     except KeyboardInterrupt:
         print("Normal interrupt")
-    print(f" trained on {i} samples, loss = {loss.item()}, took {(time.time()-start)/60:.2f} minutes")
+    tt = (time.time()-start)
+    print(f" trained on {i} samples, loss = {loss.item()}, took {tt/60:.2f} minutes")
+    print(f"{i//batch_size} gradient steps, {i//batch_size/tt:.1f} gd/s")
     return timestamp, trainlosslist, testlosslist
 
 ##define test function
