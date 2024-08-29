@@ -87,6 +87,7 @@ class NNC(nn.Module):
         return F.log_softmax(x, dim=1)
 
 if __name__ == '__main__':
+    #torch.set_num_threads(1) # 10% perf loss for wasser but only use one core.
     parser = argparse.ArgumentParser()
     #parser.add_argument("dist", type=int)
     parser.add_argument( "-s", "--seconds", type=int, default=3)
@@ -163,4 +164,4 @@ if __name__ == '__main__':
     plt.legend()
     ax.set_yscale('log')
     ax.grid(True)
-    plt.savefig(f"output/{args.model}_{args.seconds}s_{args.m}.png", dpi=300)
+    plt.savefig(f"output/{args.model}-s{args.seconds}-m{args.m}-b{args.batch_train}-lr{args.lr}.png", dpi=300)
