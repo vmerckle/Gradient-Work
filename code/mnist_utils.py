@@ -14,7 +14,10 @@ def train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, devic
     batch_size = train_loader.batch_size
     i = 0
     n = len(train_loader.dataset)
-    samplerate, lastsample = 5, 0
+    if second < 400:
+        samplerate, lastsample = 5, 0
+    else:
+        samplerate, lastsample = 60, 0
     start = time.time()
     lastloss=1
     try:
@@ -35,12 +38,12 @@ def train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, devic
                     timestamp.append(time.time()-start)
                     trainlosslist.append(loss.item())
                     if time.time() - lastsample > samplerate:
-                        print(f"{i+batch_size} samples.. {loss.item()}")
                         with torch.no_grad():
                             test_loss, test_acc = statsf(model, device=device, loader=test_loader)
                         testlosslist.append(test_loss)
                         lastsample = time.time()
                         lastloss=testlosslist[-1]
+                        print(f"{(i//batch_size)+1} samples.. train={loss.item()}, test={test_loss}, test ACC={test_acc}")
                     else:
                         testlosslist.append(lastloss)
                     i += batch_size
