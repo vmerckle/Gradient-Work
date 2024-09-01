@@ -143,8 +143,6 @@ if __name__ == '__main__':
 
     timestamp, trainlosslist, testlosslist = train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, device, seconds=args.seconds, regression=regression, statsf=statsf)
 
-    sys.exit(0)
-
     # test 100% of the test data set
     test_loss, test_acc = statsf(model, device=device, loader=test_loader)
     print(f'TEST loss: {test_loss:.4f}, TEST acc: {test_acc*100:.3f}%)')
