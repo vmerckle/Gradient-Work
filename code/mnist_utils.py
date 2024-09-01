@@ -10,16 +10,18 @@ import torch.optim as optim
 
 def train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, device, seconds=2, regression=False, statsf=None):
     timestamp, trainlosslist, testlosslist = [], [], []
+    testacclist = []
     model.train()
     batch_size = train_loader.batch_size
     i = 0
     n = len(train_loader.dataset)
-    if second < 400:
+    if seconds < 400:
         samplerate, lastsample = 5, 0
     else:
         samplerate, lastsample = 60, 0
     start = time.time()
     lastloss=1
+    lastacc=0
     try:
         while True:
             if batch_size == 60000 and device=="cuda":
@@ -41,11 +43,14 @@ def train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, devic
                         with torch.no_grad():
                             test_loss, test_acc = statsf(model, device=device, loader=test_loader)
                         testlosslist.append(test_loss)
+                        lastacc=test_acc
+                        testacclist.append(test_acc)
                         lastsample = time.time()
                         lastloss=testlosslist[-1]
-                        print(f"{(i//batch_size)+1} samples.. train={loss.item()}, test={test_loss}, test ACC={test_acc}")
+                        print(f"{(i//batch_size)+1} gradstep of {batch_size} samples.. train={loss.item()}, test={test_loss}, test ACC={test_acc}")
                     else:
                         testlosslist.append(lastloss)
+                        testacclist.append(lastacc)
                     i += batch_size
                         
                     if time.time() - start > seconds:
@@ -68,14 +73,17 @@ def train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, devic
                     timestamp.append(time.time()-start)
                     trainlosslist.append(loss.item())
                     if time.time() - lastsample > samplerate:
-                        print(f"{i+batch_size} samples.. {loss.item()}")
+                        lastsample = time.time()
                         with torch.no_grad():
                             test_loss, test_acc = statsf(model, device=device, loader=test_loader)
+                        print(f"{(i//batch_size)+1} gradstep of {batch_size} samples.. train={loss.item()}, test={test_loss}, test ACC={test_acc}")
                         testlosslist.append(test_loss)
-                        lastsample = time.time()
+                        testacclist.append(test_acc)
+                        lastacc=test_acc
                         lastloss=testlosslist[-1]
                     else:
                         testlosslist.append(lastloss)
+                        testacclist.append(lastacc)
                     i += batch_size
                         
                     if time.time() - start > seconds:
@@ -90,7 +98,7 @@ def train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, devic
     tt = (time.time()-start)
     print(f" trained on {i} samples, loss = {loss.item()}, took {tt/60:.2f} minutes")
     print(f"{i//batch_size} gradient steps, {i//batch_size/tt:.1f} gd/s")
-    return timestamp, trainlosslist, testlosslist
+    return timestamp, trainlosslist, testlosslist, testacclist
 
 ##define test function
 def classif_stats(model, loader, device, noprint=True):

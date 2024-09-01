@@ -141,7 +141,7 @@ if __name__ == '__main__':
     #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=400)
     scheduler = None
 
-    timestamp, trainlosslist, testlosslist = train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, device, seconds=args.seconds, regression=regression, statsf=statsf)
+    timestamp, trainlosslist, testlosslist, testacclist = train(model, optimizer, scheduler, loss_fn, train_loader, test_loader, device, seconds=args.seconds, regression=regression, statsf=statsf)
 
     # test 100% of the test data set
     test_loss, test_acc = statsf(model, device=device, loader=test_loader)
@@ -154,15 +154,19 @@ if __name__ == '__main__':
 
     fig = plt.figure(figsize=(19.8,10.8))
     ax = fig.add_subplot(frameon=False)
+    ax2 = ax.twinx()  # instantiate a second Axes that shares the same x-axis
     ax.axhline(y=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
     ax.axvline(x=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
     ax.grid(True, alpha=0.2)
     ax.scatter(timestamp, trainlosslist, label='Train Loss', color='blue', marker='+', alpha=0.1)
-    ax.plot(timestamp, testlosslist, label='Test Loss(every 5 second)', color='red')
+    ax.plot(timestamp, testlosslist, label='Test Loss(every 5 second)', color='red', linestyle='dashed')
+    ax2.plot(timestamp, np.array(testacclist)*100, label='Test Accuracy %', color='orange')
+    ax2.set_ylim(0, 100)
     plt.xlabel('seconds')
     plt.ylabel('Loss')
     plt.title('Train and Test Loss Over Time')
-    plt.legend()
+    ax.legend(loc="upper left")
+    ax2.legend()
     ax.set_yscale('log')
     ax.grid(True)
     plt.savefig(f"output/{args.model}-s{args.seconds}-m{args.m}-b{args.batch_train}-lr{args.lr}.png", dpi=300)
