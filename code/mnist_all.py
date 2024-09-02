@@ -97,6 +97,7 @@ if __name__ == '__main__':
     parser.add_argument( "--batch_train", type=int, default=32)
     parser.add_argument( "-m", type=int, default=3)
     parser.add_argument( "-lr", type=float, default=1e-3)
+    parser.add_argument( "--scale", type=float, default=1)
     parser.add_argument( "--optimizer", default="adam", choices=["prod", "adam"])
     parser.add_argument( "--model", default="nnc", choices=["cnnc", "nnc", "nnrs", "nnr"])
     args = parser.parse_args()
@@ -128,6 +129,10 @@ if __name__ == '__main__':
         statsf = classif_stats_cross_scalar
         model = NNRS(args.m) # using cpu here
         loss_fn = torch.nn.MSELoss
+        model.fc_layers[0].weight.data = model.fc_layers[0].weight.data*args.scale
+        model.fc_layers[0].bias.data = model.fc_layers[0].bias.data*args.scale
+        model.fc_layers[2].weight.data = model.fc_layers[2].weight.data*args.scale
+        model.fc_layers[2].bias.data = model.fc_layers[2].bias.data*args.scale
     model = model.to(device)
     train_dataset.data.to(device)  # put data into GPU entirely
     train_dataset.targets.to(device)
@@ -169,4 +174,4 @@ if __name__ == '__main__':
     ax2.legend()
     ax.set_yscale('log')
     ax.grid(True)
-    plt.savefig(f"output/{args.model}-s{args.seconds}-m{args.m}-b{args.batch_train}-lr{args.lr}.png", dpi=300)
+    plt.savefig(f"output/{args.model}-s{args.seconds}-m{args.m}-b{args.batch_train}-lr{args.lr}-sc{args.scale}.png", dpi=300)
