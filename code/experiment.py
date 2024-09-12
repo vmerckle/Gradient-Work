@@ -59,6 +59,40 @@ def mnist(args):
     logger = lambda D, opti, num : None
     runner(config, expname, stopper=debugstop, logger=logger)
 
+def quickexp(args):
+    expname = "quick wasser"
+    folder = f"data/{expname}"
+    config = {
+            "NNseed": 4,
+            "dataseed": 4,
+            "typefloat": "float32",
+            "threadcount": 1,
+            "device": "cuda",
+            "algo": "proxpoint",
+            "algoD": {"dist": "wasser",
+                      "inneriter": 200,
+                      "gamma": 1e-1,
+                      "recordinner": True,
+                      "recordinnerlayers": False,
+                      "momentum":0.95,
+                      "opti": "AdamW",
+                      "beta": 0,
+                      "lr": 1e-4,
+                      "innerlr": 1e-4,
+                      "onlyTrainFirstLayer": True,
+                      },
+            "datatype": "random",
+            "Xsampling": "uniform",
+            "onlypositives": False,
+            "Ynoise": 0,
+            "beta": 0,
+            "scale": 1e-2,
+            "m": 300,
+            "d": 300,
+            "n": 3000,
+        }
+    runner(config, expname)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     #parser.add_argument("dist", type=int)
@@ -68,4 +102,4 @@ if __name__ == '__main__':
     if args.debug:
         debug(args)
     else:
-        mnist(args)
+        quickexp(args)

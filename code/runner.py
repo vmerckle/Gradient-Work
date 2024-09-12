@@ -72,7 +72,7 @@ def runner(D, folder, stopper=dontstop, logger=default_logger, printer=default_p
 
     try:
         while True:
-            if stopper(D, opti, num):
+            if stopper(D, opti, num, D["timestart"]):
                 break
 
             try:

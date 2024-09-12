@@ -41,6 +41,15 @@ def getfilenameFromTS(timestamp):
             if int(ts) == timestamp:
                 return f"{path}/{f}" # os.join is for losers
 
+def listAllTS(folder="data"):
+    ll = []
+    for path, _, l in os.walk(folder):
+        for f in l:
+            ts, ext = f.split(".")
+            ll.append(int(ts))
+    ll.sort()
+    return ll
+
 def getTS(timestamp):
     with open(getfilenameFromTS(timestamp), "rb") as f:
         return pickle.load(f)
