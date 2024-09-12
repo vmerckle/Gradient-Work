@@ -15,6 +15,8 @@ import postprocess
 import load
 
 def tolist(ld, key):
+    # from Dict {10: {"key1": 0.22}, 13: {"key1":0.35}}
+    # outputs [10, 13], [0.22, 0.35] for "key1"
     nums = list(ld.keys())
     nums.sort()
     return np.array(nums), np.array([ld[x][key] for x in nums])

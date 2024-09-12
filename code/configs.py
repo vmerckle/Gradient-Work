@@ -28,6 +28,7 @@ default = {
                   "opti": "prodigy",
                   "beta": 0,
                   "lr": 1e0,
+                  "innerlr": 1e0,
                   "onlyTrainFirstLayer": True,
                   },
         "datatype": "random",

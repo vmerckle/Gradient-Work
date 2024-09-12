@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import argparse
 import time
 import os.path
@@ -30,8 +32,9 @@ def debug(args):
     folder = f"data/{expname}"
     config = configs.default
     config["expdesc"] = args.d
-    config["proxD"]["recordinnerlayers"] = True
-    debugstop = lambda D, opti, num : num > 10
+    config["algoD"]["recordinnerlayers"] = True
+    config["algoD"]["dist"] = "wasser"
+    debugstop = lambda D, opti, num : num > 5
     runner(config, expname, stopper=debugstop)
 
 def mnist(args):
