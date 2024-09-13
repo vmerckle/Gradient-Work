@@ -40,7 +40,7 @@ def default_printer(D, opti, num): # print every 0.1secs
 
 
 def default_saver(D, num, folder): # saves after 10 minutes
-    if D["datatype"] == "mnist":
+    if D["data"] == "mnist": # don't save anything if MNIST.
         D["X"] = "mnist"
         D["Xb"] =  "mnist"
         D["Y"] =  "mnist"

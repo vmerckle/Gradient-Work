@@ -1,39 +1,46 @@
 config
 ---
-- NNseed: int
-- dataseed: int
+- seed: int
 - typefloat: float32, float64
 - threadcount: int
-- device: cpu, cuda
-- algo: GD, JKO, proxpoint
-- algoD (all parameters for algo)
-(all)
-    - opti: "prodigy", "mechanize", "mechanizeadam", "SGD", "AdamW"
-    - momentum: float
-(GD)
-    - lr: float
-    - onlyTrainFirstLayer: bool
-(JKO)
-    - proxf: "cvxpy", "scipy", "pytorch"
-    - tol: float
-    - tau: float
-    - gamma: float
-(proxpoint)
-    - dist: "frobenius", "wasser" ot.emd2, "sliced" ot.sliced...
-    - gamma: float
-    - innerlr: float
-    - inneriter: int
-    - recordinner: bool
-    - recordinnerlayers: bool
-- datatype: linear2d, rnglinear, sinus, random, mnist
-- Xsampling: uniform, normal
-- onlypositives: bool
-- Ynoise: float
-- beta: float
-- scale: float
-- m (nb of neurons): int
-- d (dimension): int
-- n (nb of datapoints): int
+- device: "cpu", "cuda"
+- algo: "GD", "JKO", "proxpoint"
+- algoD: DICT {
+    (all algos)
+        - opti: "prodigy", "mechanize", "mechanizeadam", "SGD", "AdamW"
+        - momentum: float
+    ("GD")
+        - lr: float
+        - onlyTrainFirstLayer: bool
+    ("JKO")
+        - proxf: "cvxpy", "scipy", "pytorch"
+        - tol: float
+        - tau: float
+        - gamma: float
+    ("proxpoint")
+        - dist: "frobenius", "wasser" ot.emd2, "sliced" ot.sliced...
+        - gamma: float
+        - innerlr: float
+        - inneriter: int
+        - recordinner: bool
+        - recordinnerlayers: bool
+}
+
+- data: "linear2d", "rnglinear", "sinus", "random", "mnist"
+- dataD: DICT {
+    - seed: int
+    - sampling: "uniform", "linear"
+    - Ynoise: float
+    - d: int
+    - n: int
+}
+
+- init: "normal", "uniform", "grid"
+- initD: DICT {
+    - onlypositives: bool
+    - scale: float
+    - m (nb of neurons): int
+}
 
 apply config
 ---

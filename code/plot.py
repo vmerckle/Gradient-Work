@@ -41,10 +41,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     #parser.add_argument("folder", help="folder name")
     parser.add_argument("-t", "--timestamp", help="timestamp", type=int)
+    parser.add_argument("-s", "--show", help="show plots instead of saving", type=int)
     args = parser.parse_args()
     if args.timestamp is None:
-        print("Taking last timestamped data")
         args.timestamp = load.listAllTS()[-1]
+        print("No argument -> taking last timestamped data:", args.timestamp)
 
     D = load.getTS(args.timestamp)
     nums, lossL = tolist(D["iter"], "loss")
@@ -68,8 +69,11 @@ if __name__ == '__main__':
     ax.scatter(nums, s["dist"], label='prox distance', marker='+', alpha=0.4)
     ax.set_yscale('log')
     ax.legend()
-    #plt.show()
-    plt.savefig("output/mergedprox_obj_dist.png", dpi=300)
+    if args.s:
+        plt.show()
+    else:
+        plt.savefig("output/mergedprox_obj_dist.png", dpi=300)
+        print("saved", "output/mergedprox_obj_dist.png")
 
     fig = plt.figure(figsize=(19.8,10.8))
     ax = fig.add_subplot(frameon=False)
@@ -84,5 +88,9 @@ if __name__ == '__main__':
     ax.scatter(list(range(len(lossL))), lossL, label="loss", marker='+', alpha=0.8)
     ax.set_yscale('log')
     ax.legend()
-    #plt.show()
-    plt.savefig("output/loss.png", dpi=300)
+
+    if args.s:
+        plt.show()
+    else:
+        plt.savefig("output/loss.png", dpi=300)
+        print("saved", "output/loss.png")

@@ -15,18 +15,6 @@ from runner import runner
 import postprocess
 import configs
 
-
-def shouldstop(X1, opti, num):
-    start = X1["timestart"]
-    step = num > 7
-    timec =  time.time() - start > 1
-    loss = opti.loss() < 1e-4
-
-    return step 
-    return loss
-    return timec or loss
-    return timec or step 
-
 def debug(args):
     expname = "debug"
     folder = f"data/{expname}"
@@ -34,7 +22,7 @@ def debug(args):
     config["expdesc"] = args.d
     config["algoD"]["recordinnerlayers"] = True
     config["algoD"]["dist"] = "wasser"
-    debugstop = lambda D, opti, num : num > 5
+    debugstop = lambda D, opti, num, timestart : num > 5
     runner(config, expname, stopper=debugstop)
 
 def mnist(args):
@@ -55,7 +43,7 @@ def mnist(args):
     config["datatype"] = "mnist"
     #config["device"] = "cpu"
     config["device"] = "cuda"
-    debugstop = lambda D, opti, num : False
+    debugstop = lambda D, opti, num, timestart : False
     logger = lambda D, opti, num : None
     runner(config, expname, stopper=debugstop, logger=logger)
 
@@ -63,11 +51,10 @@ def quickexp(args):
     expname = "quick wasser"
     folder = f"data/{expname}"
     config = {
-            "NNseed": 4,
-            "dataseed": 4,
             "typefloat": "float32",
             "threadcount": 1,
             "device": "cuda",
+            "seed": 4,
             "algo": "proxpoint",
             "algoD": {"dist": "wasser",
                       "inneriter": 200,
@@ -77,19 +64,24 @@ def quickexp(args):
                       "momentum":0.95,
                       "opti": "AdamW",
                       "beta": 0,
-                      "lr": 1e-4,
                       "innerlr": 1e-4,
                       "onlyTrainFirstLayer": True,
                       },
-            "datatype": "random",
-            "Xsampling": "uniform",
-            "onlypositives": False,
-            "Ynoise": 0,
-            "beta": 0,
-            "scale": 1e-2,
-            "m": 300,
-            "d": 300,
-            "n": 3000,
+            "data": "random",
+            "dataD": {
+                "seed": 4,
+                "Xsampling": "uniform",
+                "Ynoise": 0,
+                "d": 300,
+                "n": 3000,
+                },
+            "init": "normal",
+            "initD": {
+                "seed": 5,
+                "onlypositives": False,
+                "scale": 1e-2,
+                "m": 300,
+                },
         }
     runner(config, expname)
 
