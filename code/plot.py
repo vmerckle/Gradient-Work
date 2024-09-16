@@ -69,7 +69,7 @@ if __name__ == '__main__':
     ax.scatter(nums, s["dist"], label='prox distance', marker='+', alpha=0.4)
     ax.set_yscale('log')
     ax.legend()
-    if args.s:
+    if args.show:
         plt.show()
     else:
         plt.savefig("output/mergedprox_obj_dist.png", dpi=300)
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     ax.set_yscale('log')
     ax.legend()
 
-    if args.s:
+    if args.show:
         plt.show()
     else:
         plt.savefig("output/loss.png", dpi=300)

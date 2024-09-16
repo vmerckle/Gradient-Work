@@ -21,7 +21,7 @@ def debug(args):
     config = configs.default
     config["expdesc"] = args.d
     config["algoD"]["recordinnerlayers"] = True
-    config["algoD"]["dist"] = "wasser"
+    #config["algoD"]["dist"] = "wasser"
     debugstop = lambda D, opti, num, timestart : num > 5
     runner(config, expname, stopper=debugstop)
 
