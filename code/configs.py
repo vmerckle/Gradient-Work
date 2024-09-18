@@ -28,6 +28,7 @@ default = {
                   "beta": 0,
                   "lr": 1e-3,
                   "innerlr": 1e-4,
+                  "LRdecay": 1.0,
                   "onlyTrainFirstLayer": True,
                   },
         "data": "random",

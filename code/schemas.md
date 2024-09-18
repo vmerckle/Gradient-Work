@@ -21,6 +21,7 @@ config
         - dist: "frobenius", "wasser" ot.emd2, "sliced" ot.sliced...
         - gamma: float
         - innerlr: float
+        - LRdecay: float (will multiply the innerLR by this for every step, no reset)
         - inneriter: int
         - recordinner: bool
         - recordinnerlayers: bool

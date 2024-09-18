@@ -8,6 +8,25 @@ import ot
 
 from utils import *
 
+from torch.optim.lr_scheduler import _LRScheduler
+
+class CustomScheduler(_LRScheduler):
+    def __init__(self, optimizer, last_epoch=-1, verbose=False):
+        self.start_lr = [group['lr'] for group in optimizer.param_groups]
+        self.last_loss = 100.0
+        self.factor = 1.0
+        super(CustomScheduler, self).__init__(optimizer, last_epoch, verbose)
+
+    def step(self, loss=None, epoch=None):
+        if loss is not None:
+            if loss >= self.last_loss:
+                self.factor *= 0.9993
+            self.last_loss = loss
+        super().step(epoch)  # Proceed with the normal step functionality
+
+    def get_lr(self):
+        return [base_lr * self.factor for base_lr in self.start_lr]
+
 class proxpoint:
     def __init__(self, D, dtype=torch.float32, device="cpu"):
         self.dtype = dtype
@@ -27,6 +46,7 @@ class proxpoint:
 
         self.opti = D["opti"]
         self.innerlr = D["innerlr"]
+        self.LRdecay = D["LRdecay"]
         self.inneriter = D["inneriter"]
         self.gamma = D["gamma"]
         self.recordinner = D["recordinner"]
@@ -57,7 +77,8 @@ class proxpoint:
             if firstloss is None:
                 firstloss = loss.item()
             self.optimizer.step()
-            #self.scheduler.step()
+            if self.scheduler is not None:
+                self.scheduler.step()
         if loss.item() > firstloss:
             itero = tqdm(desc="over prox")
             while True:
@@ -90,14 +111,20 @@ class proxpoint:
         itero = range(self.inneriter)
         itero = tqdm(itero, desc="prox loop")
         self.updateInner()
+        print(self.scheduler.get_last_lr()[0])
         for i in itero:
             self.optimizer.zero_grad()
             obj = self.obj(self.ly1)
             dis = 1/self.gamma*self.proxdist(self.ly1, x_prev, self.ly2)
             loss = obj + dis
-            self.updateInner(num=i, D={"obj":obj.item(), "dist":dis.item(), "loss":loss.item()})
+            lossitem = loss.item()
+            self.updateInner(num=i, D={"obj":obj.item(), "dist":dis.item(), "loss":lossitem})
+            # todo include LR in datas
             loss.backward()
             self.optimizer.step()
+            if self.scheduler is not None:
+                self.scheduler.step(loss=lossitem)
+        print(self.scheduler.get_last_lr()[0])
         self.lastloss = obj.item()
 
     def load(self, X, Y, ly1, ly2, beta=0):
@@ -129,6 +156,10 @@ class proxpoint:
         elif self.opti == "AdamW":
             self.optimizer = torch.optim.AdamW(params, lr=self.innerlr, weight_decay=self.beta)
         #self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
+        self.scheduler = None
+        self.scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=self.LRdecay)
+        self.scheduler = CustomScheduler(self.optimizer)
+
 
         with torch.no_grad():
             self.lastloss = self.obj(self.ly1).item()

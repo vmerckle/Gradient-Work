@@ -52,22 +52,18 @@ if __name__ == '__main__':
     nums, s = mergeproxfloats(D)
 
 
-    fig = plt.figure(figsize=(19.8,10.8))
+    fig = plt.figure(figsize=(19.8*4,10.8))
     ax = fig.add_subplot(frameon=False)
-    #ax = fig.add_subplot()
 
     #ax.xaxis.set_major_locator(plt.MaxNLocator(3))
     #ax.yaxis.set_major_locator(plt.MaxNLocator(3))
-    #ax.set_ylabel('values', loc='center')
     ax.axhline(y=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
     ax.axvline(x=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
     ax.grid(True, alpha=0.2)
-    #ax.plot(nums, lossL)
-    #ax.plot(nums, s["obj"], label='prox objective')
-    #ax.plot(nums, s["dist"], label='prox distance')
-    ax.scatter(nums, s["obj"], label='prox objective', marker='+', alpha=0.4)
-    ax.scatter(nums, s["dist"], label='prox distance', marker='+', alpha=0.4)
+    ax.scatter(nums, s["obj"], label='prox objective', marker='+', alpha=0.2)
+    ax.scatter(nums, s["dist"], label='prox distance', marker='+', alpha=0.2)
     ax.set_yscale('log')
+    #ax.set_ylabel('values', loc='center')
     ax.legend()
     if args.show:
         plt.show()
@@ -77,11 +73,7 @@ if __name__ == '__main__':
 
     fig = plt.figure(figsize=(19.8,10.8))
     ax = fig.add_subplot(frameon=False)
-    #ax = fig.add_subplot()
 
-    #ax.xaxis.set_major_locator(plt.MaxNLocator(3))
-    #ax.yaxis.set_major_locator(plt.MaxNLocator(3))
-    #ax.set_ylabel('values', loc='center')
     ax.axhline(y=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
     ax.axvline(x=0, color="black", linestyle="-", alpha=0.7, linewidth=0.4)
     ax.grid(True, alpha=0.2)
