@@ -20,7 +20,9 @@ def debug(args):
     folder = f"data/{expname}"
     config = configs.default
     config["expdesc"] = args.d
+    config["algo"] = "GD"
     config["algoD"]["recordinnerlayers"] = True
+    config["algoD"]["batched"] = True
     #config["algoD"]["dist"] = "wasser"
     debugstop = lambda D, opti, num, timestart : num > 5
     runner(config, expname, stopper=debugstop)

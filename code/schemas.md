@@ -8,10 +8,15 @@ config
 - algoD: DICT {
     (all algos)
         - opti: "prodigy", "mechanize", "mechanizeadam", "SGD", "AdamW"
-        - momentum: float
+        - optiD: DICT {
+            - lr: float
+            - weight_decay: float
+            - momentum: float
+        }
     ("GD")
-        - lr: float
         - onlyTrainFirstLayer: bool
+        - batched: bool
+        - batch_size: int
     ("JKO")
         - proxf: "cvxpy", "scipy", "pytorch"
         - tol: float
@@ -20,7 +25,6 @@ config
     ("proxpoint")
         - dist: "frobenius", "wasser" ot.emd2, "sliced" ot.sliced...
         - gamma: float
-        - innerlr: float
         - LRdecay: float (will multiply the innerLR by this for every step, no reset)
         - inneriter: int
         - recordinner: bool

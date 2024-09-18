@@ -10,58 +10,69 @@ from utils import *
 def torch_2layers(X, ly1, ly2):
     return torch.relu(X@ly1)@ly2
 
+def getOpti(optiname, params, optiD):
+    if optiname == "prodigy":
+        from prodigyopt import Prodigy
+        return Prodigy(params,lr=optiD["lr"], weight_decay=optiD["weight_decay"])
+    elif optiname == "mechanize":
+        from mechanic_pytorch import mechanize # lr magic (rollbacks)
+        return mechanize(torch.optim.SGD)(params, lr=optiD["lr"])
+    elif optiname == "mechanizeadam":
+        from mechanic_pytorch import mechanize # lr magic (rollbacks)
+        return mechanize(torch.optim.AdamW)(params, lr=optiD["lr"])
+    elif optiname == "SGD":
+        return torch.optim.SGD(params, lr=optiD["lr"], weight_decay=optiD["weight_decay"])
+    elif optiname == "AdamW":
+        return torch.optim.AdamW(params, lr=optiD["lr"], weight_decay=optiD["weight_decay"])
+    elif optiname == "Adadelta":
+        return torch.optim.Adadelta(params, lr=optiD["lr"], weight_decay=optiD["weight_decay"])
+
 class torch_descent:
     def __init__(self, D, dtype=torch.float32, device="cpu"):
-        self.opti = D["opti"]
-        self.momentum = D["momentum"]
         self.dtype = dtype
         self.device = device
         self.loss_fn = torch.nn.MSELoss()
         # self.loss_fn = torch.nn.SoftMarginLoss() # loss for 2-class classif
         self.pred_fn = torch_2layers
+        self.opti = D["opti"]
+        self.optiD = D["optiD"]
         self.optimizer = None
-        self.lr = D["lr"]
-        self.beta = D["beta"]
         self.onlyTrainFirstLayer = D["onlyTrainFirstLayer"]
+        self.batched = D["batched"]
+        self.batch_size = D["batch_size"]
 
 
     def load(self, X, Y, ly1, ly2, beta=0):
         self.n, self.d = X.shape
         self.m = ly1.shape[1]
 
-        self.ly1 = torch.tensor(ly1, dtype=self.dtype, device=self.device, requires_grad=True)
-        self.X = torch.tensor(X, dtype=self.dtype, device=self.device)
-        self.Y = torch.tensor(Y, dtype=self.dtype, device=self.device)
-
-        if self.onlyTrainFirstLayer:
-            params = [self.ly1]
-            self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=False)
+        if self.batched:
+            trainset = torch.tensor([(x, y) for x,y in zip(X, Y)], dtype=self.dtype, device=self.device)
+            self.train_loader = torch.utils.data.DataLoader(trainset, batch_size=self.batch_size, shuffle=True)
+            print(self.X.shape, self.Y.shape)
+            assert False
         else:
-            params = [self.ly1, self.ly2]
-            self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=True)
+            self.X = torch.tensor(X, dtype=self.dtype, device=self.device)
+            self.Y = torch.tensor(Y, dtype=self.dtype, device=self.device)
 
-        if self.opti == "prodigy":
-            from prodigyopt import Prodigy
-            self.optimizer = Prodigy(params,lr=self.lr, weight_decay=self.beta)
-        elif self.opti == "mechanize":
-            from mechanic_pytorch import mechanize # lr magic (rollbacks)
-            self.optimizer = mechanize(torch.optim.SGD)(params, lr=self.lr)
-        elif self.opti == "mechanizeadam":
-            from mechanic_pytorch import mechanize # lr magic (rollbacks)
-            self.optimizer = mechanize(torch.optim.AdamW)(params, lr=self.lr)
-        elif self.opti == "SGD":
-            self.optimizer = torch.optim.SGD(params, lr=self.lr, weight_decay=self.beta)
-        elif self.opti == "AdamW":
-            self.optimizer = torch.optim.AdamW(params, lr=self.lr, weight_decay=self.beta)
-        elif self.opti == "Adadelta":
-            self.optimizer = torch.optim.Adadelta(params, lr=self.lr, weight_decay=self.beta)
+        self.ly1 = torch.tensor(ly1, dtype=self.dtype, device=self.device, requires_grad=True)
+        self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=not self.onlyTrainFirstLayer)
+        params = [self.ly1]
+        if self.onlyTrainFirstLayer:
+            params = [self.ly1, self.ly2]
+
+        self.optimizer = getOpti(self.opti, params, self.optiD)
         #self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
+        
 
         with torch.no_grad():
             self.lastloss = self.loss_fn(self.pred_fn(self.X, self.ly1, self.ly2), self.Y).item()
 
     def step(self):
-        loss = self.loss_fn(self.pred_fn(self.X, self.ly1, self.ly2), self.Y)
+        if self.batched:
+            loss = self.loss_fn(self.pred_fn(self.X, self.ly1, self.ly2), self.Y)
+        else:
+            loss = self.loss_fn(self.pred_fn(self.X, self.ly1, self.ly2), self.Y)
         self.lastloss = loss.item()
         loss.backward()
         self.optimizer.step()

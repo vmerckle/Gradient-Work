@@ -18,33 +18,37 @@ default = {
         "device": "cpu",
         "seed": 1,
         "algo": "proxpoint",
-        "algoD": {"dist": "frobenius",
-                  "inneriter": 100,
-                  "gamma": 1e-1,
-                  "recordinner": True,
-                  "recordinnerlayers": False,
-                  "opti": "AdamW",
-                  "momentum":0.95,
-                  "beta": 0,
-                  "lr": 1e-3,
-                  "innerlr": 1e-4,
-                  "LRdecay": 1.0,
-                  "onlyTrainFirstLayer": True,
-                  },
+        "algoD": {
+            "dist": "frobenius",
+            "inneriter": 100,
+            "gamma": 1e-1,
+            "recordinner": True,
+            "recordinnerlayers": False,
+            "LRdecay": 1.0,
+            "onlyTrainFirstLayer": True,
+            "opti": "AdamW",
+            "batched": False,
+            "batch_size": 2,
+            "optiD": {
+                "momentum":0.95,
+                "weight_decay": 0,
+                "lr": 1e-3,
+            },
+        },
         "data": "random",
         "dataD": {
             "seed": 2,
             "sampling": "uniform",
             "Ynoise": 0,
             "d": 10,
-            "n": 10,
+            "n": 11,
             },
         "init": "normal",
         "initD": {
             "seed": 3,
             "onlypositives": False,
             "scale": 1e-2,
-            "m": 10,
+            "m": 12,
             },
     }
 
@@ -59,11 +63,7 @@ def applyconfig(D):
 
 def loadOpti(D):
     x = SimpleNamespace(**D)
-    #if x.proxdist == "wasser":
-    #    x.device = "cpu"
-    #    x.threadcount = 1
-    torch.set_num_threads(x.threadcount) # 10% perf loss for wasser but only use one core.
-
+    torch.set_num_threads(x.threadcount)
     if x.typefloat == "float32":
         dtype = torch.float32
     elif x.typefloat == "float64":
