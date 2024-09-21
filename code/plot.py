@@ -52,7 +52,7 @@ if __name__ == '__main__':
     nums, s = mergeproxfloats(D)
 
 
-    fig = plt.figure(figsize=(19.8*4,10.8))
+    fig = plt.figure(figsize=(19.8,10.8))
     ax = fig.add_subplot(frameon=False)
 
     #ax.xaxis.set_major_locator(plt.MaxNLocator(3))
@@ -68,8 +68,9 @@ if __name__ == '__main__':
     if args.show:
         plt.show()
     else:
-        plt.savefig("output/mergedprox_obj_dist.png", dpi=300)
-        print("saved", "output/mergedprox_obj_dist.png")
+        name = f"output/{args.timestamp}_mergedprox_obj_dist.png"
+        plt.savefig(name, dpi=300)
+        print("saved", name)
 
     fig = plt.figure(figsize=(19.8,10.8))
     ax = fig.add_subplot(frameon=False)
@@ -84,5 +85,6 @@ if __name__ == '__main__':
     if args.show:
         plt.show()
     else:
-        plt.savefig("output/loss.png", dpi=300)
-        print("saved", "output/loss.png")
+        name = f"output/{args.timestamp}_loss.png"
+        plt.savefig(name, dpi=300)
+        print("saved", name)

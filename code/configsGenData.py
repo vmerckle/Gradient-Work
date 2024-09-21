@@ -50,13 +50,13 @@ def rngrng(D):
     n, d = D["n"], D["d"]
 
     if D["sampling"] == "uniform":
-        Xb = rng.uniform(-0.5, 0.5, (n, d-1))
-        Y = rng.uniform(-2, 2, (n, 1))
+        Xb = rng.uniform(-1, 1, (n, d-1))
+        Y = rng.uniform(-3, 1, (n, 1))
     elif D["sampling"] == "normal":
         Xb = rng.standard_normal((n, d-1))
-        Y = rng.normal(0.25, 1, (n, 1))
-        Y += rng.normal(-0.25, 1, (n, 1)) # (bad) attempt at creating something harder
-        Y = rng.uniform(-0.5, 0.5, (n, 1))
+        Y = rng.uniform(-1, 1, (n, 1))
+        #Y += rng.normal(-0.25, 1, (n, 1)) # (bad) attempt at creating something harder
+        #Y = rng.uniform(-0.5, 0.5, (n, 1))
 
     return add_bias(Xb), Y, Xb
 

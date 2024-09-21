@@ -1,26 +1,26 @@
 import numpy as np
-
 from tqdm import tqdm
-import torch
 import ot
+import torch
+from torch.optim.lr_scheduler import _LRScheduler
 #import geomloss as poto
     #    return poto.SamplesLoss("sinkhorn", p=2, blur=0.01)(x, x_prev)
 
 from utils import *
-
-from torch.optim.lr_scheduler import _LRScheduler
+from algo_GD_torch import getOpti
 
 class CustomScheduler(_LRScheduler):
-    def __init__(self, optimizer, last_epoch=-1, verbose=False):
+    def __init__(self, optimizer, lr_decay=0.9993, last_epoch=-1):
         self.start_lr = [group['lr'] for group in optimizer.param_groups]
         self.last_loss = 100.0
         self.factor = 1.0
-        super(CustomScheduler, self).__init__(optimizer, last_epoch, verbose)
+        self.lr_decay = lr_decay
+        super(CustomScheduler, self).__init__(optimizer, last_epoch)
 
     def step(self, loss=None, epoch=None):
         if loss is not None:
             if loss >= self.last_loss:
-                self.factor *= 0.9993
+                self.factor *= self.lr_decay
             self.last_loss = loss
         super().step(epoch)  # Proceed with the normal step functionality
 
@@ -45,14 +45,13 @@ class proxpoint:
             raise Exception("config bad proxdist choice")
 
         self.opti = D["opti"]
-        self.innerlr = D["innerlr"]
+        self.optiD = D["optiD"]
         self.LRdecay = D["LRdecay"]
         self.inneriter = D["inneriter"]
         self.gamma = D["gamma"]
         self.recordinner = D["recordinner"]
         self.recordinnerlayers = D["recordinnerlayers"]
         self.onlyTrainFirstLayer = D["onlyTrainFirstLayer"]
-        self.beta = D["beta"]
         if self.recordinner:
             self.innerD = {}
 
@@ -62,7 +61,7 @@ class proxpoint:
         mseloss = torch.nn.MSELoss()(yhat.flatten(), self.Y.flatten())
         return mseloss 
 
-    def step(self):
+    def step_unused(self):
         x_prev = self.ly1.clone().detach()
         assert self.ly1.requires_grad
         itero = range(self.inneriter)
@@ -109,22 +108,22 @@ class proxpoint:
         assert self.ly1.requires_grad
         
         itero = range(self.inneriter)
-        itero = tqdm(itero, desc="prox loop")
+        if self.inneriter > 100:
+            itero = tqdm(itero, desc="prox loop")
+
         self.updateInner()
-        print(self.scheduler.get_last_lr()[0])
         for i in itero:
             self.optimizer.zero_grad()
             obj = self.obj(self.ly1)
             dis = 1/self.gamma*self.proxdist(self.ly1, x_prev, self.ly2)
             loss = obj + dis
             lossitem = loss.item()
-            self.updateInner(num=i, D={"obj":obj.item(), "dist":dis.item(), "loss":lossitem})
+            self.updateInner(num=i, D={"obj":obj.item(), "dist":dis.item(), "loss":lossitem, "lr":self.scheduler.get_last_lr()[0]})
             # todo include LR in datas
             loss.backward()
             self.optimizer.step()
             if self.scheduler is not None:
                 self.scheduler.step(loss=lossitem)
-        print(self.scheduler.get_last_lr()[0])
         self.lastloss = obj.item()
 
     def load(self, X, Y, ly1, ly2, beta=0):
@@ -135,30 +134,16 @@ class proxpoint:
         self.X = torch.tensor(X, dtype=self.dtype, device=self.device)
         self.Y = torch.tensor(Y, dtype=self.dtype, device=self.device)
 
+        self.ly1 = torch.tensor(ly1, dtype=self.dtype, device=self.device, requires_grad=True)
+        self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=not self.onlyTrainFirstLayer)
+        params = [self.ly1]
         if self.onlyTrainFirstLayer:
-            params = [self.ly1]
-            self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=False)
-        else:
             params = [self.ly1, self.ly2]
-            self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=True)
 
-        if self.opti == "prodigy":
-            from prodigyopt import Prodigy
-            self.optimizer = Prodigy(params,lr=self.innerlr, weight_decay=self.beta)
-        elif self.opti == "mechanize":
-            from mechanic_pytorch import mechanize # lr magic (rollbacks)
-            self.optimizer = mechanize(torch.optim.SGD)(params, lr=self.innerlr)
-        elif self.opti == "mechanizeadam":
-            from mechanic_pytorch import mechanize # lr magic (rollbacks)
-            self.optimizer = mechanize(torch.optim.AdamW)(params, lr=self.innerlr)
-        elif self.opti == "SGD":
-            self.optimizer = torch.optim.SGD(params, lr=self.innerlr, weight_decay=self.beta)
-        elif self.opti == "AdamW":
-            self.optimizer = torch.optim.AdamW(params, lr=self.innerlr, weight_decay=self.beta)
+        self.optimizer = getOpti(self.opti, params, self.optiD)
         #self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
-        self.scheduler = None
-        self.scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=self.LRdecay)
-        self.scheduler = CustomScheduler(self.optimizer)
+        #self.scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=self.LRdecay)
+        self.scheduler = CustomScheduler(self.optimizer, lr_decay=self.LRdecay)
 
 
         with torch.no_grad():

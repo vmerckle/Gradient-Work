@@ -50,42 +50,45 @@ def mnist(args):
     runner(config, expname, stopper=debugstop, logger=logger)
 
 def quickexp(args):
-    expname = "quick wasser"
+    expname = "quick_wasser"
     folder = f"data/{expname}"
     config = {
             "typefloat": "float32",
             "threadcount": 1,
-            "device": "cpu",
-            "seed": 4,
+            "device": "cuda",
+            "seed": 1,
             "algo": "proxpoint",
-            "algoD": {"dist": "frobenius",
-                      "inneriter": 500,
-                      "gamma": 1e-1,
-                      "recordinner": True,
-                      "recordinnerlayers": False,
-                      "momentum":0.95,
-                      "opti": "AdamW",
-                      "beta": 0,
-                      "innerlr": 1e-3,
-                      "LRdecay": 1.0, #0.9998,
-                      "onlyTrainFirstLayer": True,
-                      },
-            "data": "rnglinear",
+            "algoD": {
+                "dist": "frobenius",
+                "inneriter": 100,
+                "gamma": 1e-2,
+                "recordinner": True,
+                "recordinnerlayers": False,
+                "onlyTrainFirstLayer": True,
+                "opti": "AdamW",
+                "batched": False,
+                "batch_size": 2,
+                "LRdecay": 0.9993,
+                "optiD": {
+                    "momentum":0.99,
+                    "weight_decay": 0,
+                    "lr": 1e-3,
+                },
+            },
+            "data": "random",
             "dataD": {
-                "seed": 4,
-                "Xsampling": "uniform",
+                "seed": 2,
                 "sampling": "normal",
-                "eps": 0.,
-                "Ynoise": 0,
+                "eps": 0,
                 "d": 5,
-                "n": 10,
+                "n": 700,
                 },
             "init": "normal",
             "initD": {
-                "seed": 5,
+                "seed": 3,
                 "onlypositives": False,
                 "scale": 1e-2,
-                "m": 10,
+                "m": 1000,
                 },
         }
     runner(config, expname)
