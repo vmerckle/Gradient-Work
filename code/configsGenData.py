@@ -60,16 +60,19 @@ def rngrng(D):
 
     return add_bias(Xb), Y, Xb
 
-def mnist(D = None):
+def mnist(D):
     # if not yet done, downloads MNIST using pytorch and save numpy version to file.
-    pth = "dataset/mnist.pkl"
+    pth = "dataset/mnist_test.pkl"
+    if D["train"]:
+        pth = "dataset/mnist_train.pkl"
+
     if os.path.exists(pth):
         with open(pth, "rb") as f:
             return pickle.load(f)
 
     import torch
     import torchvision
-    print("load mnist for the first time")
+    print("load mnist for the first time, train={D['train']}")
     if not os.path.exists("dataset"):
         os.mkdir(f"dataset")
     
@@ -79,18 +82,18 @@ def mnist(D = None):
         #torchvision.transforms.Normalize((0.1307,), (0.3081,))
     ])
 
-    # laziest way
-    train_dataset = torchvision.datasets.MNIST('dataset/', train=True, download=True, transform=image_transform)
-    test_dataset = torchvision.datasets.MNIST('dataset/', train=False, download=True, transform=image_transform)
-    train_loader = torch.utils.data.DataLoader(train_dataset,
-                                               batch_size=60000, 
-                                               shuffle=False)
-    test_loader = torch.utils.data.DataLoader(test_dataset,
-                                              batch_size=10000, 
-                                              shuffle=False)
-    for d,t in train_loader:
-        Xb, Y = d, t
-    Xb = Xb.view(-1, 784) # no convolution: flatten the data
+    if D["train"]:
+        dataset = torchvision.datasets.MNIST('dataset/', train=True, download=True, transform=image_transform)
+    else:
+        dataset = torchvision.datasets.MNIST('dataset/', train=False, download=True, transform=image_transform)
+
+    for x,y in dataset:
+        Y.append(y)
+        X.append(x)
+
+    Y = torch.tensor(Y)
+    X = torch.cat(X) # only works because one item is 1,28,28 and this gets rid of the dimension 1,
+    Xb = X.view(-1, 784) # no convolution: flatten the data
     Y = Y.to(torch.float32)[:, None] # convert classification labels to floats
     Xb, Y = Xb.numpy(), Y.numpy()
     X = add_bias(Xb)
@@ -98,3 +101,4 @@ def mnist(D = None):
     with open(pth, "wb") as f:
         pickle.dump((X, Y, Xb), f)
     return X, Y, Xb
+

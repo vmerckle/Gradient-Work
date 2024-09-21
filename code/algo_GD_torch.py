@@ -44,16 +44,12 @@ class torch_descent:
 
     def load(self, X, Y, ly1, ly2, beta=0):
         self.n, self.d = X.shape
+        self.ibatch = self.n # so that we reshuffle at first step
         self.m = ly1.shape[1]
 
-        if self.batched:
-            trainset = torch.tensor([(x, y) for x,y in zip(X, Y)], dtype=self.dtype, device=self.device)
-            self.train_loader = torch.utils.data.DataLoader(trainset, batch_size=self.batch_size, shuffle=True)
-            print(self.X.shape, self.Y.shape)
-            assert False
-        else:
-            self.X = torch.tensor(X, dtype=self.dtype, device=self.device)
-            self.Y = torch.tensor(Y, dtype=self.dtype, device=self.device)
+
+        self.X = torch.tensor(X, dtype=self.dtype, device=self.device)
+        self.Y = torch.tensor(Y, dtype=self.dtype, device=self.device)
 
         self.ly1 = torch.tensor(ly1, dtype=self.dtype, device=self.device, requires_grad=True)
         self.ly2 = torch.tensor(ly2, dtype=self.dtype, device=self.device, requires_grad=not self.onlyTrainFirstLayer)
@@ -70,7 +66,14 @@ class torch_descent:
 
     def step(self):
         if self.batched:
-            loss = self.loss_fn(self.pred_fn(self.X, self.ly1, self.ly2), self.Y)
+            if self.ibatch + self.batch_size > self.n:
+                self.ibatch = 0
+                rand_indx = torch.randperm(self.n)
+                self.X = self.X[rand_indx]
+                self.Y = self.Y[rand_indx]
+            bY, bX = self.Y[self.ibatch:self.ibatch+self.batch_size], self.X[self.ibatch:self.ibatch+self.batch_size]
+            loss = self.loss_fn(self.pred_fn(bX, self.ly1, self.ly2), bY)
+            self.ibatch += self.batch_size
         else:
             loss = self.loss_fn(self.pred_fn(self.X, self.ly1, self.ly2), self.Y)
         self.lastloss = loss.item()
