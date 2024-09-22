@@ -37,7 +37,7 @@ def mergeproxfloats(D):
             s[k].extend(l)
     return list(range(len(s["obj"]))), s
 
-def plotprox(D, pre, show):
+def plotprox(D, pre, show, dpi=100):
     nums, s = mergeproxfloats(D)
 
     fig = plt.figure(figsize=(19.8,10.8))
@@ -58,10 +58,10 @@ def plotprox(D, pre, show):
         plt.show()
     else:
         name = f"{pre}mergedprox_obj_dist.png"
-        plt.savefig(name, dpi=300)
+        plt.savefig(name, dpi=dpi)
         print("saved", name)
 
-def plotloss(D, pre, show):
+def plotloss(D, pre, show, dpi):
     nums, lossL = tolist(D["iter"], "loss")
 
     fig = plt.figure(figsize=(19.8,10.8))
@@ -78,10 +78,10 @@ def plotloss(D, pre, show):
         plt.show()
     else:
         name = f"{pre}loss.png"
-        plt.savefig(name, dpi=300)
+        plt.savefig(name, dpi=dpi)
         print("saved", name)
 
-def plotdata1D(D, pre, show):
+def plotdata1D(D, pre, show, dpi):
     X, Y = D["Xb"], D["Y"].flatten()
     Xb = D["X"]
     assert X.shape[1] == 1
@@ -102,7 +102,7 @@ def plotdata1D(D, pre, show):
         plt.show()
     else:
         name = f"{pre}1Data_labelled.png"
-        plt.savefig(name, dpi=300)
+        plt.savefig(name, dpi=dpi)
         print("saved", name)
 
     fig = plt.figure(figsize=(19.8,10.8))
@@ -120,10 +120,10 @@ def plotdata1D(D, pre, show):
         plt.show()
     else:
         name = f"{pre}1Data.png"
-        plt.savefig(name, dpi=300)
+        plt.savefig(name, dpi=dpi)
         print("saved", name)
 
-def plotneurons1D(D, pre, show):
+def plotneurons1D(D, pre, show, dpi):
     assert D["dataD"]["d"] == 2
     nums = list(D["iter"].keys())
     nums.sort()
@@ -152,12 +152,12 @@ def plotneurons1D(D, pre, show):
             plt.show()
         else:
             name = f"{pre}neurons_{i}.png"
-            plt.savefig(name, dpi=300)
+            plt.savefig(name, dpi=dpi)
             print("saved", name)
 
     plotone(0)
 
-def plotneurons1D_traj(D, pre, show):
+def plotneurons1D_traj(D, pre, show, dpi):
     assert D["dataD"]["d"] == 2
     X, Y = D["Xb"], D["Y"].flatten()
     X = X.flatten()
@@ -171,7 +171,7 @@ def plotneurons1D_traj(D, pre, show):
     pxl, pyl = xl[:, :nbpos], yl[:, :nbpos]
     nxl, nyl = xl[:, nbpos:], yl[:, nbpos:]
 
-    fig = plt.figure(figsize=(19.8,10.8))
+    fig = plt.figure(figsize=(19.8*4,10.8*4))
     ax = fig.add_subplot(frameon=False)
 
     ax.scatter(pxl[0], pyl[0], color="green", marker='+', label='pos start')
@@ -191,7 +191,7 @@ def plotneurons1D_traj(D, pre, show):
         plt.show()
     else:
         name = f"{pre}traj_neurons.png"
-        plt.savefig(name, dpi=300)
+        plt.savefig(name, dpi=dpi)
         print("saved", name)
 
 if __name__ == '__main__':
@@ -209,6 +209,7 @@ if __name__ == '__main__':
 
     plotparams = {"D": D,
                   "pre": pre,
+                  "dpi": 100,
                   "show": args.show}
 
     #plotdata1D(**plotparams)
