@@ -27,7 +27,7 @@ def mergeproxfloats(D):
     if nums != list(range(len(nums))):
         print("not every iteration was recorded - doesn't make sense to merge prox loops")
         return None
-    keylist = ["obj", "dist", "loss"]
+    keylist = ["obj", "dist", "loss", "lr"]
     s = {}
     for k in keylist:
         s[k] = []
@@ -62,6 +62,7 @@ if __name__ == '__main__':
     ax.grid(True, alpha=0.2)
     ax.scatter(nums, s["obj"], label='prox objective', marker='+', alpha=0.2)
     ax.scatter(nums, s["dist"], label='prox distance', marker='+', alpha=0.2)
+    ax.plot(nums, s["lr"], label='learning rate', color="grey")
     ax.set_yscale('log')
     #ax.set_ylabel('values', loc='center')
     ax.legend()
