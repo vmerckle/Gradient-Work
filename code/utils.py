@@ -1,6 +1,12 @@
 import numpy as np
 import datetime
 
+
+def legend_without_duplicate_labels(ax):
+    handles, labels = ax.get_legend_handles_labels()
+    unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l not in labels[:i]]
+    ax.legend(*zip(*unique))
+
 def gethours(timestamp): #timestamp is an int*1000
     delta = datetime.datetime.now() - datetime.datetime.fromtimestamp(float(timestamp/1000))
     return delta.total_seconds() / 3600

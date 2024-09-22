@@ -21,9 +21,11 @@ def debug(args):
     config = configs.default
     config["expdesc"] = args.d
     config["algo"] = "GD"
+    config["algo"] = "proxpoint"
     config["algoD"]["recordinnerlayers"] = True
-    config["algoD"]["batched"] = True
-    #config["algoD"]["dist"] = "wasser"
+    config["algoD"]["batched"] = False
+    config["algoD"]["dist"] = "wasser"
+    config["dataD"]["d"] = 2
     debugstop = lambda D, opti, num, timestart : num > 5
     runner(config, expname, stopper=debugstop)
 

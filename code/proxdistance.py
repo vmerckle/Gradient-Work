@@ -20,7 +20,7 @@ def wasserstein(x, x_prev, ly2): # x has grad=true
 def wasserstein_np(x, x_prev): # same remarks as torch wasser
     nbpos = np.sum((ly2 > 0)).item()
     Mpos = ot.dist(x.T[:nbpos], x_prev.T[:nbpos], metric='sqeuclidean', p=2)
-    Mneg = ot.dist(x.T[m-nbpos:], x_prev.T[m-nbpos:], metric='sqeuclidean', p=2)
+    Mneg = ot.dist(x.T[nbpos:], x_prev.T[nbpos:], metric='sqeuclidean', p=2)
     emp = np.array([])
     return ot.emd2(emp, emp, Mpos) + ot.emd2(emp, emp, Mneg)
 
@@ -29,7 +29,7 @@ def wasserstein_num(x, x_prev):
     m = len(x[0])
     nbpos = np.sum((ly2 > 0)).item()
     Mpos = ot.dist(x.T[:nbpos], x_prev.T[:nbpos], metric='sqeuclidean', p=2)
-    Mneg = ot.dist(x.T[m-nbpos:], x_prev.T[m-nbpos:], metric='sqeuclidean', p=2)
+    Mneg = ot.dist(x.T[nbpos:], x_prev.T[nbpos:], metric='sqeuclidean', p=2)
     emp = np.array([])
     upos = np.sum(np.abs(ot.emd(emp, emp, Mpos) - np.eye(len(Mpos))/m))
     uneg = np.sum(np.abs(ot.emd(emp, emp, Mneg) - np.eye(len(Mneg))/m))
