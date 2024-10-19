@@ -1,6 +1,0 @@
-- *main.tex* macros
-- *content.tex* content
-- *iclr\** style files
-- *math_commands.tex* recommanded macros from iclr
-- *mybib.bib* BibTex
-- *Makefile* Works on my machine
