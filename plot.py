@@ -205,6 +205,8 @@ if __name__ == '__main__':
         print("No argument -> taking last timestamped data:", args.timestamp)
 
     D = load.getTS(args.timestamp)
+    if not os.path.exists("output"):
+        os.mkdir(f"output")
     pre= f"output/{args.timestamp}_"
 
     plotparams = {"D": D,

@@ -73,22 +73,22 @@ def loadOpti(D):
 
     algo = x.algo
     if algo == "GD":
-        from algo_GD_torch import torch_descent
+        from algos.algo_GD_torch import torch_descent
         opti = torch_descent(x.algoD, device=x.device)
     elif algo == "JKO":
         if x.proxf == "cvxpy":
-            from jko_proxf_cvxpy import jko_cvxpy
+            from JKO.jko_proxf_cvxpy import jko_cvxpy
             opti = jko_cvxpy(x.algoD)
         elif x.proxf == "scipy":
-            from jko_proxf_scipy import jko_scipy
+            from JKO.jko_proxf_scipy import jko_scipy
             opti = jko_scipy(x.algoD)
         elif x.proxf == "pytorch":
-            from jko_proxf_pytorch import jko_pytorch
+            from JKO.jko_proxf_pytorch import jko_pytorch
             opti = jko_pytorch(x.algoD)
         else:
             raise Exception(f"config bad proxf='{x.proxf}' choice")
     elif algo == "proxpoint":
-        from algo_prox import proxpoint
+        from algos.algo_prox import proxpoint
         opti = proxpoint(x.algoD, dtype=dtype, device=x.device)
     else:
         raise Exception("config bad algo choice")

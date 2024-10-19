@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import _LRScheduler
     #    return poto.SamplesLoss("sinkhorn", p=2, blur=0.01)(x, x_prev)
 
 from utils import *
-from algo_GD_torch import getOpti
+from algos.algo_GD_torch import getOpti
 
 class CustomScheduler(_LRScheduler):
     def __init__(self, optimizer, lr_decay=0.9993, last_epoch=-1):
@@ -33,13 +33,13 @@ class proxpoint:
         self.device = device
         dist = D["dist"]
         if dist == "wasser":
-            from proxdistance import wasserstein
+            from algos.proxdistance import wasserstein
             self.proxdist = wasserstein
         elif dist == "frobenius":
-            from proxdistance import frobenius 
+            from algos.proxdistance import frobenius 
             self.proxdist = frobenius
         elif dist == "sliced":
-            from proxdistance import slicedwasserstein
+            from algos.proxdistance import slicedwasserstein
             self.proxdist = slicedwasserstein
         else:
             raise Exception("config bad proxdist choice")
